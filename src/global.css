@@ -1,0 +1,72 @@
+html, body, #root, body > div:first-of-type {
+  background:#0b1220 !important;
+  min-height:100%;
+}
+body { margin:0; }
+
+/* Slider re-skin */
+:root {
+  --slider-track: rgba(51, 65, 85, 0.7); /* slate-700/70 */
+  --slider-track-hover: rgba(71, 85, 105, 0.85); /* slate-600/85 */
+  --slider-thumb: #c7d2fe; /* indigo-200 */
+  --slider-accent: #6366f1; /* indigo-500 */
+  --slider-shadow: rgba(99, 102, 241, 0.35); /* indigo-500/35 */
+}
+
+input[type="range"].range-skin {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+}
+input[type="range"].range-skin:focus { outline: none; }
+
+/* WebKit */
+input[type="range"].range-skin::-webkit-slider-runnable-track {
+  height: 8px;
+  background: var(--slider-track);
+  border-radius: 999px;
+}
+input[type="range"].range-skin:hover::-webkit-slider-runnable-track {
+  background: var(--slider-track-hover);
+}
+input[type="range"].range-skin::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -4px; /* center on 8px track */
+  border-radius: 999px;
+  background: var(--slider-thumb);
+  border: 1px solid rgba(148, 163, 184, 0.5); /* slate-400/50 */
+  box-shadow: 0 0 0 0 rgba(0,0,0,0), 0 1px 2px rgba(0,0,0,0.35);
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+input[type="range"].range-skin:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--slider-shadow), 0 1px 2px rgba(0,0,0,0.35);
+}
+input[type="range"].range-skin:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--slider-shadow), 0 1px 2px rgba(0,0,0,0.35);
+}
+
+/* Firefox */
+input[type="range"].range-skin::-moz-range-track {
+  height: 8px;
+  background: var(--slider-track);
+  border-radius: 999px;
+}
+input[type="range"].range-skin:hover::-moz-range-track { background: var(--slider-track-hover); }
+input[type="range"].range-skin::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--slider-thumb);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow: 0 0 0 0 rgba(0,0,0,0), 0 1px 2px rgba(0,0,0,0.35);
+  transition: box-shadow 120ms ease, transform 120ms ease;
+}
+input[type="range"].range-skin:hover::-moz-range-thumb { box-shadow: 0 0 0 2px var(--slider-shadow), 0 1px 2px rgba(0,0,0,0.35); }
+input[type="range"].range-skin:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px var(--slider-shadow), 0 1px 2px rgba(0,0,0,0.35); }
+
+/* Edge (Chromium uses WebKit rules above) */
+/* No extra rules needed beyond WebKit */
