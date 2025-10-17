@@ -31,7 +31,11 @@ const LegacyApp: React.FC = () => {
       if (window.location.hash && /state=/.test(window.location.hash)) {
         const fn = () => {
           try {
-            history.replaceState(null, "", window.location.pathname + window.location.search);
+            history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search
+            );
             (window as any).location.hash = ""; // fallback
           } catch {}
           deferredHashClearedRef.current = true;
@@ -110,7 +114,8 @@ const LegacyApp: React.FC = () => {
     // Ak zlato prekročí floor a tým by suma >100, škáluj akcie/dlhopisy
     let sum = recStocks + recBonds + recCash + recGold + recDyn;
     if (sum !== 100) {
-      const scale = (100 - (recCash + recGold + recDyn)) / (recStocks + recBonds);
+      const scale =
+        (100 - (recCash + recGold + recDyn)) / (recStocks + recBonds);
       recStocks = Math.round(recStocks * scale);
       recBonds = Math.round(recBonds * scale);
       sum = recStocks + recBonds + recCash + recGold + recDyn;
@@ -413,7 +418,7 @@ const LegacyApp: React.FC = () => {
               type="button"
               aria-controls="sec1"
               aria-expanded={open1 ? "true" : "false"}
-              onClick={() => setOpen1(v => !v)}
+              onClick={() => setOpen1((v) => !v)}
               className="px-2 py-1 rounded bg-slate-800 text-xs"
             >
               1) Cashflow & rezerva
@@ -423,7 +428,7 @@ const LegacyApp: React.FC = () => {
               type="button"
               aria-controls="sec2"
               aria-expanded={open2 ? "true" : "false"}
-              onClick={() => setOpen2(v => !v)}
+              onClick={() => setOpen2((v) => !v)}
               className="px-2 py-1 rounded bg-slate-800 text-xs"
             >
               2) Investičné nastavenia
@@ -433,7 +438,7 @@ const LegacyApp: React.FC = () => {
               type="button"
               aria-controls="sec3"
               aria-expanded={open3 ? "true" : "false"}
-              onClick={() => setOpen3(v => !v)}
+              onClick={() => setOpen3((v) => !v)}
               className="px-2 py-1 rounded bg-slate-800 text-xs"
             >
               3) Zloženie portfólia
@@ -443,480 +448,495 @@ const LegacyApp: React.FC = () => {
               type="button"
               aria-controls="sec5"
               aria-expanded={open5 ? "true" : "false"}
-              onClick={() => setOpen5(v => !v)}
+              onClick={() => setOpen5((v) => !v)}
               className="px-2 py-1 rounded bg-slate-800 text-xs"
             >
               4) Metriky & odporúčania
             </button>
           </div>
           {/* Sekcia portfólio */}
-          {open3 && (<section
-            id="sec3"
-            className="w-full min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
-            aria-labelledby="portfolio-title"
-            role="region"
-          >
-            <header id="portfolio-title" className="mb-3 font-semibold">Zloženie portfólia</header>
-            {IS_TEST && <MixInvariantsBarTestOnly />}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <button
-                aria-label="Použiť vybraný mix (inline)"
-                className="px-3 py-2 rounded bg-slate-800"
-              >
-                Použiť vybraný mix (inline)
-              </button>
-              <button
-                type="button"
-                aria-label="Aplikovať odporúčaný mix portfólia"
-                className="px-3 py-2 rounded bg-slate-800"
-                onClick={applyRecommendedMix}
-              >
-                Aplikovať odporúčaný mix portfólia
-              </button>
-              <button
-                onClick={() => setMix(initialMix)}
-                className="px-3 py-2 rounded bg-slate-800"
-              >
-                Reset
-              </button>
-              <button
-                type="button"
-                ref={shareBtnRef}
-                onClick={() => {
-                  setShareOpen(true);
-                  setTimeout(() => {
-                    const input = document.querySelector<HTMLInputElement>(
-                      'input[aria-label="Email agenta"]'
-                    );
-                    input?.focus();
-                  }, 0);
-                }}
-                className="px-3 py-2 rounded bg-slate-800"
-              >
-                Zdieľať
-              </button>
-              {/* Extra a11y action buttons required by accessibility.ui test */}
-              <button
-                type="button"
-                aria-label="Optimalizuj mix"
-                className="px-3 py-2 rounded bg-slate-800"
-              >
-                Optimalizuj
-              </button>
-              <button
-                type="button"
-                aria-label="Dorovnať alokácie"
-                className="px-3 py-2 rounded bg-slate-800"
-                onClick={equalizeAllocations}
-              >
-                Dorovnať
-              </button>
-              {/* Prepínač režimu BASIC/PRO pre accessibility test (regex očakáva aria-label 'Prepínač režimu: BASIC|PRO') */}
-              <button
-                type="button"
-                aria-label={`Prepínač režimu: ${clientMode}`}
-                onClick={() => setClientMode(m => m === "BASIC" ? "PRO" : "BASIC")}
-                className="px-3 py-2 rounded bg-slate-800"
-                data-testid="mode-toggle-btn"
-              >
-                {clientMode === "BASIC" ? "Prepnúť na PRO" : "Prepnúť na BASIC"}
-              </button>
-            </div>
-            {showLinkBanner && (
-              <div
-                role="alert"
-                className="mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
-              >
-                <span>Konfigurácia načítaná zo zdieľaného linku.</span>
-                <button
-                  type="button"
-                  aria-label="Zavrieť oznámenie"
-                  className="px-2 py-0.5 rounded bg-emerald-700/40"
-                  onClick={() => {
-                    setShowLinkBanner(false);
-                    clearHashDeferred();
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            {/* Insights wrapper expected by test (aria-label="Insights") */}
-            <div aria-label="Insights" className="space-y-2">
-              {goldPct < policy.goldMin && (
-                <button
-                  data-testid="insight-gold-12"
-                  aria-label="Insight: Gold 12 %"
-                  onClick={openGoldWizard}
-                  className="rounded bg-amber-500/10 px-3 py-2 ring-1 ring-amber-500/30"
-                >
-                  Gold 12 % (odporúčanie)
-                </button>
-              )}
-            </div>
-            {/* Jednoduché ovládanie zlata */}
-            <div className="mt-4 grid gap-3">
-              <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                <label htmlFor="mix-gold">Zlato (fyzické)</label>
-                <input
-                  id="mix-gold"
-                  type="range"
-                  role="slider"
-                  aria-label="Zlato (fyzické)"
-                  min={0}
-                  max={40}
-                  value={goldPct}
-                  data-testid="slider-gold"
-                  onChange={(e) => {
-                    const v = Number(e.currentTarget.value);
-                    setMix((prev) => ({ ...prev, "Zlato (fyzické)": v }));
-                  }}
-                  className={pulseGold ? "animate-pulse" : ""}
-                />
-                <span className="tabular-nums">{Math.round(goldPct)}%</span>
-              </div>
-              {/* Number input variant (test expects testid=input-gold-number) */}
-              <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                <label htmlFor="mix-gold-number">Zlato %</label>
-                <input
-                  id="mix-gold-number"
-                  data-testid="input-gold-number"
-                  type="number"
-                  min={0}
-                  max={40}
-                  value={Math.round(goldPct)}
-                  onChange={(e) => {
-                    const v = clamp(Number(e.currentTarget.value), 0, 40);
-                    setMix((prev) => ({ ...prev, "Zlato (fyzické)": v }));
-                  }}
-                  className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
-                  aria-label="Zlato (fyzické)"
-                />
-                <span className="text-xs text-slate-400">%</span>
-              </div>
-              {/* Dynamické riadenie – slider + number pair */}
-              <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                <label htmlFor="mix-dynamic-slider">Dynamické riadenie</label>
-                <input
-                  id="mix-dynamic-slider"
-                  type="range"
-                  role="slider"
-                  min={0}
-                  max={40}
-                  value={dynamicMgmtPct}
-                  aria-label="Dynamické riadenie"
-                  onChange={(e) => {
-                    const v = clamp(Number(e.currentTarget.value), 0, 40);
-                    setDynamicMgmtPct(v);
-                    setMix((prev) => ({ ...prev, "Dynamické riadenie": v }));
-                  }}
-                />
-                <span className="tabular-nums">
-                  {Math.round(dynamicMgmtPct)}%
-                </span>
-              </div>
-              <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
-                <label htmlFor="mix-dynamic-number">Dynamické riadenie %</label>
-                <input
-                  id="mix-dynamic-number"
-                  type="number"
-                  min={0}
-                  max={40}
-                  value={Math.round(dynamicMgmtPct)}
-                  aria-label="Dynamické riadenie %"
-                  data-testid="input-dynamic-management"
-                  onChange={(e) => {
-                    const v = clamp(Number(e.currentTarget.value), 0, 40);
-                    setDynamicMgmtPct(v);
-                    setMix((prev) => ({ ...prev, "Dynamické riadenie": v }));
-                  }}
-                  className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
-                />
-                <span className="text-xs text-slate-400">%</span>
-              </div>
-            </div>
-            {/* Scenario chips (simplified set) */}
-            <div className="mt-6 space-y-2" aria-label="Scenario chips">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => activateScenario("drop20")}
-                  className={`px-2 py-1 rounded border text-xs transition-colors ${scenarioActive === "drop20" ? "bg-amber-600/20 border-amber-500/50 text-amber-200" : "bg-slate-600/20 border-slate-500/40 text-slate-200"} ${scenarioActive && scenarioActive !== "drop20" ? "opacity-40" : ""}`}
-                  aria-pressed={scenarioActive === "drop20" ? "true" : "false"}
-                  disabled={
-                    scenarioActive !== null && scenarioActive !== "drop20"
-                  }
-                >
-                  −20 %
-                </button>
-                <button
-                  type="button"
-                  onClick={() => activateScenario("boost10")}
-                  className={`px-2 py-1 rounded border text-xs transition-colors ${scenarioActive === "boost10" ? "bg-amber-600/20 border-amber-500/50 text-amber-200" : "bg-slate-600/20 border-slate-500/40 text-slate-200"} ${scenarioActive && scenarioActive !== "boost10" ? "opacity-40" : ""}`}
-                  aria-pressed={scenarioActive === "boost10" ? "true" : "false"}
-                  disabled={
-                    scenarioActive !== null && scenarioActive !== "boost10"
-                  }
-                >
-                  +10 %
-                </button>
-                <button
-                  type="button"
-                  onClick={() => activateScenario("infl6")}
-                  className={`px-2 py-1 rounded border text-xs transition-colors ${scenarioActive === "infl6" ? "bg-amber-600/20 border-amber-500/50 text-amber-200" : "bg-slate-600/20 border-slate-500/40 text-slate-200"} ${scenarioActive && scenarioActive !== "infl6" ? "opacity-40" : ""}`}
-                  aria-pressed={scenarioActive === "infl6" ? "true" : "false"}
-                  disabled={
-                    scenarioActive !== null && scenarioActive !== "infl6"
-                  }
-                >
-                  Inflácia 6 %
-                </button>
-              </div>
-              {scenarioActive && (
-                <div className="flex items-center gap-2">
-                  <span
-                    role="status"
-                    aria-label="Scenár aktívny"
-                    className="inline-flex items-center px-2 py-0.5 rounded bg-amber-600/30 text-amber-200 border border-amber-500/40 text-[11px]"
-                  >
-                    Scenár aktívny
-                  </span>
-                  <span role="note" className="text-[11px] text-amber-300">
-                    {scenarioActive === "drop20" && "−20 %"}
-                    {scenarioActive === "boost10" && "+10 %"}
-                    {scenarioActive === "infl6" && "Inflácia 6 %"}
-                  </span>
-                </div>
-              )}
-            </div>
-            {/* Viditeľný súhrn mixu pre acceptance testy (Súčet + list položiek) */}
-            {(() => {
-              const assets = {
-                Akcie: stocks,
-                Dlhopisy: bonds,
-                Hotovosť: cash,
-                "Zlato (fyzické)": mix["Zlato (fyzické)"] ?? 0,
-                "Dynamické riadenie": dynamicMgmtPct,
-              } as Record<string, number>;
-              const total = Object.values(assets).reduce((a, b) => a + b, 0);
-              return (
-                <div className="mt-6 text-xs space-y-2" aria-label="Mix summary visible">
-                  <div>
-                    <span>Súčet</span> <span className="tabular-nums">{Math.round(total)}%</span>
-                  </div>
-                  <ul className="space-y-0.5" role="list">
-                    {Object.entries(assets).map(([k, v]) => (
-                      <li key={k}>{k} {Math.round(v)}%</li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })()}
-          </section>)}
-          {/* Placeholder sekcie pre layout parity */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-            {open1 && (<section id="sec1" className="w-full h-full min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5" aria-labelledby="cashflow-title" role="region">
-              <header id="cashflow-title" className="mb-3 font-semibold">
-                Cashflow &amp; rezerva
+          {open3 && (
+            <section
+              id="sec3"
+              className="w-full min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+              aria-labelledby="portfolio-title"
+              role="region"
+            >
+              <header id="portfolio-title" className="mb-3 font-semibold">
+                Zloženie portfólia
               </header>
-              {/* Free cash CTA (tests: ui.freecash.cta) */}
-              <div className="space-y-3">
+              {IS_TEST && <MixInvariantsBarTestOnly />}
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <button
+                  aria-label="Použiť vybraný mix (inline)"
+                  className="px-3 py-2 rounded bg-slate-800"
+                >
+                  Použiť vybraný mix (inline)
+                </button>
                 <button
                   type="button"
-                  aria-label={`Nastaviť mesačný vklad na 100 €`}
-                  className="px-3 py-2 rounded bg-slate-800 text-xs"
-                  onClick={() => {
-                    setMonthlyContribution(100);
-                    // Immediate focus attempt (tests assert synchronously after click)
-                    monthlySliderRef.current?.focus();
-                    // Also schedule fallback focus attempts
-                    const focusFn = () => monthlySliderRef.current?.focus();
-                    requestAnimationFrame(focusFn);
-                    setTimeout(focusFn, 0);
-                  }}
+                  aria-label="Aplikovať odporúčaný mix portfólia"
+                  className="px-3 py-2 rounded bg-slate-800"
+                  onClick={applyRecommendedMix}
                 >
-                  Nastaviť mesačný vklad
+                  Aplikovať odporúčaný mix portfólia
                 </button>
-                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-xs">
-                  <label htmlFor="monthly-contrib-slider">
-                    Mesačný vklad – slider
+                <button
+                  onClick={() => setMix(initialMix)}
+                  className="px-3 py-2 rounded bg-slate-800"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  ref={shareBtnRef}
+                  onClick={() => {
+                    setShareOpen(true);
+                    setTimeout(() => {
+                      const input = document.querySelector<HTMLInputElement>(
+                        'input[aria-label="Email agenta"]'
+                      );
+                      input?.focus();
+                    }, 0);
+                  }}
+                  className="px-3 py-2 rounded bg-slate-800"
+                >
+                  Zdieľať
+                </button>
+                {/* Extra a11y action buttons required by accessibility.ui test */}
+                <button
+                  type="button"
+                  aria-label="Optimalizuj mix"
+                  className="px-3 py-2 rounded bg-slate-800"
+                >
+                  Optimalizuj
+                </button>
+                <button
+                  type="button"
+                  aria-label="Dorovnať alokácie"
+                  className="px-3 py-2 rounded bg-slate-800"
+                  onClick={equalizeAllocations}
+                >
+                  Dorovnať
+                </button>
+                {/* Prepínač režimu BASIC/PRO pre accessibility test (regex očakáva aria-label 'Prepínač režimu: BASIC|PRO') */}
+                <button
+                  type="button"
+                  aria-label={`Prepínač režimu: ${clientMode}`}
+                  onClick={() =>
+                    setClientMode((m) => (m === "BASIC" ? "PRO" : "BASIC"))
+                  }
+                  className="px-3 py-2 rounded bg-slate-800"
+                  data-testid="mode-toggle-btn"
+                >
+                  {clientMode === "BASIC"
+                    ? "Prepnúť na PRO"
+                    : "Prepnúť na BASIC"}
+                </button>
+              </div>
+              {showLinkBanner && (
+                <div
+                  role="alert"
+                  className="mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
+                >
+                  <span>Konfigurácia načítaná zo zdieľaného linku.</span>
+                  <button
+                    type="button"
+                    aria-label="Zavrieť oznámenie"
+                    className="px-2 py-0.5 rounded bg-emerald-700/40"
+                    onClick={() => {
+                      setShowLinkBanner(false);
+                      clearHashDeferred();
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {/* Insights wrapper expected by test (aria-label="Insights") */}
+              <div aria-label="Insights" className="space-y-2">
+                {goldPct < policy.goldMin && (
+                  <button
+                    data-testid="insight-gold-12"
+                    aria-label="Insight: Gold 12 %"
+                    onClick={openGoldWizard}
+                    className="rounded bg-amber-500/10 px-3 py-2 ring-1 ring-amber-500/30"
+                  >
+                    Gold 12 % (odporúčanie)
+                  </button>
+                )}
+              </div>
+              {/* Jednoduché ovládanie zlata */}
+              <div className="mt-4 grid gap-3">
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                  <label htmlFor="mix-gold">Zlato (fyzické)</label>
+                  <input
+                    id="mix-gold"
+                    type="range"
+                    role="slider"
+                    aria-label="Zlato (fyzické)"
+                    min={0}
+                    max={40}
+                    value={goldPct}
+                    data-testid="slider-gold"
+                    onChange={(e) => {
+                      const v = Number(e.currentTarget.value);
+                      setMix((prev) => ({ ...prev, "Zlato (fyzické)": v }));
+                    }}
+                    className={pulseGold ? "animate-pulse" : ""}
+                  />
+                  <span className="tabular-nums">{Math.round(goldPct)}%</span>
+                </div>
+                {/* Number input variant (test expects testid=input-gold-number) */}
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                  <label htmlFor="mix-gold-number">Zlato %</label>
+                  <input
+                    id="mix-gold-number"
+                    data-testid="input-gold-number"
+                    type="number"
+                    min={0}
+                    max={40}
+                    value={Math.round(goldPct)}
+                    onChange={(e) => {
+                      const v = clamp(Number(e.currentTarget.value), 0, 40);
+                      setMix((prev) => ({ ...prev, "Zlato (fyzické)": v }));
+                    }}
+                    className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
+                    aria-label="Zlato (fyzické)"
+                  />
+                  <span className="text-xs text-slate-400">%</span>
+                </div>
+                {/* Dynamické riadenie – slider + number pair */}
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                  <label htmlFor="mix-dynamic-slider">Dynamické riadenie</label>
+                  <input
+                    id="mix-dynamic-slider"
+                    type="range"
+                    role="slider"
+                    min={0}
+                    max={40}
+                    value={dynamicMgmtPct}
+                    aria-label="Dynamické riadenie"
+                    onChange={(e) => {
+                      const v = clamp(Number(e.currentTarget.value), 0, 40);
+                      setDynamicMgmtPct(v);
+                      setMix((prev) => ({ ...prev, "Dynamické riadenie": v }));
+                    }}
+                  />
+                  <span className="tabular-nums">
+                    {Math.round(dynamicMgmtPct)}%
+                  </span>
+                </div>
+                <div className="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                  <label htmlFor="mix-dynamic-number">
+                    Dynamické riadenie %
                   </label>
                   <input
-                    id="monthly-contrib-slider"
-                    ref={monthlySliderRef}
-                    type="range"
+                    id="mix-dynamic-number"
+                    type="number"
                     min={0}
-                    max={1000}
-                    step={10}
-                    value={monthlyContribution}
-                    aria-label="Mesačný vklad – slider"
-                    onChange={(e) =>
-                      setMonthlyContribution(Number(e.currentTarget.value))
-                    }
+                    max={40}
+                    value={Math.round(dynamicMgmtPct)}
+                    aria-label="Dynamické riadenie %"
+                    data-testid="input-dynamic-management"
+                    onChange={(e) => {
+                      const v = clamp(Number(e.currentTarget.value), 0, 40);
+                      setDynamicMgmtPct(v);
+                      setMix((prev) => ({ ...prev, "Dynamické riadenie": v }));
+                    }}
+                    className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
                   />
-                  <span className="tabular-nums">{monthlyContribution} €</span>
+                  <span className="text-xs text-slate-400">%</span>
                 </div>
               </div>
-              {/* Debts minimal form (tests: ui.debts.*) */}
-              <div className="mt-6 space-y-3">
-                <button
-                  type="button"
-                  aria-label="Pridať dlh"
-                  className="px-3 py-2 rounded bg-slate-800 text-xs"
-                  onClick={() => {
-                    setDebtsOpen(true);
-                    if (debts.length === 0) {
-                      addDebtRow();
+              {/* Scenario chips (simplified set) */}
+              <div className="mt-6 space-y-2" aria-label="Scenario chips">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => activateScenario("drop20")}
+                    className={`px-2 py-1 rounded border text-xs transition-colors ${scenarioActive === "drop20" ? "bg-amber-600/20 border-amber-500/50 text-amber-200" : "bg-slate-600/20 border-slate-500/40 text-slate-200"} ${scenarioActive && scenarioActive !== "drop20" ? "opacity-40" : ""}`}
+                    aria-pressed={
+                      scenarioActive === "drop20" ? "true" : "false"
                     }
-                  }}
-                >
-                  Pridať dlh
-                </button>
-                {debtsOpen && (
-                  <section
-                    role="region"
-                    aria-labelledby="debts-title"
-                    className="space-y-2 text-xs ring-1 ring-white/10 rounded p-3"
+                    disabled={
+                      scenarioActive !== null && scenarioActive !== "drop20"
+                    }
                   >
-                    <header id="debts-title" className="font-semibold">
-                      Dlhy a hypotéky
-                    </header>
-                    {/* Crossover note – render always for tests (ui.debt.crossover) */}
-                    <p
-                      role="note"
-                      data-testid="debt-crossover-note"
-                      className="text-xs text-slate-400"
+                    −20 %
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => activateScenario("boost10")}
+                    className={`px-2 py-1 rounded border text-xs transition-colors ${scenarioActive === "boost10" ? "bg-amber-600/20 border-amber-500/50 text-amber-200" : "bg-slate-600/20 border-slate-500/40 text-slate-200"} ${scenarioActive && scenarioActive !== "boost10" ? "opacity-40" : ""}`}
+                    aria-pressed={
+                      scenarioActive === "boost10" ? "true" : "false"
+                    }
+                    disabled={
+                      scenarioActive !== null && scenarioActive !== "boost10"
+                    }
+                  >
+                    +10 %
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => activateScenario("infl6")}
+                    className={`px-2 py-1 rounded border text-xs transition-colors ${scenarioActive === "infl6" ? "bg-amber-600/20 border-amber-500/50 text-amber-200" : "bg-slate-600/20 border-slate-500/40 text-slate-200"} ${scenarioActive && scenarioActive !== "infl6" ? "opacity-40" : ""}`}
+                    aria-pressed={scenarioActive === "infl6" ? "true" : "false"}
+                    disabled={
+                      scenarioActive !== null && scenarioActive !== "infl6"
+                    }
+                  >
+                    Inflácia 6 %
+                  </button>
+                </div>
+                {scenarioActive && (
+                  <div className="flex items-center gap-2">
+                    <span
+                      role="status"
+                      aria-label="Scenár aktívny"
+                      className="inline-flex items-center px-2 py-0.5 rounded bg-amber-600/30 text-amber-200 border border-amber-500/40 text-[11px]"
                     >
-                      {crossoverNote}
-                    </p>
-                    {/* Debt vs Invest chart placeholder (ui.debt.vs.invest.chart) */}
-                    <figure
-                      aria-label="Debt vs Invest chart"
-                      data-testid="debt-vs-invest-chart"
-                      className="mt-1 space-y-0.5"
-                    >
-                      <figcaption className="text-xs font-medium">
-                        Zostatok hypotéky
-                      </figcaption>
-                      <div className="text-[10px] text-slate-300">
-                        Hodnota portfólia vs. zostatok
-                      </div>
-                      <svg
-                        width="200"
-                        height="40"
-                        role="img"
-                        aria-label="chart-placeholder"
-                        className="block mt-1 fill-slate-600"
-                      >
-                        <rect x="0" y="10" width="200" height="20" />
-                      </svg>
-                    </figure>
-                    <div className="flex gap-2 flex-wrap items-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          addDebtRow();
-                        }}
-                        className="px-2 py-1 rounded bg-slate-700"
-                      >
-                        + Riadok
-                      </button>
-                      {debts.length > 0 &&
-                        (() => {
-                          const sum = debts.reduce(
-                            (a, b) => a + (b.payment || 0),
-                            0
-                          );
-                          const sumFmt = (() => {
-                            try {
-                              return sum.toLocaleString("sk-SK");
-                            } catch {
-                              return String(sum);
-                            }
-                          })();
-                          return (
-                            <>
-                              <div
-                                className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1"
-                                aria-label="KPI dlhy chip"
-                              >
-                                <span>
-                                  Dlhy: {debts.length} | Splátky: {sumFmt} €
-                                </span>
-                              </div>
-                              <div
-                                className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1"
-                                aria-label="Mesačné splátky chip"
-                              >
-                                <span>
-                                  Mesačné splátky spolu: {sumFmt}\u00A0€
-                                </span>
-                              </div>
-                            </>
-                          );
-                        })()}
+                      Scenár aktívny
+                    </span>
+                    <span role="note" className="text-[11px] text-amber-300">
+                      {scenarioActive === "drop20" && "−20 %"}
+                      {scenarioActive === "boost10" && "+10 %"}
+                      {scenarioActive === "infl6" && "Inflácia 6 %"}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {/* Viditeľný súhrn mixu pre acceptance testy (Súčet + list položiek) */}
+              {(() => {
+                const assets = {
+                  Akcie: stocks,
+                  Dlhopisy: bonds,
+                  Hotovosť: cash,
+                  "Zlato (fyzické)": mix["Zlato (fyzické)"] ?? 0,
+                  "Dynamické riadenie": dynamicMgmtPct,
+                } as Record<string, number>;
+                const total = Object.values(assets).reduce((a, b) => a + b, 0);
+                return (
+                  <div
+                    className="mt-6 text-xs space-y-2"
+                    aria-label="Mix summary visible"
+                  >
+                    <div>
+                      <span>Súčet</span>{" "}
+                      <span className="tabular-nums">{Math.round(total)}%</span>
                     </div>
-                    <table
-                      role="table"
-                      aria-label="Tabuľka dlhov"
-                      className="w-full text-left border-collapse"
+                    <ul className="space-y-0.5" role="list">
+                      {Object.entries(assets).map(([k, v]) => (
+                        <li key={k}>
+                          {k} {Math.round(v)}%
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+            </section>
+          )}
+          {/* Placeholder sekcie pre layout parity */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            {open1 && (
+              <section
+                id="sec1"
+                className="w-full h-full min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+                aria-labelledby="cashflow-title"
+                role="region"
+              >
+                <header id="cashflow-title" className="mb-3 font-semibold">
+                  Cashflow &amp; rezerva
+                </header>
+                {/* Free cash CTA (tests: ui.freecash.cta) */}
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    aria-label={`Nastaviť mesačný vklad na 100 €`}
+                    className="px-3 py-2 rounded bg-slate-800 text-xs"
+                    onClick={() => {
+                      setMonthlyContribution(100);
+                      // Immediate focus attempt (tests assert synchronously after click)
+                      monthlySliderRef.current?.focus();
+                      // Also schedule fallback focus attempts
+                      const focusFn = () => monthlySliderRef.current?.focus();
+                      requestAnimationFrame(focusFn);
+                      setTimeout(focusFn, 0);
+                    }}
+                  >
+                    Nastaviť mesačný vklad
+                  </button>
+                  <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-xs">
+                    <label htmlFor="monthly-contrib-slider">
+                      Mesačný vklad – slider
+                    </label>
+                    <input
+                      id="monthly-contrib-slider"
+                      ref={monthlySliderRef}
+                      type="range"
+                      min={0}
+                      max={1000}
+                      step={10}
+                      value={monthlyContribution}
+                      aria-label="Mesačný vklad – slider"
+                      onChange={(e) =>
+                        setMonthlyContribution(Number(e.currentTarget.value))
+                      }
+                    />
+                    <span className="tabular-nums">
+                      {monthlyContribution} €
+                    </span>
+                  </div>
+                </div>
+                {/* Debts minimal form (tests: ui.debts.*) */}
+                <div className="mt-6 space-y-3">
+                  <button
+                    type="button"
+                    aria-label="Pridať dlh"
+                    className="px-3 py-2 rounded bg-slate-800 text-xs"
+                    onClick={() => {
+                      setDebtsOpen(true);
+                      if (debts.length === 0) {
+                        addDebtRow();
+                      }
+                    }}
+                  >
+                    Pridať dlh
+                  </button>
+                  {debtsOpen && (
+                    <section
+                      role="region"
+                      aria-labelledby="debts-title"
+                      className="space-y-2 text-xs ring-1 ring-white/10 rounded p-3"
                     >
-                      <thead>
-                        <tr>
-                          <th scope="col" className="px-1 py-0.5">
-                            Názov
-                          </th>
-                          <th scope="col" className="px-1 py-0.5">
-                            Zostatok
-                          </th>
-                          <th scope="col" className="px-1 py-0.5">
-                            Úrok p.a.
-                          </th>
-                          <th scope="col" className="px-1 py-0.5">
-                            Splátka
-                          </th>
-                          <th scope="col" className="px-1 py-0.5">
-                            Zostáva mesiacov
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-1 py-0.5"
-                            aria-label="Akcie"
-                          />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {debts.map((d) => (
-                          <tr key={d.id} className="odd:bg-slate-800/30">
-                            <td className="px-1 py-0.5">
-                              <input
-                                aria-label="Názov"
-                                type="text"
-                                value={d.name}
-                                onChange={(e) =>
-                                  updateDebt(d.id, {
-                                    name: e.currentTarget.value,
-                                  })
-                                }
-                                className="bg-slate-800 rounded px-1 py-0.5 w-full"
-                              />
-                            </td>
-                            <td className="px-1 py-0.5">
-                              <input
-                                aria-label="Zostatok"
-                                type="number"
-                                value={d.balance}
-                                onChange={(e) =>
-                                  updateDebt(d.id, {
-                                    balance: Number(e.currentTarget.value),
-                                  })
-                                }
-                                className="bg-slate-800 rounded px-1 py-0.5 w-full"
-                              />
-                              {/* synonym for tests expecting Istina */}
-                              {IS_TEST && (
+                      <header id="debts-title" className="font-semibold">
+                        Dlhy a hypotéky
+                      </header>
+                      {/* Crossover note – render always for tests (ui.debt.crossover) */}
+                      <p
+                        role="note"
+                        data-testid="debt-crossover-note"
+                        className="text-xs text-slate-400"
+                      >
+                        {crossoverNote}
+                      </p>
+                      {/* Debt vs Invest chart placeholder (ui.debt.vs.invest.chart) */}
+                      <figure
+                        aria-label="Debt vs Invest chart"
+                        data-testid="debt-vs-invest-chart"
+                        className="mt-1 space-y-0.5"
+                      >
+                        <figcaption className="text-xs font-medium">
+                          Zostatok hypotéky
+                        </figcaption>
+                        <div className="text-[10px] text-slate-300">
+                          Hodnota portfólia vs. zostatok
+                        </div>
+                        <svg
+                          width="200"
+                          height="40"
+                          role="img"
+                          aria-label="chart-placeholder"
+                          className="block mt-1 fill-slate-600"
+                        >
+                          <rect x="0" y="10" width="200" height="20" />
+                        </svg>
+                      </figure>
+                      <div className="flex gap-2 flex-wrap items-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addDebtRow();
+                          }}
+                          className="px-2 py-1 rounded bg-slate-700"
+                        >
+                          + Riadok
+                        </button>
+                        {debts.length > 0 &&
+                          (() => {
+                            const sum = debts.reduce(
+                              (a, b) => a + (b.payment || 0),
+                              0
+                            );
+                            const sumFmt = (() => {
+                              try {
+                                return sum.toLocaleString("sk-SK");
+                              } catch {
+                                return String(sum);
+                              }
+                            })();
+                            return (
+                              <>
+                                <div
+                                  className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1"
+                                  aria-label="KPI dlhy chip"
+                                >
+                                  <span>
+                                    Dlhy: {debts.length} | Splátky: {sumFmt} €
+                                  </span>
+                                </div>
+                                <div
+                                  className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1"
+                                  aria-label="Mesačné splátky chip"
+                                >
+                                  <span>
+                                    Mesačné splátky spolu: {sumFmt}\u00A0€
+                                  </span>
+                                </div>
+                              </>
+                            );
+                          })()}
+                      </div>
+                      <table
+                        role="table"
+                        aria-label="Tabuľka dlhov"
+                        className="w-full text-left border-collapse"
+                      >
+                        <thead>
+                          <tr>
+                            <th scope="col" className="px-1 py-0.5">
+                              Názov
+                            </th>
+                            <th scope="col" className="px-1 py-0.5">
+                              Zostatok
+                            </th>
+                            <th scope="col" className="px-1 py-0.5">
+                              Úrok p.a.
+                            </th>
+                            <th scope="col" className="px-1 py-0.5">
+                              Splátka
+                            </th>
+                            <th scope="col" className="px-1 py-0.5">
+                              Zostáva mesiacov
+                            </th>
+                            <th
+                              scope="col"
+                              className="px-1 py-0.5"
+                              aria-label="Akcie"
+                            />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {debts.map((d) => (
+                            <tr key={d.id} className="odd:bg-slate-800/30">
+                              <td className="px-1 py-0.5">
                                 <input
-                                  aria-label="Istina"
+                                  aria-label="Názov"
+                                  type="text"
+                                  value={d.name}
+                                  onChange={(e) =>
+                                    updateDebt(d.id, {
+                                      name: e.currentTarget.value,
+                                    })
+                                  }
+                                  className="bg-slate-800 rounded px-1 py-0.5 w-full"
+                                />
+                              </td>
+                              <td className="px-1 py-0.5">
+                                <input
+                                  aria-label="Zostatok"
                                   type="number"
                                   value={d.balance}
                                   onChange={(e) =>
@@ -924,55 +944,54 @@ const LegacyApp: React.FC = () => {
                                       balance: Number(e.currentTarget.value),
                                     })
                                   }
-                                  className="sr-only"
-                                  tabIndex={-1}
+                                  className="bg-slate-800 rounded px-1 py-0.5 w-full"
                                 />
-                              )}
-                            </td>
-                            <td className="px-1 py-0.5">
-                              <input
-                                aria-label="Úrok p.a."
-                                type="number"
-                                value={d.rate}
-                                onChange={(e) =>
-                                  updateDebt(d.id, {
-                                    rate: Number(e.currentTarget.value),
-                                  })
-                                }
-                                className="bg-slate-800 rounded px-1 py-0.5 w-full"
-                              />
-                            </td>
-                            <td className="px-1 py-0.5">
-                              <input
-                                aria-label="Mesačná splátka"
-                                type="number"
-                                value={d.payment}
-                                onChange={(e) =>
-                                  updateDebt(d.id, {
-                                    payment: Number(e.currentTarget.value),
-                                  })
-                                }
-                                className="bg-slate-800 rounded px-1 py-0.5 w-full"
-                              />
-                              {/* removed extra synonym to avoid duplicate match; single accessible name now */}
-                            </td>
-                            <td className="px-1 py-0.5">
-                              <input
-                                aria-label="Zostáva mesiacov"
-                                type="number"
-                                value={d.remainingMonths}
-                                onChange={(e) =>
-                                  updateDebt(d.id, {
-                                    remainingMonths: Number(
-                                      e.currentTarget.value
-                                    ),
-                                  })
-                                }
-                                className="bg-slate-800 rounded px-1 py-0.5 w-full"
-                              />
-                              {IS_TEST && (
+                                {/* synonym for tests expecting Istina */}
+                                {IS_TEST && (
+                                  <input
+                                    aria-label="Istina"
+                                    type="number"
+                                    value={d.balance}
+                                    onChange={(e) =>
+                                      updateDebt(d.id, {
+                                        balance: Number(e.currentTarget.value),
+                                      })
+                                    }
+                                    className="sr-only"
+                                    tabIndex={-1}
+                                  />
+                                )}
+                              </td>
+                              <td className="px-1 py-0.5">
                                 <input
-                                  aria-label="Zostáva (mesiace)"
+                                  aria-label="Úrok p.a."
+                                  type="number"
+                                  value={d.rate}
+                                  onChange={(e) =>
+                                    updateDebt(d.id, {
+                                      rate: Number(e.currentTarget.value),
+                                    })
+                                  }
+                                  className="bg-slate-800 rounded px-1 py-0.5 w-full"
+                                />
+                              </td>
+                              <td className="px-1 py-0.5">
+                                <input
+                                  aria-label="Mesačná splátka"
+                                  type="number"
+                                  value={d.payment}
+                                  onChange={(e) =>
+                                    updateDebt(d.id, {
+                                      payment: Number(e.currentTarget.value),
+                                    })
+                                  }
+                                  className="bg-slate-800 rounded px-1 py-0.5 w-full"
+                                />
+                                {/* removed extra synonym to avoid duplicate match; single accessible name now */}
+                              </td>
+                              <td className="px-1 py-0.5">
+                                <input
+                                  aria-label="Zostáva mesiacov"
                                   type="number"
                                   value={d.remainingMonths}
                                   onChange={(e) =>
@@ -982,56 +1001,78 @@ const LegacyApp: React.FC = () => {
                                       ),
                                     })
                                   }
-                                  className="sr-only"
-                                  tabIndex={-1}
+                                  className="bg-slate-800 rounded px-1 py-0.5 w-full"
                                 />
-                              )}
-                            </td>
-                            <td className="px-1 py-0.5 text-right">
-                              <button
-                                type="button"
-                                aria-label="Zmazať"
-                                className="px-2 py-0.5 rounded bg-slate-700"
-                                onClick={() => deleteDebt(d.id)}
-                              >
-                                ×
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {/* Reason line mimic for tests (ui.debts.kpi-and-reason) */}
-                    {debts.some(
-                      (r) =>
-                        r.payment > 0 &&
-                        r.rate > 0 &&
-                        r.balance > 0 &&
-                        r.remainingMonths > 0
-                    ) && (
-                      <div
-                        className="text-amber-300"
-                        data-testid="debt-reason-line"
-                      >
-                        Dôvod: úrok {""}
-                        {(() => {
-                          const first = debts.find((r) => r.rate > 0) || {
-                            rate: 0,
-                          };
-                          return first.rate;
-                        })()}{" "}
-                        {""}% vs. oč. výnos − 2 p.b.
-                      </div>
-                    )}
-                  </section>
-                )}
-              </div>
-            </section>)}
-            {open2 && (<section id="sec2" className="w-full h-full min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5" aria-labelledby="invest-title" role="region">
-              <header id="invest-title" className="mb-3 font-semibold">
-                Investičné nastavenia
-              </header>
-            </section>)}
+                                {IS_TEST && (
+                                  <input
+                                    aria-label="Zostáva (mesiace)"
+                                    type="number"
+                                    value={d.remainingMonths}
+                                    onChange={(e) =>
+                                      updateDebt(d.id, {
+                                        remainingMonths: Number(
+                                          e.currentTarget.value
+                                        ),
+                                      })
+                                    }
+                                    className="sr-only"
+                                    tabIndex={-1}
+                                  />
+                                )}
+                              </td>
+                              <td className="px-1 py-0.5 text-right">
+                                <button
+                                  type="button"
+                                  aria-label="Zmazať"
+                                  className="px-2 py-0.5 rounded bg-slate-700"
+                                  onClick={() => deleteDebt(d.id)}
+                                >
+                                  ×
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {/* Reason line mimic for tests (ui.debts.kpi-and-reason) */}
+                      {debts.some(
+                        (r) =>
+                          r.payment > 0 &&
+                          r.rate > 0 &&
+                          r.balance > 0 &&
+                          r.remainingMonths > 0
+                      ) && (
+                        <div
+                          className="text-amber-300"
+                          data-testid="debt-reason-line"
+                        >
+                          Dôvod: úrok {""}
+                          {(() => {
+                            const first = debts.find((r) => r.rate > 0) || {
+                              rate: 0,
+                            };
+                            return first.rate;
+                          })()}{" "}
+                          {""}% vs. oč. výnos − 2 p.b.
+                        </div>
+                      )}
+                    </section>
+                  )}
+                </div>
+              </section>
+            )}
+            {open2 && (
+              <section
+                id="sec2"
+                className="w-full h-full min-w-0 overflow-hidden rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+                aria-labelledby="invest-title"
+                role="region"
+              >
+                <header id="invest-title" className="mb-3 font-semibold">
+                  Investičné nastavenia
+                </header>
+              </section>
+            )}
           </div>
         </div>
         {/* Pravý stĺpec */}
@@ -1504,12 +1545,12 @@ function MixInvariantsBarTestOnly() {
       (assets["Dynamické riadenie"] ?? 0) + (assets["Krypto (BTC/ETH)"] ?? 0) <=
       22;
     const sum100 = Object.values(assets).reduce((a, b) => a + b, 0) === 100;
-  const chips: string[] = [];
-  if (goldAdj) chips.push("Zlato dorovnané");
-  if (dynCap) chips.push("Dyn+Krypto obmedzené");
-  if (sum100) chips.push("Súčet dorovnaný");
-  setMsg("upravené podľa pravidiel" + (chips.length ? "" : ""));
-  (window as any).__mixChips = chips; // uložiť pre render podmienku
+    const chips: string[] = [];
+    if (goldAdj) chips.push("Zlato dorovnané");
+    if (dynCap) chips.push("Dyn+Krypto obmedzené");
+    if (sum100) chips.push("Súčet dorovnaný");
+    setMsg("upravené podľa pravidiel" + (chips.length ? "" : ""));
+    (window as any).__mixChips = chips; // uložiť pre render podmienku
   }
 
   function resetValues() {
@@ -1562,15 +1603,20 @@ function MixInvariantsBarTestOnly() {
       <div role="status" aria-live="polite">
         {msg || "Žiadne úpravy"}
       </div>
-      {msg.startsWith("upravené") && Array.isArray((window as any).__mixChips) && (
-        <div aria-label="Mix summary chips">
-          {(window as any).__mixChips.includes("Zlato dorovnané") && <span>Zlato dorovnané</span>}
-          {(window as any).__mixChips.includes("Dyn+Krypto obmedzené") && (
-            <span>Dyn+Krypto obmedzené</span>
-          )}
-          {(window as any).__mixChips.includes("Súčet dorovnaný") && <span>Súčet dorovnaný</span>}
-        </div>
-      )}
+      {msg.startsWith("upravené") &&
+        Array.isArray((window as any).__mixChips) && (
+          <div aria-label="Mix summary chips">
+            {(window as any).__mixChips.includes("Zlato dorovnané") && (
+              <span>Zlato dorovnané</span>
+            )}
+            {(window as any).__mixChips.includes("Dyn+Krypto obmedzené") && (
+              <span>Dyn+Krypto obmedzené</span>
+            )}
+            {(window as any).__mixChips.includes("Súčet dorovnaný") && (
+              <span>Súčet dorovnaný</span>
+            )}
+          </div>
+        )}
     </div>
   );
 }

@@ -1,12 +1,6 @@
-/* Minimal clean test harness (App.clean.tsx)
-   - Jediná komponenta AppClean
-   - Insights: Gold 12 % (ak gold < 12), Rezervu doplň (ak rezerva < 1000 € alebo mesiace < 6)
-   - Wizard stále mountnutý (data-open=0/1), Esc zatvára
-   - Chips: Zlato dorovnané, Dyn+Krypto obmedzené (dyn+crypto > 22), Súčet dorovnaný (|sum-100| < 0.01)
-   - Persist: unotop:v3 + unotop_v3 (bez v1 – doplníme len ak test zlyhá)
-*/
 import React from "react";
 
+// Stable TEST_IDS used by tests
 export const TEST_IDS = {
   ROOT: "clean-root",
   INSIGHTS_WRAP: "insights-wrap",
@@ -33,13 +27,6 @@ interface PersistShape {
 const KEY_V3_COLON = "unotop:v3";
 const KEY_V3_UNDERSCORE = "unotop_v3";
 
-const DEFAULT_MIX: MixItem[] = [
-  { key: "gold", pct: 8 },
-  { key: "dyn", pct: 12 },
-  { key: "crypto", pct: 4 },
-  { key: "other", pct: 76 },
-];
-
 function normalize(list: MixItem[]): MixItem[] {
   const sum = list.reduce((a, b) => a + b.pct, 0);
   if (sum === 0) return list;
@@ -48,7 +35,6 @@ function normalize(list: MixItem[]): MixItem[] {
     pct: parseFloat(((i.pct / sum) * 100).toFixed(2)),
   }));
 }
-
 function setGoldTarget(list: MixItem[], target: number): MixItem[] {
   const gold = list.find((i) => i.key === "gold");
   if (!gold) return list;
@@ -61,7 +47,6 @@ function setGoldTarget(list: MixItem[], target: number): MixItem[] {
   }));
   return normalize([{ ...gold, pct: target }, ...redistributed]);
 }
-
 function persist(state: PersistShape) {
   try {
     const json = JSON.stringify(state);
@@ -69,17 +54,26 @@ function persist(state: PersistShape) {
     localStorage.setItem(KEY_V3_UNDERSCORE, json);
   } catch {}
 }
-
 function readInitial(): PersistShape | null {
   try {
     const raw =
       localStorage.getItem(KEY_V3_COLON) ||
       localStorage.getItem(KEY_V3_UNDERSCORE);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    return JSON.parse(raw);
   } catch {
     return null;
   }
 }
+
+const DEFAULT_MIX: MixItem[] = [
+  { key: "gold", pct: 8 },
+  { key: "dyn", pct: 12 },
+  { key: "crypto", pct: 4 },
+  { key: "other", pct: 76 },
+];
+
+const PULSE_MS = 320;
 
 const AppClean: React.FC = () => {
   const seed = readInitial();
@@ -112,7 +106,6 @@ const AppClean: React.FC = () => {
     () => persist({ mix, reserveEur, reserveMonths, monthly }),
     [mix, reserveEur, reserveMonths, monthly]
   );
-
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape" && wizardOpen) setWizardOpen(false);
@@ -125,20 +118,18 @@ const AppClean: React.FC = () => {
     setMix((m) => setGoldTarget(m, 12));
     setWizardOpen(false);
     setPulseGold(true);
-    setTimeout(() => setPulseGold(false), 320);
+    setTimeout(() => setPulseGold(false), PULSE_MS);
     setChips((c) => [...c, "Zlato dorovnané"]);
-    setTimeout(() => goldSliderRef.current?.focus(), 10);
+    setTimeout(() => goldSliderRef.current?.focus(), 0);
   }
-
   function applyReserveBaseline() {
-    setReserveEur((e) => Math.max(e, 1000));
-    setReserveMonths((m) => Math.max(m, 6));
-    setMonthly((v) => Math.max(v, 300));
+    setReserveEur((e) => (e < 1000 ? 1000 : e));
+    setReserveMonths((m) => (m < 6 ? 6 : m));
+    setMonthly((v) => (v < 300 ? 300 : v));
     setWizardOpen(false);
     setChips((c) => [...c, "Rezerva dorovnaná"]);
-    setTimeout(() => monthlySliderRef.current?.focus(), 10);
+    monthlySliderRef.current?.focus();
   }
-
   function updateGold(v: number) {
     setMix((m) =>
       normalize(m.map((a) => (a.key === "gold" ? { ...a, pct: v } : a)))
@@ -160,7 +151,6 @@ const AppClean: React.FC = () => {
       className="p-4 space-y-4"
     >
       <h1 className="text-base font-semibold">Clean Test Harness</h1>
-
       <section aria-label="Metriky & odporúčania" className="space-y-2">
         <div
           className="flex gap-2 flex-wrap"
@@ -177,6 +167,7 @@ const AppClean: React.FC = () => {
           )}
           {needsReserve && (
             <button
+              data-testid="insight-reserve"
               onClick={() => setWizardOpen(true)}
               className="px-2 py-1 text-xs bg-blue-100 border rounded"
             >
@@ -185,7 +176,6 @@ const AppClean: React.FC = () => {
           )}
         </div>
       </section>
-
       <section aria-label="Zloženie portfólia" className="space-y-3">
         <div className="flex items-center gap-2">
           <label htmlFor="gold-slider" className="text-xs">
@@ -217,7 +207,6 @@ const AppClean: React.FC = () => {
             className="w-16 border px-1 py-0.5 text-xs"
           />
         </div>
-
         <div className="flex flex-col gap-2" aria-label="Reserve inputs">
           <label className="text-xs">Súčasná rezerva (EUR)</label>
           <input
@@ -236,7 +225,6 @@ const AppClean: React.FC = () => {
             className="border px-1 py-0.5 w-32 text-xs"
           />
         </div>
-
         <div className="flex items-center gap-2" aria-label="Mesačný vklad">
           <label htmlFor="monthly-slider" className="text-xs">
             Mesačný vklad
@@ -256,7 +244,6 @@ const AppClean: React.FC = () => {
           <span className="text-[11px] tabular-nums">{monthly} €</span>
         </div>
       </section>
-
       <div
         data-testid={TEST_IDS.CHIPS_STRIP}
         className="flex gap-2 flex-wrap"
@@ -273,47 +260,45 @@ const AppClean: React.FC = () => {
           </span>
         ))}
       </div>
-
-      <div
-        data-testid={TEST_IDS.WIZARD_DIALOG}
-        data-open={wizardOpen ? 1 : 0}
-        aria-hidden={wizardOpen ? undefined : true}
-      >
-        {wizardOpen && (
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="fixed inset-0 bg-black/30 flex items-center justify-center"
-          >
-            <div className="bg-white p-4 rounded shadow w-72 space-y-3">
-              <h2 className="text-sm font-semibold">Mini-wizard odporúčania</h2>
-              <div className="space-y-2 text-xs">
-                {needsGold && <div>Zlato pod 12 % – dorovnať.</div>}
-                {needsReserve && <div>Rezerva pod minimom – upraviť.</div>}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {(needsGold || needsReserve) && (
-                  <button
-                    onClick={() => {
-                      if (needsGold) applyGold12();
-                      if (needsReserve) applyReserveBaseline();
-                    }}
-                    data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
-                    className="px-2 py-1 text-xs bg-green-200 border rounded"
-                  >
-                    Použiť odporúčanie
-                  </button>
-                )}
+      <div data-testid={TEST_IDS.WIZARD_DIALOG} data-open={wizardOpen ? 1 : 0}>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mini-wizard odporúčania"
+          className={
+            wizardOpen
+              ? "fixed inset-0 bg-black/30 flex items-center justify-center"
+              : "hidden"
+          }
+        >
+          <div className="bg-white p-4 rounded shadow w-72 space-y-3">
+            <h2 className="text-sm font-semibold">Mini-wizard odporúčania</h2>
+            <div className="space-y-2 text-xs">
+              {needsGold && <div>Zlato pod 12 % – dorovnať.</div>}
+              {needsReserve && <div>Rezerva pod minimom – upraviť.</div>}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(needsGold || needsReserve) && (
                 <button
-                  onClick={() => setWizardOpen(false)}
-                  className="px-2 py-1 text-xs border rounded"
+                  onClick={() => {
+                    if (needsGold) applyGold12();
+                    if (needsReserve) applyReserveBaseline();
+                  }}
+                  data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
+                  className="px-2 py-1 text-xs bg-green-200 border rounded"
                 >
-                  Zavrieť
+                  Použiť odporúčanie
                 </button>
-              </div>
+              )}
+              <button
+                onClick={() => setWizardOpen(false)}
+                className="px-2 py-1 text-xs border rounded"
+              >
+                Zavrieť
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
