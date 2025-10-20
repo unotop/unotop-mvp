@@ -3,8 +3,11 @@ import React from "react";
 // Sticky layout wrapper – jediný zdroj pravdy pre dvojstĺpcové rozloženie.
 // Pravidlá:
 // - Pravý panel je sticky cez vnútorný <div className="sticky top-4">.
+// - max-h-[calc(100vh-5rem)] = výška obrazovky mínus toolbar (4rem) + spacing (1rem)
+// - overflow-y-auto = vlastný scrollbar ak obsah preteká
 // - Panely samotné NESMÚ pridávať sticky.
 // - Presun panelov rieši len zmena poradia v rodičovských stackoch.
+// - Mobile (< lg): pravý panel stack pod ľavý → bežný scroll (max-h sa neaplikuje)
 
 export default function PageLayout({
   left,
@@ -24,7 +27,9 @@ export default function PageLayout({
         aria-label="Prehľad"
         className="col-span-12 lg:col-span-4 space-y-4"
       >
-        <div className="sticky top-4 flex flex-col gap-4">{right}</div>
+        <div className="sticky top-4 flex flex-col gap-4 max-h-[calc(100vh-5rem)] overflow-y-auto">
+          {right}
+        </div>
       </aside>
     </div>
   );
