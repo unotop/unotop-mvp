@@ -8,14 +8,19 @@ describe("Persistence load/save", () => {
     const user = userEvent.setup();
     // First render: change a field
     const { unmount } = render(<AppClean />);
-    const income = await screen.findByLabelText(/Mesačný príjem/i);
+    const incomeEls = await screen.findAllByLabelText(
+      /Mesačný príjem \(profil\)/i
+    );
+    const income = incomeEls[0];
     await user.clear(income as HTMLInputElement);
     await user.type(income as HTMLInputElement, "2500");
     unmount();
     // Second render: should load
     render(<AppClean />);
-    const income2 = await screen.findByLabelText(/Mesačný príjem/i);
-    expect((income2 as HTMLInputElement).value).toMatch(/2500/);
+    const income2Els = await screen.findAllByLabelText(
+      /Mesačný príjem \(profil\)/i
+    );
+    expect((income2Els[0] as HTMLInputElement).value).toMatch(/2500/);
   });
 });
 

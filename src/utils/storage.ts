@@ -20,7 +20,7 @@ export type V3Payload = {
   crisisBias?: number; // 0..3
   debts?: Array<any>;
   // ui
-  uiMode?: Exclude<UIMode, null>; // vynechať ak null
+  uiMode?: UIMode; // ak null/undefined bude vynechané pri zápise
 };
 
 const KEY = 'unotop_v3';
@@ -41,13 +41,13 @@ export function readLS(): V3Payload {
 
 export function writeLS(data: Partial<V3Payload> & { uiMode?: UIMode }): void {
   try {
-    const { uiMode, ...rest } = data;
+  const { uiMode, ...rest } = data as { uiMode?: UIMode } & typeof data;
     const prev = readLS();
     const payload: V3Payload = {
       ...prev,
       ...rest,
       // vynecháme uiMode ak je null/undefined
-      ...(uiMode ? { uiMode } : {}),
+  ...(uiMode ? { uiMode } : {}),
       version: 3,
     };
     localStorage.setItem(KEY, JSON.stringify(payload));

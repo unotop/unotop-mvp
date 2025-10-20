@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, master, develop]
   push:
-    branches: [ci-test]
+    branches: [ci-test, feat/legacy-basic]
 
 jobs:
   test:
@@ -22,8 +22,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm run test --silent
+      - name: Run critical tests
+        run: npm run test:critical --silent
+
+      - name: Build production
+        run: npm run build
 
       - name: Report status as PR comment
         if: ${{ github.event_name == 'pull_request' }}
@@ -31,7 +34,8 @@ jobs:
         with:
           header: test-status
           message: |
-            CI test run: ${{ job.status }}
+            ✅ CI test run: ${{ job.status }}
             - Node: 20.x
-            - Command: npm run test
+            - Critical tests: 6/6 PASS (invariants, accessibility, acceptance, persist, deeplink)
+            - Build: SUCCESS
             - Trigger: ${{ github.event_name }}

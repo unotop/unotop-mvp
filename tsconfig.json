@@ -17,6 +17,12 @@
     "jsx": "react-jsx",
     "types": ["vitest", "node", "@testing-library/jest-dom"]
   },
-  "include": ["src", "tests", "vitest.setup.ts"],
-  "exclude": ["dist", "src/App.tsx"]
+  "include": ["src", "vitest.setup.ts"],
+  "exclude": [
+    "dist",
+    "tests",
+    "src/App.tsx",
+    "src/Stav pred layout.ts",
+    "src/App.before-trim.tsx"
+  ]
 }

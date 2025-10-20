@@ -1,12 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AppClean from "../src/App.clean";
+import { TEST_IDS as CLEAN_TEST_IDS } from "../src/App.clean"; // reuse harness TEST_IDS for stability
 
 describe("MiniWizard – reserve gap action", () => {
   it("opens from insight and sets monthly contribution, focusing field", async () => {
-    vi.useFakeTimers();
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    vi.useRealTimers(); // avoid range focus quirks with fake timers
+    const user = userEvent.setup();
     render(<AppClean />);
 
     // Ensure there is a missing reserve by setting low reserve and some months
@@ -35,11 +36,11 @@ describe("MiniWizard – reserve gap action", () => {
       within(dialog).getByRole("button", { name: /Použiť odporúčanie/i })
     );
 
-    // Focus on monthly slider should be applied
-    const monthlySlider = await screen.findByLabelText(
-      /Mesačný vklad – slider/i
+    // Focus on monthly slider should be applied (use stable data-testid)
+    const monthlySlider = await screen.findByTestId(
+      CLEAN_TEST_IDS.MONTHLY_SLIDER
     );
-    expect(document.activeElement).toBe(monthlySlider);
+    await waitFor(() => expect(monthlySlider).toHaveFocus());
     // Wizard closes
     expect(
       screen.queryByRole("dialog", { name: /Mini-wizard odporúčania/i })
