@@ -260,10 +260,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(goldPct)}
+              max={100}
               value={goldPct}
+              disabled={sum >= 100 && goldPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(goldPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("gold", v);
                 goldCtl.syncToDom(v);
               }}
@@ -295,10 +298,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(dynPct)}
+              max={100}
               value={dynPct}
+              disabled={sum >= 100 && dynPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(dynPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("dyn", v);
                 dynCtl.syncToDom(v);
               }}
@@ -329,10 +335,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(etfPct)}
+              max={100}
               value={etfPct}
+              disabled={sum >= 100 && etfPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(etfPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("etf", v);
                 etfCtl.syncToDom(v);
               }}
@@ -363,10 +372,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(bondsPct)}
+              max={100}
               value={bondsPct}
+              disabled={sum >= 100 && bondsPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(bondsPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("bonds", v);
                 bondsCtl.syncToDom(v);
               }}
@@ -397,10 +409,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(cashPct)}
+              max={100}
               value={cashPct}
+              disabled={sum >= 100 && cashPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(cashPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("cash", v);
                 cashCtl.syncToDom(v);
               }}
@@ -431,10 +446,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(cryptoPct)}
+              max={100}
               value={cryptoPct}
+              disabled={sum >= 100 && cryptoPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(cryptoPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("crypto", v);
                 cryptoCtl.syncToDom(v);
               }}
@@ -465,10 +483,13 @@ export const MixPanel: React.FC<{
             <input
               type="range"
               min={0}
-              max={getMaxAllowed(realPct)}
+              max={100}
               value={realPct}
+              disabled={sum >= 100 && realPct === 0}
               onChange={(e) => {
-                const v = Number(e.target.value);
+                const requested = Number(e.target.value);
+                const maxAllowed = getMaxAllowed(realPct);
+                const v = Math.min(requested, maxAllowed);
                 commitAsset("real", v);
                 realCtl.syncToDom(v);
               }}
