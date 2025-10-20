@@ -1,5 +1,6 @@
 import React from "react";
 import PageLayout from "./app/PageLayout";
+import Toolbar from "./components/Toolbar";
 import { MixPanel } from "./features/mix/MixPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { TEST_IDS } from "./testIds";
@@ -79,8 +80,8 @@ export default function LegacyApp() {
   const [cash, setCash] = React.useState(0);
   const [shareOpen, setShareOpen] = React.useState(false);
   const shareBtnRef = React.useRef<HTMLButtonElement | null>(null);
-  const [modeUi, setModeUi] = React.useState<string>(
-    seed.profile?.modeUi || (seed as any).modeUi || "BASIC"
+  const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(
+    () => (seed.profile?.modeUi as any) || "BASIC"
   );
   const debounceRef = React.useRef<number | undefined>(undefined);
   function persistDebts(list: Debt[]) {
@@ -136,6 +137,9 @@ export default function LegacyApp() {
     "reserve"
   );
   const wizardTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+
+  // Sidebar state (for Toolbar hamburger menu)
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   // Uncontrolled hooks pre sec2 polia
   const lumpSumCtl = useUncontrolledValueInput({
@@ -199,6 +203,14 @@ export default function LegacyApp() {
       profile: { ...(cur.profile || {}), crisisBias: bias } as any,
       crisisBias: bias,
     });
+  };
+
+  // Mode toggle handler (BASIC/PRO)
+  const handleModeToggle = () => {
+    const newMode = modeUi === "BASIC" ? "PRO" : "BASIC";
+    setModeUi(newMode);
+    const cur = readV3();
+    writeV3({ profile: { ...(cur.profile || {}), modeUi: newMode } as any });
   };
   // Risk cap mapping helper
   const getRiskCap = (pref: string): number => {
@@ -1075,13 +1087,17 @@ export default function LegacyApp() {
               <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
                 <span className="text-slate-400">Celkové splátky:</span>{" "}
                 <span className="font-medium text-emerald-400 tabular-nums">
-                  {debts.reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0).toFixed(0)} €/mes.
+                  {debts
+                    .reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0)
+                    .toFixed(0)}{" "}
+                  €/mes.
                 </span>
               </div>
               <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
                 <span className="text-slate-400">Celkový zostatok:</span>{" "}
                 <span className="font-medium text-red-400 tabular-nums">
-                  {debts.reduce((a, b) => a + (b.principal || 0), 0).toFixed(0)} €
+                  {debts.reduce((a, b) => a + (b.principal || 0), 0).toFixed(0)}{" "}
+                  €
                 </span>
               </div>
             </div>
@@ -1091,23 +1107,41 @@ export default function LegacyApp() {
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-white/5">
-                    <th className="px-2 py-2 font-medium text-slate-400">Názov</th>
-                    <th className="px-2 py-2 font-medium text-slate-400">Zostatok</th>
-                    <th className="px-2 py-2 font-medium text-slate-400">Úrok p.a.</th>
-                    <th className="px-2 py-2 font-medium text-slate-400">Splátka</th>
-                    <th className="px-2 py-2 font-medium text-slate-400">Zostáva</th>
-                    <th className="px-2 py-2 font-medium text-slate-400" aria-label="Akcie"></th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Názov
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Zostatok
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Úrok p.a.
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Splátka
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Zostáva
+                    </th>
+                    <th
+                      className="px-2 py-2 font-medium text-slate-400"
+                      aria-label="Akcie"
+                    ></th>
                   </tr>
                 </thead>
                 <tbody>
                   {debts.map((d, idx) => (
-                    <tr key={d.id} className="border-b border-white/5 hover:bg-slate-800/30 transition-colors">
+                    <tr
+                      key={d.id}
+                      className="border-b border-white/5 hover:bg-slate-800/30 transition-colors"
+                    >
                       <td className="px-2 py-2">
                         <input
                           aria-label={`Názov dlhu ${idx + 1}`}
                           type="text"
                           value={d.name}
-                          onChange={(e) => updateDebt(d.id, { name: e.currentTarget.value })}
+                          onChange={(e) =>
+                            updateDebt(d.id, { name: e.currentTarget.value })
+                          }
                           className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
                           placeholder="Názov"
                         />
@@ -1117,7 +1151,11 @@ export default function LegacyApp() {
                           aria-label={`Zostatok dlhu ${idx + 1}`}
                           type="number"
                           value={d.principal}
-                          onChange={(e) => updateDebt(d.id, { principal: Number(e.currentTarget.value) })}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              principal: Number(e.currentTarget.value),
+                            })
+                          }
                           className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
                           placeholder="0"
                         />
@@ -1128,7 +1166,11 @@ export default function LegacyApp() {
                           type="number"
                           step="0.1"
                           value={d.ratePa}
-                          onChange={(e) => updateDebt(d.id, { ratePa: Number(e.currentTarget.value) })}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              ratePa: Number(e.currentTarget.value),
+                            })
+                          }
                           className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
                           placeholder="0"
                         />
@@ -1138,7 +1180,11 @@ export default function LegacyApp() {
                           aria-label={`Splátka dlhu ${idx + 1}`}
                           type="number"
                           value={d.payment ?? d.monthly ?? 0}
-                          onChange={(e) => updateDebt(d.id, { payment: Number(e.currentTarget.value) })}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              payment: Number(e.currentTarget.value),
+                            })
+                          }
                           className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
                           placeholder="0"
                         />
@@ -1148,7 +1194,11 @@ export default function LegacyApp() {
                           aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
                           type="number"
                           value={d.monthsLeft ?? 0}
-                          onChange={(e) => updateDebt(d.id, { monthsLeft: Number(e.currentTarget.value) })}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              monthsLeft: Number(e.currentTarget.value),
+                            })
+                          }
                           className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
                           placeholder="0"
                         />
@@ -1216,10 +1266,10 @@ export default function LegacyApp() {
   ): number {
     if (months <= 0) return principal;
     if (monthlyPayment <= 0 || ratePa < 0) return principal; // No payment → no reduction
-    
+
     let remaining = principal;
     const monthlyRate = ratePa / 12 / 100;
-    
+
     for (let m = 0; m < months; m++) {
       if (remaining <= 0) break;
       const interest = remaining * monthlyRate;
@@ -1231,7 +1281,7 @@ export default function LegacyApp() {
         remaining -= principalPaid;
       }
     }
-    
+
     return Math.max(0, remaining);
   }
 
@@ -1239,12 +1289,22 @@ export default function LegacyApp() {
    * Calculate total debt remaining after `months` for all debts.
    */
   function calculateTotalDebtAtMonths(
-    debts: Array<{ principal: number; ratePa: number; payment?: number; monthly?: number }>,
+    debts: Array<{
+      principal: number;
+      ratePa: number;
+      payment?: number;
+      monthly?: number;
+    }>,
     months: number
   ): number {
     return debts.reduce((sum, d) => {
       const payment = d.payment ?? d.monthly ?? 0;
-      const remaining = calculateDebtRemaining(d.principal, d.ratePa, payment, months);
+      const remaining = calculateDebtRemaining(
+        d.principal,
+        d.ratePa,
+        payment,
+        months
+      );
       return sum + remaining;
     }, 0);
   }
@@ -1628,11 +1688,19 @@ export default function LegacyApp() {
   );
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      {/* Sticky Toolbar */}
+      <Toolbar
+        onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+        modeUi={modeUi}
+        onModeToggle={handleModeToggle}
+      />
+
+      {/* Deeplink Banner (pod toolbarom) */}
       {showLinkBanner && (
         <div
           role="alert"
           data-testid="deeplink-banner"
-          className="mx-auto max-w-[1320px] px-4 mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
+          className="mx-auto max-w-[1320px] px-4 mt-3 mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
         >
           <span>Konfigurácia načítaná zo zdieľaného linku.</span>
           <button

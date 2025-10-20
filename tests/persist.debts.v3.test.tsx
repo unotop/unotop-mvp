@@ -16,7 +16,9 @@ describe("Persist v3 – debts", () => {
   it("persists debts array with fields and appears in KPI chip", async () => {
     render(<App />);
     // Nový standalone debt section má button "Pridať prvý dlh"
-    const addBtn = await screen.findByRole("button", { name: /Pridať prvý dlh/i });
+    const addBtn = await screen.findByRole("button", {
+      name: /Pridať prvý dlh/i,
+    });
     fireEvent.click(addBtn);
     // fill first row
     const nameInput = screen.getByRole("textbox", { name: /Názov/i });
