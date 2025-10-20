@@ -76,10 +76,10 @@ describe("Accessibility regression (core)", () => {
     const user = userEvent.setup();
     render(<App />);
     const headers = [
-      screen.getByRole("button", { name: /1\).*Cashflow/i }),
-      screen.getByRole("button", { name: /2\).*Investi.*nastavenia/i }),
-      screen.getByRole("button", { name: /3\).*(Zloženie|Projekcia)/i }),
-      screen.getByRole("button", { name: /4\).*(Metriky|odporúčania)/i }),
+      screen.getByRole("button", { name: /Cashflow.*rezerva/i }),
+      screen.getByRole("button", { name: /Investi.*nastavenia/i }),
+      screen.getByRole("button", { name: /Zloženie.*portfólia/i }),
+      screen.getByRole("button", { name: /Metriky.*odporúčania/i }),
     ];
     for (const headerBtn of headers) {
       const controlsId = headerBtn.getAttribute("aria-controls");

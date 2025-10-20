@@ -384,7 +384,9 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Garantovaný dlhopis 7,5% p.a."
             />
-            <span className="tabular-nums text-xs">{Math.round(bondsPct)}%</span>
+            <span className="tabular-nums text-xs">
+              {Math.round(bondsPct)}%
+            </span>
           </div>
         </div>
         {/* Cash */}
@@ -458,7 +460,9 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Krypto (BTC/ETH)"
             />
-            <span className="tabular-nums text-xs">{Math.round(cryptoPct)}%</span>
+            <span className="tabular-nums text-xs">
+              {Math.round(cryptoPct)}%
+            </span>
           </div>
         </div>
         {/* Real */}

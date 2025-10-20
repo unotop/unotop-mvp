@@ -35,10 +35,11 @@ export default function LegacyApp() {
   const [open1, setOpen1] = React.useState(true);
   const [open2, setOpen2] = React.useState(true);
   const [open3, setOpen3] = React.useState(true);
+  const [open4, setOpen4] = React.useState(true); // sec4: Projekcia
   const [open5, setOpen5] = React.useState(true);
   const [monthlyContribution, setMonthlyContribution] = React.useState(0);
   const monthlySliderRef = React.useRef<HTMLInputElement | null>(null);
-  const [debtsOpen, setDebtsOpen] = React.useState(false);
+  const [debtsOpen, setDebtsOpen] = React.useState(true); // Changed to true for consistent initial state
   const [debts, setDebts] = React.useState<Debt[]>(
     () => (seed.debts as any as Debt[]) || []
   );
@@ -266,16 +267,30 @@ export default function LegacyApp() {
   const left = (
     <div className="min-w-0 space-y-6" data-testid="left-col">
       {/* sec0: Profil klienta (nový blok nad sec1) */}
+      <button
+        type="button"
+        aria-controls="sec0"
+        aria-expanded={open0}
+        onClick={() => setOpen0((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
+      >
+        <span id="profile-title">Profil klienta</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${open0 ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
       {open0 && (
         <section
           id="sec0"
           role="region"
           aria-labelledby="profile-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          <header id="profile-title" className="mb-4 font-semibold">
-            0) Profil klienta
-          </header>
           <div className="space-y-5">
             {/* Typ klienta */}
             <fieldset className="space-y-2">
@@ -397,64 +412,30 @@ export default function LegacyApp() {
           </div>
         </section>
       )}
-      <div className="space-y-2" aria-label="Collapsy headers">
-        <button
-          type="button"
-          aria-controls="sec0"
-          aria-expanded={open0}
-          onClick={() => setOpen0((v) => !v)}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
+      <button
+        type="button"
+        aria-controls="sec1"
+        aria-expanded={open1}
+        onClick={() => setOpen1((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
+      >
+        <span id="cashflow-title">Cashflow &amp; rezerva</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${open1 ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          0) Profil klienta
-        </button>
-        <button
-          type="button"
-          aria-controls="sec1"
-          aria-expanded={open1}
-          onClick={() => setOpen1((v) => !v)}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
-        >
-          1) Cashflow & rezerva
-        </button>
-        <button
-          type="button"
-          aria-controls="sec2"
-          aria-expanded={open2}
-          onClick={() => setOpen2((v) => !v)}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
-        >
-          2) Investičné nastavenia
-        </button>
-        <button
-          type="button"
-          aria-controls="sec3"
-          aria-expanded={open3}
-          onClick={() => setOpen3((v) => !v)}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
-        >
-          3) Zloženie portfólia
-        </button>
-        <button
-          type="button"
-          aria-controls="sec5"
-          aria-expanded={open5}
-          onClick={() => setOpen5((v) => !v)}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
-        >
-          4) Metriky & odporúčania
-        </button>
-      </div>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
       {open1 && (
         <section
           id="sec1"
           role="region"
           aria-labelledby="cashflow-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          <header id="cashflow-title" className="mb-3 font-semibold">
-            Cashflow &amp; rezerva
-          </header>
-
           {/* 2-column grid: Cashflow left, Rezerva right */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Left column: Príjmy a výdavky */}
@@ -730,16 +711,30 @@ export default function LegacyApp() {
           {/* Starý debt UI odstránený - teraz používame standalone section */}
         </section>
       )}
+      <button
+        type="button"
+        aria-controls="sec2"
+        aria-expanded={open2}
+        onClick={() => setOpen2((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
+      >
+        <span id="invest-title">Investičné nastavenia</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${open2 ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
       {open2 && (
         <section
           id="sec2"
           role="region"
           aria-labelledby="invest-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          <header id="invest-title" className="mb-3 font-semibold">
-            Investičné nastavenia
-          </header>
           <div className="space-y-4">
             <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
               <label htmlFor="lump-sum-input">Jednorazová investícia</label>
@@ -867,16 +862,30 @@ export default function LegacyApp() {
           </div>
         </section>
       )}
+      <button
+        type="button"
+        aria-controls="sec3"
+        aria-expanded={open3}
+        onClick={() => setOpen3((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
+      >
+        <span id="portfolio-title">Zloženie portfólia</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${open3 ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
       {open3 && (
         <section
           id="sec3"
           role="region"
           aria-labelledby="portfolio-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          <header id="portfolio-title" className="mb-3 font-semibold">
-            Zloženie portfólia
-          </header>
           <div className="mb-4" data-testid="mixpanel-slot">
             <MixPanel
               mode="BASIC"
@@ -996,17 +1005,31 @@ export default function LegacyApp() {
       )}
 
       {/* Debt Panel - Standalone Section */}
-      <section
-        id="sec-debts"
-        role="region"
-        aria-labelledby="debts-section-title"
-        className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+      <button
+        type="button"
+        aria-controls="sec-debts"
+        aria-expanded={debtsOpen}
+        onClick={() => setDebtsOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
       >
-        <header id="debts-section-title" className="mb-3 font-semibold">
-          💳 Dlhy a hypotéky
-        </header>
-
-        {debts.length === 0 ? (
+        <span id="debts-section-title">💳 Dlhy a hypotéky</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${debtsOpen ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {debtsOpen && (
+        <section
+          id="sec-debts"
+          role="region"
+          aria-labelledby="debts-section-title"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
+        >
+          {debts.length === 0 ? (
           <div className="space-y-3">
             <p className="text-sm text-slate-400">
               Pridajte dlhy alebo hypotéky pre presnejšiu finančnú projekciu.
@@ -1177,7 +1200,8 @@ export default function LegacyApp() {
             </button>
           </div>
         )}
-      </section>
+        </section>
+      )}
 
       {/* Share modal stub */}
     </div>
@@ -1276,6 +1300,23 @@ export default function LegacyApp() {
 
   const right = (
     <>
+      <button
+        type="button"
+        aria-controls="sec5"
+        aria-expanded={open5}
+        onClick={() => setOpen5((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
+      >
+        <span id="sec5-title">Metriky &amp; odporúčania</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${open5 ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
       {open5 &&
         (() => {
           const v3Data = readV3();
@@ -1289,11 +1330,8 @@ export default function LegacyApp() {
               id="sec5"
               role="region"
               aria-labelledby="sec5-title"
-              className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+              className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
             >
-              <header id="sec5-title" className="mb-3 font-semibold">
-                Metriky &amp; odporúčania
-              </header>
               <div className="space-y-4">
                 {/* SVG Risk Gauge (prominentný, väčší) */}
                 {Array.isArray(mix) && mix.length > 0 && (
@@ -1416,16 +1454,31 @@ export default function LegacyApp() {
             </section>
           );
         })()}
-      <section
-        id="sec4"
-        role="region"
-        aria-labelledby="sec4-title"
-        className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+      <button
+        type="button"
+        aria-controls="sec4"
+        aria-expanded={open4}
+        onClick={() => setOpen4((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
       >
-        <header id="sec4-title" className="mb-3 font-semibold">
-          Projekcia
-        </header>
-        {(() => {
+        <span id="sec4-title">Projekcia</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${open4 ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open4 && (
+        <section
+          id="sec4"
+          role="region"
+          aria-labelledby="sec4-title"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
+        >
+          {(() => {
           const v3Data = readV3();
           const mix: MixItem[] = (v3Data.mix as any) || [];
           const goal = goalAssetsEur || 0;
@@ -1596,7 +1649,8 @@ export default function LegacyApp() {
             </div>
           );
         })()}
-      </section>
+        </section>
+      )}
 
       {/* Share CTA - výrazný zelený button */}
       <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-5">
@@ -1657,129 +1711,231 @@ export default function LegacyApp() {
             type="button"
             aria-label="Zavrieť oznámenie"
             className="px-2 py-0.5 rounded bg-emerald-700/40"
+            onClick={() => {
+              setShowLinkBanner(false);
+              clearHashRef.current();
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+      <PageLayout left={left} right={right} />
+      <div
+        role="dialog"
+        aria-label="Mini-wizard odporúčania"
+        data-testid="mini-wizard-dialog"
+        data-open={wizardOpen ? "1" : "0"}
+        className={
+          wizardOpen
+            ? "fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
+            : "pointer-events-none fixed inset-0 z-[-1] opacity-0"
+        }
+        aria-hidden={wizardOpen ? "false" : "true"}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && wizardOpen) {
+            e.stopPropagation();
+            setWizardOpen(false);
+            setTimeout(() => wizardTriggerRef.current?.focus(), 0);
+          }
+        }}
+        tabIndex={-1}
+      >
+        {wizardOpen && (
+          <div
+            className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full relative z-[101]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold">Odporúčanie</h2>
+            <p className="text-sm text-slate-400">
+              {wizardType === "reserve"
+                ? "Nastaviť rezervu na minimum (1000€ / 6 mesiacov)?"
+                : "Nastaviť zlato na 12 %?"}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
+                className="px-4 py-2 rounded bg-emerald-600 text-white"
+                aria-label={
+                  wizardType === "reserve"
+                    ? "Apply reserve baseline"
+                    : "Apply gold 12%"
+                }
                 onClick={() => {
-                  setShowLinkBanner(false);
-                  clearHashRef.current();
+                  if (wizardType === "reserve") {
+                    const cur = readV3();
+                    const reserveEur = Math.max(
+                      cur.reserveEur || cur.profile?.reserveEur || 0,
+                      1000
+                    );
+                    const reserveMonths = Math.max(
+                      cur.reserveMonths || cur.profile?.reserveMonths || 0,
+                      6
+                    );
+                    writeV3({
+                      profile: {
+                        ...(cur.profile || {}),
+                        reserveEur,
+                        reserveMonths,
+                      } as any,
+                    });
+                  } else {
+                    // Gold wizard: set gold to 12%
+                    const cur = readV3();
+                    const currentMix = (cur.mix as any as MixItem[]) || [];
+                    if (currentMix.length > 0) {
+                      const adjusted = setGoldTarget(currentMix, 12);
+                      writeV3({ mix: adjusted as any });
+                    }
+                  }
+                  setWizardOpen(false);
+                  const focusFn = () => {
+                    const targetTestId =
+                      wizardType === "reserve"
+                        ? TEST_IDS.MONTHLY_SLIDER
+                        : TEST_IDS.GOLD_SLIDER;
+                    const el = document.querySelector<HTMLInputElement>(
+                      `[data-testid="${targetTestId}"]`
+                    );
+                    el?.focus();
+                    el?.classList.add("animate-pulse");
+                    setTimeout(
+                      () => el?.classList.remove("animate-pulse"),
+                      1000
+                    );
+                  };
+                  Promise.resolve().then(focusFn);
+                  setTimeout(focusFn, 0);
                 }}
               >
-                ×
+                Použiť
+              </button>
+              <button
+                onClick={() => {
+                  setWizardOpen(false);
+                  setTimeout(() => wizardTriggerRef.current?.focus(), 0);
+                }}
+                className="px-4 py-2 rounded bg-slate-700"
+              >
+                Zavrieť
               </button>
             </div>
-          )}
-          <PageLayout left={left} right={right} />
-          <div
-            role="dialog"
-            aria-label="Mini-wizard odporúčania"
-            data-testid="mini-wizard-dialog"
-            data-open={wizardOpen ? "1" : "0"}
-            className={
-              wizardOpen
-                ? "fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
-                : "pointer-events-none fixed inset-0 z-[-1] opacity-0"
-            }
-            aria-hidden={wizardOpen ? "false" : "true"}
-            onKeyDown={(e) => {
-              if (e.key === "Escape" && wizardOpen) {
-                e.stopPropagation();
-                setWizardOpen(false);
-                setTimeout(() => wizardTriggerRef.current?.focus(), 0);
-              }
-            }}
-            tabIndex={-1}
-          >
-            {wizardOpen && (
-              <div
-                className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full relative z-[101]"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h2 className="text-base font-semibold">Odporúčanie</h2>
-                <p className="text-sm text-slate-400">
-                  {wizardType === "reserve"
-                    ? "Nastaviť rezervu na minimum (1000€ / 6 mesiacov)?"
-                    : "Nastaviť zlato na 12 %?"}
-                </p>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
-                    className="px-4 py-2 rounded bg-emerald-600 text-white"
-                    aria-label={
-                      wizardType === "reserve"
-                        ? "Apply reserve baseline"
-                        : "Apply gold 12%"
-                    }
-                    onClick={() => {
-                      if (wizardType === "reserve") {
-                        const cur = readV3();
-                        const reserveEur = Math.max(
-                          cur.reserveEur || cur.profile?.reserveEur || 0,
-                          1000
-                        );
-                        const reserveMonths = Math.max(
-                          cur.reserveMonths || cur.profile?.reserveMonths || 0,
-                          6
-                        );
-                        writeV3({
-                          profile: {
-                            ...(cur.profile || {}),
-                            reserveEur,
-                            reserveMonths,
-                          } as any,
-                        });
-                      } else {
-                        // Gold wizard: set gold to 12%
-                        const cur = readV3();
-                        const currentMix = (cur.mix as any as MixItem[]) || [];
-                        if (currentMix.length > 0) {
-                          const adjusted = setGoldTarget(currentMix, 12);
-                          writeV3({ mix: adjusted as any });
-                        }
-                      }
-                      setWizardOpen(false);
-                      const focusFn = () => {
-                        const targetTestId =
-                          wizardType === "reserve"
-                            ? TEST_IDS.MONTHLY_SLIDER
-                            : TEST_IDS.GOLD_SLIDER;
-                        const el = document.querySelector<HTMLInputElement>(
-                          `[data-testid="${targetTestId}"]`
-                        );
-                        el?.focus();
-                        el?.classList.add("animate-pulse");
-                        setTimeout(
-                          () => el?.classList.remove("animate-pulse"),
-                          1000
-                        );
-                      };
-                      Promise.resolve().then(focusFn);
-                      setTimeout(focusFn, 0);
-                    }}
-                  >
-                    Použiť
-                  </button>
-                  <button
-                    onClick={() => {
-                      setWizardOpen(false);
-                      setTimeout(() => wizardTriggerRef.current?.focus(), 0);
-                    }}
-                    className="px-4 py-2 rounded bg-slate-700"
-                  >
-                    Zavrieť
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
-          {shareOpen && (
-            <div
-              role="dialog"
-              aria-label="Zdieľať nastavenie"
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-            >
-              <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
-                <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
+        )}
+      </div>
+      {shareOpen && (
+        <div
+          role="dialog"
+          aria-label="Zdieľať nastavenie"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+        >
+          <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
 
-                {/* Preview FV + Mix */}
-                {(() => {
+            {/* Preview FV + Mix */}
+            {(() => {
+              const v3Data = readV3();
+              const mix: MixItem[] = (v3Data.mix as any) || [];
+              const lump = lumpSumEur || 0;
+              const monthly = monthlyVklad || 0;
+              const years = horizonYears || 10;
+              const goal = goalAssetsEur || 0;
+              const approx = approxYieldAnnualFromMix(mix);
+              const fv = calculateFutureValue(lump, monthly, years, approx);
+              const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
+
+              return (
+                <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
+                  <div className="font-medium text-slate-300">
+                    Vaša projekcia:
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-400">
+                        Hodnota po {years} rokoch:
+                      </span>
+                      <div className="font-bold text-emerald-400 tabular-nums">
+                        {fv.toFixed(0)} €
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Progres k cieľu:</span>
+                      <div className="font-bold text-amber-400 tabular-nums">
+                        {pct}%
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Jednorazový vklad:</span>
+                      <div className="font-medium tabular-nums">
+                        {lump.toFixed(0)} €
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">Mesačný vklad:</span>
+                      <div className="font-medium tabular-nums">
+                        {monthly.toFixed(0)} €
+                      </div>
+                    </div>
+                  </div>
+                  {mix.length > 0 && (
+                    <div className="pt-2 border-t border-white/5">
+                      <div className="text-slate-400 mb-1">Mix portfólia:</div>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                        {mix
+                          .filter((i) => i.pct > 0)
+                          .map((item) => {
+                            const labels: Record<string, string> = {
+                              gold: "🪙 Zlato",
+                              dyn: "📊 Dyn. riadenie",
+                              etf: "🌍 ETF svet",
+                              bonds: "📜 Dlhopisy",
+                              cash: "💵 Hotovosť",
+                              crypto: "₿ Krypto",
+                              real: "🏘️ Reality",
+                              other: "📦 Ostatné",
+                            };
+                            return (
+                              <div
+                                key={item.key}
+                                className="flex justify-between"
+                              >
+                                <span className="text-slate-300">
+                                  {labels[item.key] || item.key}
+                                </span>
+                                <span className="font-medium tabular-nums">
+                                  {item.pct.toFixed(1)}%
+                                </span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Email input */}
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-slate-300">
+                Email finančného advisora
+              </span>
+              <input
+                autoFocus
+                aria-label="Email agenta"
+                type="email"
+                placeholder="advisor@example.com"
+                className="w-full bg-slate-800 rounded-lg px-4 py-2.5 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
+              />
+            </label>
+
+            {/* CTA buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
+                onClick={() => {
+                  // TODO: Generate mailto link with template + deeplink
                   const v3Data = readV3();
                   const mix: MixItem[] = (v3Data.mix as any) || [];
                   const lump = lumpSumEur || 0;
@@ -1788,136 +1944,23 @@ export default function LegacyApp() {
                   const goal = goalAssetsEur || 0;
                   const approx = approxYieldAnnualFromMix(mix);
                   const fv = calculateFutureValue(lump, monthly, years, approx);
-                  const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
 
-                  return (
-                    <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
-                      <div className="font-medium text-slate-300">
-                        Vaša projekcia:
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-slate-400">
-                            Hodnota po {years} rokoch:
-                          </span>
-                          <div className="font-bold text-emerald-400 tabular-nums">
-                            {fv.toFixed(0)} €
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">
-                            Progres k cieľu:
-                          </span>
-                          <div className="font-bold text-amber-400 tabular-nums">
-                            {pct}%
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">
-                            Jednorazový vklad:
-                          </span>
-                          <div className="font-medium tabular-nums">
-                            {lump.toFixed(0)} €
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-400">Mesačný vklad:</span>
-                          <div className="font-medium tabular-nums">
-                            {monthly.toFixed(0)} €
-                          </div>
-                        </div>
-                      </div>
-                      {mix.length > 0 && (
-                        <div className="pt-2 border-t border-white/5">
-                          <div className="text-slate-400 mb-1">
-                            Mix portfólia:
-                          </div>
-                          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                            {mix
-                              .filter((i) => i.pct > 0)
-                              .map((item) => {
-                                const labels: Record<string, string> = {
-                                  gold: "🪙 Zlato",
-                                  dyn: "📊 Dyn. riadenie",
-                                  etf: "🌍 ETF svet",
-                                  bonds: "📜 Dlhopisy",
-                                  cash: "💵 Hotovosť",
-                                  crypto: "₿ Krypto",
-                                  real: "🏘️ Reality",
-                                  other: "📦 Ostatné",
-                                };
-                                return (
-                                  <div
-                                    key={item.key}
-                                    className="flex justify-between"
-                                  >
-                                    <span className="text-slate-300">
-                                      {labels[item.key] || item.key}
-                                    </span>
-                                    <span className="font-medium tabular-nums">
-                                      {item.pct.toFixed(1)}%
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                  // Generate deeplink
+                  const state = {
+                    profile: {
+                      lumpSumEur: lump,
+                      horizonYears: years,
+                      goalAssetsEur: goal,
+                    },
+                    monthly,
+                    mix,
+                  };
+                  const encoded = btoa(JSON.stringify(state));
+                  const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
 
-                {/* Email input */}
-                <label className="block space-y-2">
-                  <span className="text-sm font-medium text-slate-300">
-                    Email finančného advisora
-                  </span>
-                  <input
-                    autoFocus
-                    aria-label="Email agenta"
-                    type="email"
-                    placeholder="advisor@example.com"
-                    className="w-full bg-slate-800 rounded-lg px-4 py-2.5 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
-                  />
-                </label>
-
-                {/* CTA buttons */}
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
-                    onClick={() => {
-                      // TODO: Generate mailto link with template + deeplink
-                      const v3Data = readV3();
-                      const mix: MixItem[] = (v3Data.mix as any) || [];
-                      const lump = lumpSumEur || 0;
-                      const monthly = monthlyVklad || 0;
-                      const years = horizonYears || 10;
-                      const goal = goalAssetsEur || 0;
-                      const approx = approxYieldAnnualFromMix(mix);
-                      const fv = calculateFutureValue(
-                        lump,
-                        monthly,
-                        years,
-                        approx
-                      );
-
-                      // Generate deeplink
-                      const state = {
-                        profile: {
-                          lumpSumEur: lump,
-                          horizonYears: years,
-                          goalAssetsEur: goal,
-                        },
-                        monthly,
-                        mix,
-                      };
-                      const encoded = btoa(JSON.stringify(state));
-                      const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
-
-                      // Email template
-                      const subject = "Investičná projekcia - Unotop";
-                      const body = `Dobrý deň,
+                  // Email template
+                  const subject = "Investičná projekcia - Unotop";
+                  const body = `Dobrý deň,
 
 pridávam vám moju investičnú projekciu:
 
@@ -1937,29 +1980,29 @@ ${deeplink}
 
 S pozdravom`;
 
-                      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                      window.location.href = mailtoLink;
+                  const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                  window.location.href = mailtoLink;
 
-                      setShareOpen(false);
-                      setTimeout(() => shareBtnRef.current?.focus(), 0);
-                    }}
-                  >
-                    📨 Odoslať email
-                  </button>
-                  <button
-                    type="button"
-                    className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
-                    onClick={() => {
-                      setShareOpen(false);
-                      setTimeout(() => shareBtnRef.current?.focus(), 0);
-                    }}
-                  >
-                    Zrušiť
-                  </button>
-                </div>
-              </div>
+                  setShareOpen(false);
+                  setTimeout(() => shareBtnRef.current?.focus(), 0);
+                }}
+              >
+                📨 Odoslať email
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
+                onClick={() => {
+                  setShareOpen(false);
+                  setTimeout(() => shareBtnRef.current?.focus(), 0);
+                }}
+              >
+                Zrušiť
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
