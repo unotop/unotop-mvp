@@ -1619,10 +1619,20 @@ export default function LegacyApp() {
         >
           {/* Shine effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-          
+
           <div className="relative flex items-center justify-center gap-3">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              />
             </svg>
             <span>Odoslať advisorovi</span>
           </div>
@@ -1663,13 +1673,24 @@ export default function LegacyApp() {
         data-open={wizardOpen ? "1" : "0"}
         className={
           wizardOpen
-            ? "fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            ? "fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
             : "pointer-events-none fixed inset-0 z-[-1] opacity-0"
         }
         aria-hidden={wizardOpen ? "false" : "true"}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && wizardOpen) {
+            e.stopPropagation();
+            setWizardOpen(false);
+            setTimeout(() => wizardTriggerRef.current?.focus(), 0);
+          }
+        }}
+        tabIndex={-1}
       >
         {wizardOpen && (
-          <div className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full">
+          <div 
+            className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full relative z-[101]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-base font-semibold">Odporúčanie</h2>
             <p className="text-sm text-slate-400">
               {wizardType === "reserve"
@@ -1747,20 +1768,6 @@ export default function LegacyApp() {
           </div>
         )}
       </div>
-      {wizardOpen && (
-        <div
-          className="fixed inset-0 z-[60]"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.stopPropagation();
-              setWizardOpen(false);
-              setTimeout(() => wizardTriggerRef.current?.focus(), 0);
-            }
-          }}
-          tabIndex={-1}
-          aria-hidden="true"
-        />
-      )}
       {shareOpen && (
         <div
           role="dialog"
@@ -1769,7 +1776,7 @@ export default function LegacyApp() {
         >
           <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
-            
+
             {/* Preview FV + Mix */}
             {(() => {
               const v3Data = readV3();
@@ -1784,47 +1791,68 @@ export default function LegacyApp() {
 
               return (
                 <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
-                  <div className="font-medium text-slate-300">Vaša projekcia:</div>
+                  <div className="font-medium text-slate-300">
+                    Vaša projekcia:
+                  </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-slate-400">Hodnota po {years} rokoch:</span>
-                      <div className="font-bold text-emerald-400 tabular-nums">{fv.toFixed(0)} €</div>
+                      <span className="text-slate-400">
+                        Hodnota po {years} rokoch:
+                      </span>
+                      <div className="font-bold text-emerald-400 tabular-nums">
+                        {fv.toFixed(0)} €
+                      </div>
                     </div>
                     <div>
                       <span className="text-slate-400">Progres k cieľu:</span>
-                      <div className="font-bold text-amber-400 tabular-nums">{pct}%</div>
+                      <div className="font-bold text-amber-400 tabular-nums">
+                        {pct}%
+                      </div>
                     </div>
                     <div>
                       <span className="text-slate-400">Jednorazový vklad:</span>
-                      <div className="font-medium tabular-nums">{lump.toFixed(0)} €</div>
+                      <div className="font-medium tabular-nums">
+                        {lump.toFixed(0)} €
+                      </div>
                     </div>
                     <div>
                       <span className="text-slate-400">Mesačný vklad:</span>
-                      <div className="font-medium tabular-nums">{monthly.toFixed(0)} €</div>
+                      <div className="font-medium tabular-nums">
+                        {monthly.toFixed(0)} €
+                      </div>
                     </div>
                   </div>
                   {mix.length > 0 && (
                     <div className="pt-2 border-t border-white/5">
                       <div className="text-slate-400 mb-1">Mix portfólia:</div>
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                        {mix.filter(i => i.pct > 0).map((item) => {
-                          const labels: Record<string, string> = {
-                            gold: '🪙 Zlato',
-                            dyn: '📊 Dyn. riadenie',
-                            etf: '🌍 ETF svet',
-                            bonds: '📜 Dlhopisy',
-                            cash: '💵 Hotovosť',
-                            crypto: '₿ Krypto',
-                            real: '🏘️ Reality',
-                            other: '📦 Ostatné'
-                          };
-                          return (
-                            <div key={item.key} className="flex justify-between">
-                              <span className="text-slate-300">{labels[item.key] || item.key}</span>
-                              <span className="font-medium tabular-nums">{item.pct.toFixed(1)}%</span>
-                            </div>
-                          );
-                        })}
+                        {mix
+                          .filter((i) => i.pct > 0)
+                          .map((item) => {
+                            const labels: Record<string, string> = {
+                              gold: "🪙 Zlato",
+                              dyn: "📊 Dyn. riadenie",
+                              etf: "🌍 ETF svet",
+                              bonds: "📜 Dlhopisy",
+                              cash: "💵 Hotovosť",
+                              crypto: "₿ Krypto",
+                              real: "🏘️ Reality",
+                              other: "📦 Ostatné",
+                            };
+                            return (
+                              <div
+                                key={item.key}
+                                className="flex justify-between"
+                              >
+                                <span className="text-slate-300">
+                                  {labels[item.key] || item.key}
+                                </span>
+                                <span className="font-medium tabular-nums">
+                                  {item.pct.toFixed(1)}%
+                                </span>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   )}
@@ -1834,7 +1862,9 @@ export default function LegacyApp() {
 
             {/* Email input */}
             <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-300">Email finančného advisora</span>
+              <span className="text-sm font-medium text-slate-300">
+                Email finančného advisora
+              </span>
               <input
                 autoFocus
                 aria-label="Email agenta"
@@ -1859,18 +1889,22 @@ export default function LegacyApp() {
                   const goal = goalAssetsEur || 0;
                   const approx = approxYieldAnnualFromMix(mix);
                   const fv = calculateFutureValue(lump, monthly, years, approx);
-                  
+
                   // Generate deeplink
                   const state = {
-                    profile: { lumpSumEur: lump, horizonYears: years, goalAssetsEur: goal },
+                    profile: {
+                      lumpSumEur: lump,
+                      horizonYears: years,
+                      goalAssetsEur: goal,
+                    },
                     monthly,
-                    mix
+                    mix,
                   };
                   const encoded = btoa(JSON.stringify(state));
                   const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
-                  
+
                   // Email template
-                  const subject = 'Investičná projekcia - Unotop';
+                  const subject = "Investičná projekcia - Unotop";
                   const body = `Dobrý deň,
 
 pridávam vám moju investičnú projekciu:
@@ -1893,7 +1927,7 @@ S pozdravom`;
 
                   const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                   window.location.href = mailtoLink;
-                  
+
                   setShareOpen(false);
                   setTimeout(() => shareBtnRef.current?.focus(), 0);
                 }}
