@@ -1,6 +1,7 @@
 import React from "react";
 import PageLayout from "./app/PageLayout";
 import Toolbar from "./components/Toolbar";
+import Sidebar from "./components/Sidebar";
 import { MixPanel } from "./features/mix/MixPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { TEST_IDS } from "./testIds";
@@ -1695,21 +1696,28 @@ export default function LegacyApp() {
         onModeToggle={handleModeToggle}
       />
 
-      {/* Deeplink Banner (pod toolbarom) */}
-      {showLinkBanner && (
-        <div
-          role="alert"
-          data-testid="deeplink-banner"
-          className="mx-auto max-w-[1320px] px-4 mt-3 mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
-        >
-          <span>Konfigurácia načítaná zo zdieľaného linku.</span>
-          <button
-            type="button"
-            aria-label="Zavrieť oznámenie"
-            className="px-2 py-0.5 rounded bg-emerald-700/40"
-            onClick={() => {
-              setShowLinkBanner(false);
-              clearHashRef.current();
+      {/* Main layout: Sidebar + Content */}
+      <div className="flex">
+        {/* Sidebar Navigation */}
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+        {/* Main content area */}
+        <div className="flex-1">
+          {/* Deeplink Banner (pod toolbarom) */}
+          {showLinkBanner && (
+            <div
+              role="alert"
+              data-testid="deeplink-banner"
+              className="mx-auto max-w-[1320px] px-4 mt-3 mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
+            >
+              <span>Konfigurácia načítaná zo zdieľaného linku.</span>
+              <button
+                type="button"
+                aria-label="Zavrieť oznámenie"
+                className="px-2 py-0.5 rounded bg-emerald-700/40"
+                onClick={() => {
+                  setShowLinkBanner(false);
+                  clearHashRef.current();
             }}
           >
             ×
@@ -1999,6 +2007,8 @@ S pozdravom`;
           </div>
         </div>
       )}
+        </div> {/* End of flex-1 main content area */}
+      </div> {/* End of flex sidebar+content */}
     </div>
   );
 }
