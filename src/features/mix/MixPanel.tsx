@@ -273,7 +273,7 @@ export const MixPanel: React.FC<{
               data-testid={TEST_IDS.GOLD_SLIDER}
               aria-label="Zlato (fyzické)"
             />
-            <span className="tabular-nums text-xs">{goldPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(goldPct)}%</span>
           </div>
         </div>
         {/* Dyn */}
@@ -310,7 +310,7 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Dynamické riadenie"
             />
-            <span className="tabular-nums text-xs">{dynPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(dynPct)}%</span>
           </div>
         </div>
         {/* ETF */}
@@ -347,7 +347,7 @@ export const MixPanel: React.FC<{
               }}
               aria-label="ETF (svet – aktívne)"
             />
-            <span className="tabular-nums text-xs">{etfPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(etfPct)}%</span>
           </div>
         </div>
         {/* Bonds */}
@@ -384,7 +384,7 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Garantovaný dlhopis 7,5% p.a."
             />
-            <span className="tabular-nums text-xs">{bondsPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(bondsPct)}%</span>
           </div>
         </div>
         {/* Cash */}
@@ -421,7 +421,7 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Hotovosť/rezerva"
             />
-            <span className="tabular-nums text-xs">{cashPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(cashPct)}%</span>
           </div>
         </div>
         {/* Crypto */}
@@ -458,7 +458,7 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Krypto (BTC/ETH)"
             />
-            <span className="tabular-nums text-xs">{cryptoPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(cryptoPct)}%</span>
           </div>
         </div>
         {/* Real */}
@@ -495,7 +495,7 @@ export const MixPanel: React.FC<{
               }}
               aria-label="Reality (komerčné)"
             />
-            <span className="tabular-nums text-xs">{realPct}%</span>
+            <span className="tabular-nums text-xs">{Math.round(realPct)}%</span>
           </div>
         </div>
       </div>

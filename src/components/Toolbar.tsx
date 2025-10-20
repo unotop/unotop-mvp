@@ -23,7 +23,7 @@ export default function Toolbar({
             type="button"
             onClick={onMenuToggle}
             aria-label="Otvoriť menu"
-            className="p-2 rounded-lg hover:bg-slate-800 transition-colors lg:hidden"
+            className="p-2 rounded-lg hover:bg-slate-800 transition-colors"
           >
             <svg
               className="w-6 h-6"

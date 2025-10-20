@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,25 +13,25 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'profil', label: 'Profil & Rezerva', sectionId: 'sec0', icon: '👤' },
-  { id: 'cashflow', label: 'Cashflow', sectionId: 'sec1', icon: '💰' },
-  { id: 'invest', label: 'Investície', sectionId: 'sec2', icon: '📈' },
-  { id: 'mix', label: 'Portfólio Mix', sectionId: 'sec3', icon: '🎯' },
-  { id: 'debts', label: 'Dlhy & Hypotéky', sectionId: 'sec4', icon: '🏦' },
-  { id: 'metrics', label: 'Metriky', sectionId: 'sec5', icon: '📊' },
+  { id: "profil", label: "Profil & Rezerva", sectionId: "sec0", icon: "👤" },
+  { id: "cashflow", label: "Cashflow", sectionId: "sec1", icon: "💰" },
+  { id: "invest", label: "Investície", sectionId: "sec2", icon: "📈" },
+  { id: "mix", label: "Portfólio Mix", sectionId: "sec3", icon: "🎯" },
+  { id: "debts", label: "Dlhy & Hypotéky", sectionId: "sec4", icon: "🏦" },
+  { id: "metrics", label: "Metriky", sectionId: "sec5", icon: "📊" },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const [activeSection, setActiveSection] = React.useState<string>('sec0');
+  const [activeSection, setActiveSection] = React.useState<string>("sec0");
 
   // IntersectionObserver pre tracking aktívnej sekcie
   React.useEffect(() => {
     // Skip IntersectionObserver in test environment (JSDOM)
-    if (typeof IntersectionObserver === 'undefined') return;
+    if (typeof IntersectionObserver === "undefined") return;
 
     const observerOptions = {
       root: null,
-      rootMargin: '-20% 0px -70% 0px',
+      rootMargin: "-20% 0px -70% 0px",
       threshold: 0,
     };
 
@@ -43,7 +43,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       });
     };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const observer = new IntersectionObserver(
+      observerCallback,
+      observerOptions
+    );
 
     NAV_ITEMS.forEach((item) => {
       const el = document.getElementById(item.sectionId);
@@ -57,66 +60,45 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const handleNavClick = (sectionId: string) => {
     const el = document.getElementById(sectionId);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Mobile: zavri sidebar po kliknutí
-      if (window.innerWidth < 1024) {
-        onClose();
-      }
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Zavri sidebar po kliknutí (desktop aj mobile)
+      onClose();
     }
   };
 
-  // Esc key handler (mobile overlay)
+  // Esc key handler
   React.useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
   return (
     <>
-      {/* Mobile backdrop (overlay) */}
+      {/* Backdrop (overlay) */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar panel */}
+      {/* Sidebar panel - vždy overlay */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-slate-900/95 backdrop-blur-sm
+          fixed top-16 left-0 bottom-0 w-64 bg-slate-900/95 backdrop-blur-sm
           border-r border-white/10 z-50 
           transition-transform duration-300 ease-in-out
-          lg:translate-x-0 lg:static lg:z-auto
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
         role="navigation"
         aria-label="Hlavné menu"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <span className="text-2xl">🏆</span>
-            <span>UNOTOP</span>
-          </h2>
-          {/* Close button (mobile only) */}
-          <button
-            onClick={onClose}
-            className="lg:hidden text-slate-400 hover:text-white transition-colors p-2"
-            aria-label="Zavrieť menu"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
         {/* Navigation links */}
         <nav className="p-4 space-y-1">
           {NAV_ITEMS.map((item) => {
@@ -130,11 +112,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   transition-all duration-200
                   ${
                     isActive
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
-                      : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20"
+                      : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
                   }
                 `}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
                 <span className="text-xl">{item.icon}</span>
                 <span className="font-medium text-sm">{item.label}</span>
@@ -142,13 +124,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             );
           })}
         </nav>
-
-        {/* Footer (optional info) */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
-          <p className="text-xs text-slate-500 text-center">
-            v0.6.0-beta
-          </p>
-        </div>
       </aside>
     </>
   );

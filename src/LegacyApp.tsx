@@ -877,60 +877,6 @@ export default function LegacyApp() {
           <header id="portfolio-title" className="mb-3 font-semibold">
             Zloženie portfólia
           </header>
-          <fieldset
-            className="mb-4 flex flex-wrap gap-4 text-xs"
-            aria-label="Risk preferencia"
-          >
-            <legend className="sr-only">Risk preferencia</legend>
-            {[
-              { lbl: "Konzervatívny", val: "conservative" },
-              { lbl: "Vyvážený", val: "balanced" },
-              { lbl: "Rastový", val: "growth" },
-            ].map((opt) => (
-              <label key={opt.val} className="inline-flex items-center gap-1">
-                <input
-                  type="radio"
-                  name="risk_pref_visible"
-                  value={opt.val}
-                  aria-label={opt.lbl}
-                  defaultChecked={opt.val === "balanced"}
-                  onChange={() => {
-                    const cur = readV3();
-                    writeV3({
-                      profile: {
-                        ...(cur.profile || {}),
-                        riskPref: opt.val,
-                      } as any,
-                      riskPref: opt.val,
-                    });
-                  }}
-                />{" "}
-                {opt.lbl}
-              </label>
-            ))}
-            {/* Viditeľný spinbutton krízového biasu (persistuje crisisBias) */}
-            <label className="inline-flex flex-col ml-4">
-              <span className="text-xs">Krízový bias (0 až 3)</span>
-              <input
-                type="number"
-                role="spinbutton"
-                aria-label="Krízový bias (0 až 3)"
-                min={0}
-                max={3}
-                value={crisisIdx}
-                onChange={(e) => {
-                  const v = Number(e.currentTarget.value);
-                  setCrisisIdx(v);
-                  const cur = readV3();
-                  writeV3({
-                    profile: { ...(cur.profile || {}), crisisBias: v } as any,
-                    crisisBias: v,
-                  });
-                }}
-                className="mt-1 w-16 rounded bg-slate-800 px-2 py-1 text-xs"
-              />
-            </label>
-          </fieldset>
           <div className="mb-4" data-testid="mixpanel-slot">
             <MixPanel
               mode="BASIC"
@@ -1696,250 +1642,144 @@ export default function LegacyApp() {
         onModeToggle={handleModeToggle}
       />
 
-      {/* Main layout: Sidebar + Content */}
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* Sidebar Navigation (overlay) */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Main content area */}
-        <div className="flex-1">
-          {/* Deeplink Banner (pod toolbarom) */}
-          {showLinkBanner && (
-            <div
-              role="alert"
-              data-testid="deeplink-banner"
-              className="mx-auto max-w-[1320px] px-4 mt-3 mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
-            >
-              <span>Konfigurácia načítaná zo zdieľaného linku.</span>
-              <button
-                type="button"
-                aria-label="Zavrieť oznámenie"
-                className="px-2 py-0.5 rounded bg-emerald-700/40"
+      {/* Deeplink Banner (pod toolbarom) */}
+      {showLinkBanner && (
+        <div
+          role="alert"
+          data-testid="deeplink-banner"
+          className="mx-auto max-w-[1320px] px-4 mt-3 mb-3 rounded bg-emerald-600/15 border border-emerald-500/30 p-3 text-xs flex justify-between items-start gap-3"
+        >
+          <span>Konfigurácia načítaná zo zdieľaného linku.</span>
+          <button
+            type="button"
+            aria-label="Zavrieť oznámenie"
+            className="px-2 py-0.5 rounded bg-emerald-700/40"
                 onClick={() => {
                   setShowLinkBanner(false);
                   clearHashRef.current();
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
-      <PageLayout left={left} right={right} />
-      <div
-        role="dialog"
-        aria-label="Mini-wizard odporúčania"
-        data-testid="mini-wizard-dialog"
-        data-open={wizardOpen ? "1" : "0"}
-        className={
-          wizardOpen
-            ? "fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
-            : "pointer-events-none fixed inset-0 z-[-1] opacity-0"
-        }
-        aria-hidden={wizardOpen ? "false" : "true"}
-        onKeyDown={(e) => {
-          if (e.key === "Escape" && wizardOpen) {
-            e.stopPropagation();
-            setWizardOpen(false);
-            setTimeout(() => wizardTriggerRef.current?.focus(), 0);
-          }
-        }}
-        tabIndex={-1}
-      >
-        {wizardOpen && (
-          <div
-            className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full relative z-[101]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-base font-semibold">Odporúčanie</h2>
-            <p className="text-sm text-slate-400">
-              {wizardType === "reserve"
-                ? "Nastaviť rezervu na minimum (1000€ / 6 mesiacov)?"
-                : "Nastaviť zlato na 12 %?"}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
-                className="px-4 py-2 rounded bg-emerald-600 text-white"
-                aria-label={
-                  wizardType === "reserve"
-                    ? "Apply reserve baseline"
-                    : "Apply gold 12%"
-                }
-                onClick={() => {
-                  if (wizardType === "reserve") {
-                    const cur = readV3();
-                    const reserveEur = Math.max(
-                      cur.reserveEur || cur.profile?.reserveEur || 0,
-                      1000
-                    );
-                    const reserveMonths = Math.max(
-                      cur.reserveMonths || cur.profile?.reserveMonths || 0,
-                      6
-                    );
-                    writeV3({
-                      profile: {
-                        ...(cur.profile || {}),
-                        reserveEur,
-                        reserveMonths,
-                      } as any,
-                    });
-                  } else {
-                    // Gold wizard: set gold to 12%
-                    const cur = readV3();
-                    const currentMix = (cur.mix as any as MixItem[]) || [];
-                    if (currentMix.length > 0) {
-                      const adjusted = setGoldTarget(currentMix, 12);
-                      writeV3({ mix: adjusted as any });
-                    }
-                  }
-                  setWizardOpen(false);
-                  const focusFn = () => {
-                    const targetTestId =
-                      wizardType === "reserve"
-                        ? TEST_IDS.MONTHLY_SLIDER
-                        : TEST_IDS.GOLD_SLIDER;
-                    const el = document.querySelector<HTMLInputElement>(
-                      `[data-testid="${targetTestId}"]`
-                    );
-                    el?.focus();
-                    el?.classList.add("animate-pulse");
-                    setTimeout(
-                      () => el?.classList.remove("animate-pulse"),
-                      1000
-                    );
-                  };
-                  Promise.resolve().then(focusFn);
-                  setTimeout(focusFn, 0);
                 }}
               >
-                Použiť
-              </button>
-              <button
-                onClick={() => {
-                  setWizardOpen(false);
-                  setTimeout(() => wizardTriggerRef.current?.focus(), 0);
-                }}
-                className="px-4 py-2 rounded bg-slate-700"
-              >
-                Zavrieť
+                ×
               </button>
             </div>
-          </div>
-        )}
-      </div>
-      {shareOpen && (
-        <div
-          role="dialog"
-          aria-label="Zdieľať nastavenie"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-        >
-          <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
-
-            {/* Preview FV + Mix */}
-            {(() => {
-              const v3Data = readV3();
-              const mix: MixItem[] = (v3Data.mix as any) || [];
-              const lump = lumpSumEur || 0;
-              const monthly = monthlyVklad || 0;
-              const years = horizonYears || 10;
-              const goal = goalAssetsEur || 0;
-              const approx = approxYieldAnnualFromMix(mix);
-              const fv = calculateFutureValue(lump, monthly, years, approx);
-              const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
-
-              return (
-                <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
-                  <div className="font-medium text-slate-300">
-                    Vaša projekcia:
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-slate-400">
-                        Hodnota po {years} rokoch:
-                      </span>
-                      <div className="font-bold text-emerald-400 tabular-nums">
-                        {fv.toFixed(0)} €
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Progres k cieľu:</span>
-                      <div className="font-bold text-amber-400 tabular-nums">
-                        {pct}%
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Jednorazový vklad:</span>
-                      <div className="font-medium tabular-nums">
-                        {lump.toFixed(0)} €
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Mesačný vklad:</span>
-                      <div className="font-medium tabular-nums">
-                        {monthly.toFixed(0)} €
-                      </div>
-                    </div>
-                  </div>
-                  {mix.length > 0 && (
-                    <div className="pt-2 border-t border-white/5">
-                      <div className="text-slate-400 mb-1">Mix portfólia:</div>
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                        {mix
-                          .filter((i) => i.pct > 0)
-                          .map((item) => {
-                            const labels: Record<string, string> = {
-                              gold: "🪙 Zlato",
-                              dyn: "📊 Dyn. riadenie",
-                              etf: "🌍 ETF svet",
-                              bonds: "📜 Dlhopisy",
-                              cash: "💵 Hotovosť",
-                              crypto: "₿ Krypto",
-                              real: "🏘️ Reality",
-                              other: "📦 Ostatné",
-                            };
-                            return (
-                              <div
-                                key={item.key}
-                                className="flex justify-between"
-                              >
-                                <span className="text-slate-300">
-                                  {labels[item.key] || item.key}
-                                </span>
-                                <span className="font-medium tabular-nums">
-                                  {item.pct.toFixed(1)}%
-                                </span>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  )}
+          )}
+          <PageLayout left={left} right={right} />
+          <div
+            role="dialog"
+            aria-label="Mini-wizard odporúčania"
+            data-testid="mini-wizard-dialog"
+            data-open={wizardOpen ? "1" : "0"}
+            className={
+              wizardOpen
+                ? "fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
+                : "pointer-events-none fixed inset-0 z-[-1] opacity-0"
+            }
+            aria-hidden={wizardOpen ? "false" : "true"}
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && wizardOpen) {
+                e.stopPropagation();
+                setWizardOpen(false);
+                setTimeout(() => wizardTriggerRef.current?.focus(), 0);
+              }
+            }}
+            tabIndex={-1}
+          >
+            {wizardOpen && (
+              <div
+                className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full relative z-[101]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-base font-semibold">Odporúčanie</h2>
+                <p className="text-sm text-slate-400">
+                  {wizardType === "reserve"
+                    ? "Nastaviť rezervu na minimum (1000€ / 6 mesiacov)?"
+                    : "Nastaviť zlato na 12 %?"}
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
+                    className="px-4 py-2 rounded bg-emerald-600 text-white"
+                    aria-label={
+                      wizardType === "reserve"
+                        ? "Apply reserve baseline"
+                        : "Apply gold 12%"
+                    }
+                    onClick={() => {
+                      if (wizardType === "reserve") {
+                        const cur = readV3();
+                        const reserveEur = Math.max(
+                          cur.reserveEur || cur.profile?.reserveEur || 0,
+                          1000
+                        );
+                        const reserveMonths = Math.max(
+                          cur.reserveMonths || cur.profile?.reserveMonths || 0,
+                          6
+                        );
+                        writeV3({
+                          profile: {
+                            ...(cur.profile || {}),
+                            reserveEur,
+                            reserveMonths,
+                          } as any,
+                        });
+                      } else {
+                        // Gold wizard: set gold to 12%
+                        const cur = readV3();
+                        const currentMix = (cur.mix as any as MixItem[]) || [];
+                        if (currentMix.length > 0) {
+                          const adjusted = setGoldTarget(currentMix, 12);
+                          writeV3({ mix: adjusted as any });
+                        }
+                      }
+                      setWizardOpen(false);
+                      const focusFn = () => {
+                        const targetTestId =
+                          wizardType === "reserve"
+                            ? TEST_IDS.MONTHLY_SLIDER
+                            : TEST_IDS.GOLD_SLIDER;
+                        const el = document.querySelector<HTMLInputElement>(
+                          `[data-testid="${targetTestId}"]`
+                        );
+                        el?.focus();
+                        el?.classList.add("animate-pulse");
+                        setTimeout(
+                          () => el?.classList.remove("animate-pulse"),
+                          1000
+                        );
+                      };
+                      Promise.resolve().then(focusFn);
+                      setTimeout(focusFn, 0);
+                    }}
+                  >
+                    Použiť
+                  </button>
+                  <button
+                    onClick={() => {
+                      setWizardOpen(false);
+                      setTimeout(() => wizardTriggerRef.current?.focus(), 0);
+                    }}
+                    className="px-4 py-2 rounded bg-slate-700"
+                  >
+                    Zavrieť
+                  </button>
                 </div>
-              );
-            })()}
+              </div>
+            )}
+          </div>
+          {shareOpen && (
+            <div
+              role="dialog"
+              aria-label="Zdieľať nastavenie"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            >
+              <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
+                <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
 
-            {/* Email input */}
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-300">
-                Email finančného advisora
-              </span>
-              <input
-                autoFocus
-                aria-label="Email agenta"
-                type="email"
-                placeholder="advisor@example.com"
-                className="w-full bg-slate-800 rounded-lg px-4 py-2.5 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
-              />
-            </label>
-
-            {/* CTA buttons */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
-                onClick={() => {
-                  // TODO: Generate mailto link with template + deeplink
+                {/* Preview FV + Mix */}
+                {(() => {
                   const v3Data = readV3();
                   const mix: MixItem[] = (v3Data.mix as any) || [];
                   const lump = lumpSumEur || 0;
@@ -1948,23 +1788,136 @@ export default function LegacyApp() {
                   const goal = goalAssetsEur || 0;
                   const approx = approxYieldAnnualFromMix(mix);
                   const fv = calculateFutureValue(lump, monthly, years, approx);
+                  const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
 
-                  // Generate deeplink
-                  const state = {
-                    profile: {
-                      lumpSumEur: lump,
-                      horizonYears: years,
-                      goalAssetsEur: goal,
-                    },
-                    monthly,
-                    mix,
-                  };
-                  const encoded = btoa(JSON.stringify(state));
-                  const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
+                  return (
+                    <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
+                      <div className="font-medium text-slate-300">
+                        Vaša projekcia:
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-slate-400">
+                            Hodnota po {years} rokoch:
+                          </span>
+                          <div className="font-bold text-emerald-400 tabular-nums">
+                            {fv.toFixed(0)} €
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            Progres k cieľu:
+                          </span>
+                          <div className="font-bold text-amber-400 tabular-nums">
+                            {pct}%
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">
+                            Jednorazový vklad:
+                          </span>
+                          <div className="font-medium tabular-nums">
+                            {lump.toFixed(0)} €
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-slate-400">Mesačný vklad:</span>
+                          <div className="font-medium tabular-nums">
+                            {monthly.toFixed(0)} €
+                          </div>
+                        </div>
+                      </div>
+                      {mix.length > 0 && (
+                        <div className="pt-2 border-t border-white/5">
+                          <div className="text-slate-400 mb-1">
+                            Mix portfólia:
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+                            {mix
+                              .filter((i) => i.pct > 0)
+                              .map((item) => {
+                                const labels: Record<string, string> = {
+                                  gold: "🪙 Zlato",
+                                  dyn: "📊 Dyn. riadenie",
+                                  etf: "🌍 ETF svet",
+                                  bonds: "📜 Dlhopisy",
+                                  cash: "💵 Hotovosť",
+                                  crypto: "₿ Krypto",
+                                  real: "🏘️ Reality",
+                                  other: "📦 Ostatné",
+                                };
+                                return (
+                                  <div
+                                    key={item.key}
+                                    className="flex justify-between"
+                                  >
+                                    <span className="text-slate-300">
+                                      {labels[item.key] || item.key}
+                                    </span>
+                                    <span className="font-medium tabular-nums">
+                                      {item.pct.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
-                  // Email template
-                  const subject = "Investičná projekcia - Unotop";
-                  const body = `Dobrý deň,
+                {/* Email input */}
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-slate-300">
+                    Email finančného advisora
+                  </span>
+                  <input
+                    autoFocus
+                    aria-label="Email agenta"
+                    type="email"
+                    placeholder="advisor@example.com"
+                    className="w-full bg-slate-800 rounded-lg px-4 py-2.5 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
+                  />
+                </label>
+
+                {/* CTA buttons */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
+                    onClick={() => {
+                      // TODO: Generate mailto link with template + deeplink
+                      const v3Data = readV3();
+                      const mix: MixItem[] = (v3Data.mix as any) || [];
+                      const lump = lumpSumEur || 0;
+                      const monthly = monthlyVklad || 0;
+                      const years = horizonYears || 10;
+                      const goal = goalAssetsEur || 0;
+                      const approx = approxYieldAnnualFromMix(mix);
+                      const fv = calculateFutureValue(
+                        lump,
+                        monthly,
+                        years,
+                        approx
+                      );
+
+                      // Generate deeplink
+                      const state = {
+                        profile: {
+                          lumpSumEur: lump,
+                          horizonYears: years,
+                          goalAssetsEur: goal,
+                        },
+                        monthly,
+                        mix,
+                      };
+                      const encoded = btoa(JSON.stringify(state));
+                      const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
+
+                      // Email template
+                      const subject = "Investičná projekcia - Unotop";
+                      const body = `Dobrý deň,
 
 pridávam vám moju investičnú projekciu:
 
@@ -1984,31 +1937,29 @@ ${deeplink}
 
 S pozdravom`;
 
-                  const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                  window.location.href = mailtoLink;
+                      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                      window.location.href = mailtoLink;
 
-                  setShareOpen(false);
-                  setTimeout(() => shareBtnRef.current?.focus(), 0);
-                }}
-              >
-                📨 Odoslať email
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
-                onClick={() => {
-                  setShareOpen(false);
-                  setTimeout(() => shareBtnRef.current?.focus(), 0);
-                }}
-              >
-                Zrušiť
-              </button>
+                      setShareOpen(false);
+                      setTimeout(() => shareBtnRef.current?.focus(), 0);
+                    }}
+                  >
+                    📨 Odoslať email
+                  </button>
+                  <button
+                    type="button"
+                    className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
+                    onClick={() => {
+                      setShareOpen(false);
+                      setTimeout(() => shareBtnRef.current?.focus(), 0);
+                    }}
+                  >
+                    Zrušiť
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-        </div> {/* End of flex-1 main content area */}
-      </div> {/* End of flex sidebar+content */}
+          )}
     </div>
   );
 }
