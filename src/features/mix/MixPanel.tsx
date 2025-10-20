@@ -586,8 +586,8 @@ export const MixPanel: React.FC<{
 
       {/* Dyn+Krypto constraint warning + CTA */}
       {(() => {
-        const dynPct = mix.find((i) => i.key === 'dyn')?.pct || 0;
-        const cryptoPct = mix.find((i) => i.key === 'crypto')?.pct || 0;
+        const dynPct = mix.find((i) => i.key === "dyn")?.pct || 0;
+        const cryptoPct = mix.find((i) => i.key === "crypto")?.pct || 0;
         const combined = dynPct + cryptoPct;
         if (combined <= 22) return null;
         return (
@@ -610,17 +610,23 @@ export const MixPanel: React.FC<{
                 const newCrypto = cryptoPct * ratio;
                 const freed = combined - targetSum;
                 // Redistribuuj freed medzi ostatné (proporcionálne)
-                const others = mix.filter((i) => i.key !== 'dyn' && i.key !== 'crypto');
+                const others = mix.filter(
+                  (i) => i.key !== "dyn" && i.key !== "crypto"
+                );
                 const othersSum = others.reduce((a, b) => a + b.pct, 0) || 1;
                 const adjusted = mix.map((i) => {
-                  if (i.key === 'dyn') return { ...i, pct: +newDyn.toFixed(2) };
-                  if (i.key === 'crypto') return { ...i, pct: +newCrypto.toFixed(2) };
-                  return { ...i, pct: +(i.pct + (i.pct / othersSum * freed)).toFixed(2) };
+                  if (i.key === "dyn") return { ...i, pct: +newDyn.toFixed(2) };
+                  if (i.key === "crypto")
+                    return { ...i, pct: +newCrypto.toFixed(2) };
+                  return {
+                    ...i,
+                    pct: +(i.pct + (i.pct / othersSum) * freed).toFixed(2),
+                  };
                 });
                 const normalized = normalize(adjusted);
                 setMix(normalized);
                 writeV3({ mix: normalized as any });
-                setToast('Dyn+Krypto dorovnané na 22%');
+                setToast("Dyn+Krypto dorovnané na 22%");
                 setTimeout(() => setToast(null), 2000);
               }}
             >
