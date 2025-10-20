@@ -4,7 +4,7 @@ import { MixPanel } from "./features/mix/MixPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { TEST_IDS } from "./testIds";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
-import { riskScore, type MixItem } from "./features/mix/mix.service";
+import { riskScore, applyRiskConstrainedMix, setGoldTarget, type MixItem } from "./features/mix/mix.service";
 import { RiskGauge } from "./components/RiskGauge";
 import {
   LineChart,
@@ -1373,15 +1373,44 @@ export default function LegacyApp() {
                   </div>
                 </div>
 
+                {/* Insights: Gold 12% recommendation */}
+                {(() => {
+                  if (!Array.isArray(mix) || mix.length === 0) return null;
+                  const goldPct = mix.find(i => i.key === 'gold')?.pct || 0;
+                  if (goldPct >= 12) return null;
+                  return (
+                    <div className="p-3 rounded-lg bg-amber-900/20 ring-1 ring-amber-500/30 text-sm">
+                      <div className="font-medium text-amber-400 mb-1">
+                        💡 Zlato pod minimum
+                      </div>
+                      <div className="text-slate-300 mb-2">
+                        Odporúčame zlato ≥ 12 % pre stabilitu portfólia.
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Nastaviť zlato na 12%"
+                        className="px-3 py-1.5 rounded bg-amber-600/30 ring-1 ring-amber-500/50 text-xs font-medium hover:bg-amber-600/40 transition-colors"
+                        onClick={() => {
+                          setWizardType('gold');
+                          setWizardOpen(true);
+                        }}
+                      >
+                        Nastaviť zlato na 12 %
+                      </button>
+                    </div>
+                  );
+                })()}
+
                 {/* CTA: Max výnos */}
                 <div className="pt-2 border-t border-white/5">
                   <button
                     type="button"
                     aria-label="Max výnos (riziko ≤ cap)"
-                    className="w-full px-3 py-2 rounded bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium"
+                    className="w-full px-3 py-2 rounded bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
                     onClick={() => {
-                      // TODO: implementovať applyRiskConstrainedMix alebo optimalizáciu
-                      alert("Max výnos – implementácia TODO");
+                      if (!Array.isArray(mix) || mix.length === 0) return;
+                      const optimized = applyRiskConstrainedMix(mix, cap);
+                      writeV3({ mix: optimized as any });
                     }}
                   >
                     Max výnos (riziko ≤ cap)
@@ -1642,13 +1671,21 @@ export default function LegacyApp() {
                       } as any,
                     });
                   } else {
-                    // Gold wizard logic (TODO: implement in Sprint 3)
-                    alert('Gold 12% - implementácia v Sprint 3');
+                    // Gold wizard: set gold to 12%
+                    const cur = readV3();
+                    const currentMix = (cur.mix as any as MixItem[]) || [];
+                    if (currentMix.length > 0) {
+                      const adjusted = setGoldTarget(currentMix, 12);
+                      writeV3({ mix: adjusted as any });
+                    }
                   }
                   setWizardOpen(false);
                   const focusFn = () => {
+                    const targetTestId = wizardType === 'reserve' 
+                      ? TEST_IDS.MONTHLY_SLIDER 
+                      : TEST_IDS.GOLD_SLIDER;
                     const el = document.querySelector<HTMLInputElement>(
-                      `[data-testid="${TEST_IDS.MONTHLY_SLIDER}"]`
+                      `[data-testid="${targetTestId}"]`
                     );
                     el?.focus();
                     el?.classList.add("animate-pulse");

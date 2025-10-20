@@ -583,6 +583,53 @@ export const MixPanel: React.FC<{
           </span>
         ))}
       </div>
+
+      {/* Dyn+Krypto constraint warning + CTA */}
+      {(() => {
+        const dynPct = mix.find((i) => i.key === 'dyn')?.pct || 0;
+        const cryptoPct = mix.find((i) => i.key === 'crypto')?.pct || 0;
+        const combined = dynPct + cryptoPct;
+        if (combined <= 22) return null;
+        return (
+          <div className="mt-3 p-3 rounded-lg bg-amber-900/20 ring-1 ring-amber-500/30 text-sm">
+            <div className="font-medium text-amber-400 mb-1">
+              ⚠️ Dyn+Krypto nad limit
+            </div>
+            <div className="text-slate-300 mb-2">
+              Dynamické riadenie + Krypto: {combined.toFixed(0)}% (max 22%)
+            </div>
+            <button
+              type="button"
+              aria-label="Upraviť Dyn+Krypto na 22% limit"
+              className="px-3 py-1.5 rounded bg-amber-600/30 ring-1 ring-amber-500/50 text-xs font-medium hover:bg-amber-600/40 transition-colors"
+              onClick={() => {
+                // Proporcionálne znížiť dyn + crypto na 22% max
+                const targetSum = 22;
+                const ratio = targetSum / combined;
+                const newDyn = dynPct * ratio;
+                const newCrypto = cryptoPct * ratio;
+                const freed = combined - targetSum;
+                // Redistribuuj freed medzi ostatné (proporcionálne)
+                const others = mix.filter((i) => i.key !== 'dyn' && i.key !== 'crypto');
+                const othersSum = others.reduce((a, b) => a + b.pct, 0) || 1;
+                const adjusted = mix.map((i) => {
+                  if (i.key === 'dyn') return { ...i, pct: +newDyn.toFixed(2) };
+                  if (i.key === 'crypto') return { ...i, pct: +newCrypto.toFixed(2) };
+                  return { ...i, pct: +(i.pct + (i.pct / othersSum * freed)).toFixed(2) };
+                });
+                const normalized = normalize(adjusted);
+                setMix(normalized);
+                writeV3({ mix: normalized as any });
+                setToast('Dyn+Krypto dorovnané na 22%');
+                setTimeout(() => setToast(null), 2000);
+              }}
+            >
+              Dorovnať na 22 %
+            </button>
+          </div>
+        );
+      })()}
+
       {/* Semantická list reprezentácia mixu (pre acceptance test, ktorý očakáva role="listitem") */}
       <ul aria-label="Mix položky" className="sr-only">
         {mix.map((item) => (
