@@ -265,7 +265,7 @@ export default function LegacyApp() {
     return () => window.removeEventListener("keydown", onKey);
   }, [shareOpen]);
   const left = (
-    <div className="min-w-0 space-y-6" data-testid="left-col">
+    <div className="min-w-0 space-y-4" data-testid="left-col">
       {/* sec0: Profil klienta (nový blok nad sec1) */}
       <button
         type="button"
@@ -281,7 +281,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open0 && (
@@ -291,7 +296,7 @@ export default function LegacyApp() {
           aria-labelledby="profile-title"
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Row 1: Typ klienta + Risk preferencia (2 columns) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Typ klienta */}
@@ -419,7 +424,9 @@ export default function LegacyApp() {
                   setDebtsOpen(true);
                   // Scroll to debts section after brief delay
                   setTimeout(() => {
-                    document.getElementById("sec-debts")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    document
+                      .getElementById("sec-debts")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }, 100);
                 }}
                 className="px-4 py-2 rounded-lg bg-amber-600/20 ring-1 ring-amber-500/40 text-sm font-medium hover:bg-amber-600/30 transition-colors whitespace-nowrap"
@@ -446,7 +453,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {debtsOpen && (
@@ -457,176 +469,178 @@ export default function LegacyApp() {
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           {debts.length === 0 ? (
-          <div className="space-y-3">
-            <p className="text-sm text-slate-400">
-              Pridajte dlhy alebo hypotéky pre presnejšiu finančnú projekciu.
-            </p>
-            <button
-              type="button"
-              aria-label="Pridať prvý dlh"
-              className="px-4 py-2 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
-              onClick={() => {
-                addDebtRow();
-                setDebtsOpen(true);
-              }}
-            >
-              ➕ Pridať dlh/hypotéku
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Summary chips */}
-            <div className="flex gap-2 flex-wrap text-xs">
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                <span className="text-slate-400">Počet dlhov:</span>{" "}
-                <span className="font-medium text-white">{debts.length}</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                <span className="text-slate-400">Celkové splátky:</span>{" "}
-                <span className="font-medium text-emerald-400 tabular-nums">
-                  {debts
-                    .reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0)
-                    .toFixed(0)}{" "}
-                  €/mes.
-                </span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                <span className="text-slate-400">Celkový zostatok:</span>{" "}
-                <span className="font-medium text-red-400 tabular-nums">
-                  {debts.reduce((a, b) => a + (b.principal || 0), 0).toFixed(0)}{" "}
-                  €
-                </span>
-              </div>
+            <div className="space-y-3">
+              <p className="text-sm text-slate-400">
+                Pridajte dlhy alebo hypotéky pre presnejšiu finančnú projekciu.
+              </p>
+              <button
+                type="button"
+                aria-label="Pridať prvý dlh"
+                className="px-4 py-2 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
+                onClick={() => {
+                  addDebtRow();
+                  setDebtsOpen(true);
+                }}
+              >
+                ➕ Pridať dlh/hypotéku
+              </button>
             </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Summary chips */}
+              <div className="flex gap-2 flex-wrap text-xs">
+                <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                  <span className="text-slate-400">Počet dlhov:</span>{" "}
+                  <span className="font-medium text-white">{debts.length}</span>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                  <span className="text-slate-400">Celkové splátky:</span>{" "}
+                  <span className="font-medium text-emerald-400 tabular-nums">
+                    {debts
+                      .reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0)
+                      .toFixed(0)}{" "}
+                    €/mes.
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                  <span className="text-slate-400">Celkový zostatok:</span>{" "}
+                  <span className="font-medium text-red-400 tabular-nums">
+                    {debts
+                      .reduce((a, b) => a + (b.principal || 0), 0)
+                      .toFixed(0)}{" "}
+                    €
+                  </span>
+                </div>
+              </div>
 
-            {/* Debts table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Názov
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Zostatok
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Úrok p.a.
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Splátka
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Zostáva
-                    </th>
-                    <th
-                      className="px-2 py-2 font-medium text-slate-400"
-                      aria-label="Akcie"
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {debts.map((d, idx) => (
-                    <tr
-                      key={d.id}
-                      className="border-b border-white/5 hover:bg-slate-800/30 transition-colors"
-                    >
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Názov dlhu ${idx + 1}`}
-                          type="text"
-                          value={d.name}
-                          onChange={(e) =>
-                            updateDebt(d.id, { name: e.currentTarget.value })
-                          }
-                          className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
-                          placeholder="Názov"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Zostatok dlhu ${idx + 1}`}
-                          type="number"
-                          value={d.principal}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              principal: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Úrok p.a. dlhu ${idx + 1}`}
-                          type="number"
-                          step="0.1"
-                          value={d.ratePa}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              ratePa: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Splátka dlhu ${idx + 1}`}
-                          type="number"
-                          value={d.payment ?? d.monthly ?? 0}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              payment: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
-                          type="number"
-                          value={d.monthsLeft ?? 0}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              monthsLeft: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <button
-                          type="button"
-                          aria-label={`Zmazať dlh ${idx + 1}`}
-                          onClick={() => deleteDebt(d.id)}
-                          className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
-                        >
-                          🗑️
-                        </button>
-                      </td>
+              {/* Debts table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5">
+                      <th className="px-2 py-2 font-medium text-slate-400">
+                        Názov
+                      </th>
+                      <th className="px-2 py-2 font-medium text-slate-400">
+                        Zostatok
+                      </th>
+                      <th className="px-2 py-2 font-medium text-slate-400">
+                        Úrok p.a.
+                      </th>
+                      <th className="px-2 py-2 font-medium text-slate-400">
+                        Splátka
+                      </th>
+                      <th className="px-2 py-2 font-medium text-slate-400">
+                        Zostáva
+                      </th>
+                      <th
+                        className="px-2 py-2 font-medium text-slate-400"
+                        aria-label="Akcie"
+                      ></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {debts.map((d, idx) => (
+                      <tr
+                        key={d.id}
+                        className="border-b border-white/5 hover:bg-slate-800/30 transition-colors"
+                      >
+                        <td className="px-2 py-2">
+                          <input
+                            aria-label={`Názov dlhu ${idx + 1}`}
+                            type="text"
+                            value={d.name}
+                            onChange={(e) =>
+                              updateDebt(d.id, { name: e.currentTarget.value })
+                            }
+                            className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
+                            placeholder="Názov"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input
+                            aria-label={`Zostatok dlhu ${idx + 1}`}
+                            type="number"
+                            value={d.principal}
+                            onChange={(e) =>
+                              updateDebt(d.id, {
+                                principal: Number(e.currentTarget.value),
+                              })
+                            }
+                            className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input
+                            aria-label={`Úrok p.a. dlhu ${idx + 1}`}
+                            type="number"
+                            step="0.1"
+                            value={d.ratePa}
+                            onChange={(e) =>
+                              updateDebt(d.id, {
+                                ratePa: Number(e.currentTarget.value),
+                              })
+                            }
+                            className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input
+                            aria-label={`Splátka dlhu ${idx + 1}`}
+                            type="number"
+                            value={d.payment ?? d.monthly ?? 0}
+                            onChange={(e) =>
+                              updateDebt(d.id, {
+                                payment: Number(e.currentTarget.value),
+                              })
+                            }
+                            className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input
+                            aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
+                            type="number"
+                            value={d.monthsLeft ?? 0}
+                            onChange={(e) =>
+                              updateDebt(d.id, {
+                                monthsLeft: Number(e.currentTarget.value),
+                              })
+                            }
+                            className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <button
+                            type="button"
+                            aria-label={`Zmazať dlh ${idx + 1}`}
+                            onClick={() => deleteDebt(d.id)}
+                            className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
+                          >
+                            🗑️
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Add another debt button */}
-            <button
-              type="button"
-              aria-label="Pridať ďalší dlh"
-              className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-xs transition-colors"
-              onClick={addDebtRow}
-            >
-              ➕ Pridať ďalší dlh
-            </button>
-          </div>
-        )}
+              {/* Add another debt button */}
+              <button
+                type="button"
+                aria-label="Pridať ďalší dlh"
+                className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-xs transition-colors"
+                onClick={addDebtRow}
+              >
+                ➕ Pridať ďalší dlh
+              </button>
+            </div>
+          )}
         </section>
       )}
 
@@ -644,7 +658,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open1 && (
@@ -943,7 +962,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open2 && (
@@ -1094,7 +1118,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open3 && (
@@ -1318,7 +1347,7 @@ export default function LegacyApp() {
   }
 
   const right = (
-    <>
+    <div className="space-y-4">
       <button
         type="button"
         aria-controls="sec5"
@@ -1333,7 +1362,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open5 &&
@@ -1487,7 +1521,12 @@ export default function LegacyApp() {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
         </svg>
       </button>
       {open4 && (
@@ -1498,181 +1537,184 @@ export default function LegacyApp() {
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           {(() => {
-          const v3Data = readV3();
-          const mix: MixItem[] = (v3Data.mix as any) || [];
-          const goal = goalAssetsEur || 0;
+            const v3Data = readV3();
+            const mix: MixItem[] = (v3Data.mix as any) || [];
+            const goal = goalAssetsEur || 0;
 
-          if (!goal || goal <= 0) {
-            return (
-              <div className="text-sm text-slate-400">
-                Nastavte cieľ aktív v sekcii Investičné nastavenia.
-              </div>
+            if (!goal || goal <= 0) {
+              return (
+                <div className="text-sm text-slate-400">
+                  Nastavte cieľ aktív v sekcii Investičné nastavenia.
+                </div>
+              );
+            }
+
+            const lump = lumpSumEur || 0;
+            const monthly = monthlyVklad || 0;
+            const years = horizonYears || 10;
+            const approx = approxYieldAnnualFromMix(mix);
+            const fv = calculateFutureValue(lump, monthly, years, approx);
+            const pct = Math.max(
+              0,
+              Math.min(100, Math.round((fv / goal) * 100))
             );
-          }
 
-          const lump = lumpSumEur || 0;
-          const monthly = monthlyVklad || 0;
-          const years = horizonYears || 10;
-          const approx = approxYieldAnnualFromMix(mix);
-          const fv = calculateFutureValue(lump, monthly, years, approx);
-          const pct = Math.max(0, Math.min(100, Math.round((fv / goal) * 100)));
+            // Color-coded progress bar
+            const barColor =
+              pct >= 80
+                ? "bg-emerald-500"
+                : pct >= 50
+                  ? "bg-amber-500"
+                  : "bg-red-500";
 
-          // Color-coded progress bar
-          const barColor =
-            pct >= 80
-              ? "bg-emerald-500"
-              : pct >= 50
-                ? "bg-amber-500"
-                : "bg-red-500";
+            // Prepare data for dual-line chart
+            const debts = v3Data.debts || [];
+            const totalDebtPrincipal = debts.reduce(
+              (sum, d) => sum + (d.principal || 0),
+              0
+            );
+            const chartData: { year: number; fv: number; debt: number }[] = [];
+            for (let y = 0; y <= years; y++) {
+              const fvAtYear = calculateFutureValue(lump, monthly, y, approx);
+              // Real amortization: month-by-month compound interest calculation
+              const debtAtYear = calculateTotalDebtAtMonths(debts, y * 12);
+              chartData.push({ year: y, fv: fvAtYear, debt: debtAtYear });
+            }
 
-          // Prepare data for dual-line chart
-          const debts = v3Data.debts || [];
-          const totalDebtPrincipal = debts.reduce(
-            (sum, d) => sum + (d.principal || 0),
-            0
-          );
-          const chartData: { year: number; fv: number; debt: number }[] = [];
-          for (let y = 0; y <= years; y++) {
-            const fvAtYear = calculateFutureValue(lump, monthly, y, approx);
-            // Real amortization: month-by-month compound interest calculation
-            const debtAtYear = calculateTotalDebtAtMonths(debts, y * 12);
-            chartData.push({ year: y, fv: fvAtYear, debt: debtAtYear });
-          }
-
-          // Crossover detection: first year where FV >= debt
-          let crossoverYear: number | null = null;
-          if (totalDebtPrincipal > 0) {
-            for (let i = 0; i < chartData.length; i++) {
-              if (chartData[i].fv >= chartData[i].debt) {
-                crossoverYear = chartData[i].year;
-                break;
+            // Crossover detection: first year where FV >= debt
+            let crossoverYear: number | null = null;
+            if (totalDebtPrincipal > 0) {
+              for (let i = 0; i < chartData.length; i++) {
+                if (chartData[i].fv >= chartData[i].debt) {
+                  crossoverYear = chartData[i].year;
+                  break;
+                }
               }
             }
-          }
 
-          return (
-            <div className="space-y-3">
-              <div className="text-sm">
-                <span className="text-slate-400">Progres k cieľu: </span>
-                <span className="font-bold tabular-nums">{pct}%</span>
-              </div>
+            return (
+              <div className="space-y-3">
+                <div className="text-sm">
+                  <span className="text-slate-400">Progres k cieľu: </span>
+                  <span className="font-bold tabular-nums">{pct}%</span>
+                </div>
 
-              <div
-                className="relative h-2 w-full rounded-full bg-slate-800 ring-1 ring-white/5 overflow-hidden"
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={pct}
-                aria-label={`Progres k cieľu ${pct}%`}
-              >
                 <div
-                  className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-300`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+                  className="relative h-2 w-full rounded-full bg-slate-800 ring-1 ring-white/5 overflow-hidden"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={pct}
+                  aria-label={`Progres k cieľu ${pct}%`}
+                >
+                  <div
+                    className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-300`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
 
-              <div className="space-y-1 text-xs text-slate-400">
-                <div>
-                  Odhad hodnoty v horizontu:{" "}
-                  <span className="tabular-nums font-medium text-slate-300">
-                    {fv.toFixed(0)} €
-                  </span>
-                </div>
-                <div>
-                  Cieľ:{" "}
-                  <span className="tabular-nums font-medium text-slate-300">
-                    {goal.toFixed(0)} €
-                  </span>
-                </div>
-                {totalDebtPrincipal > 0 && (
+                <div className="space-y-1 text-xs text-slate-400">
                   <div>
-                    Celkový dlh:{" "}
-                    <span className="tabular-nums font-medium text-red-400">
-                      {totalDebtPrincipal.toFixed(0)} €
+                    Odhad hodnoty v horizontu:{" "}
+                    <span className="tabular-nums font-medium text-slate-300">
+                      {fv.toFixed(0)} €
                     </span>
+                  </div>
+                  <div>
+                    Cieľ:{" "}
+                    <span className="tabular-nums font-medium text-slate-300">
+                      {goal.toFixed(0)} €
+                    </span>
+                  </div>
+                  {totalDebtPrincipal > 0 && (
+                    <div>
+                      Celkový dlh:{" "}
+                      <span className="tabular-nums font-medium text-red-400">
+                        {totalDebtPrincipal.toFixed(0)} €
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Recharts dual-line chart */}
+                {totalDebtPrincipal > 0 && (
+                  <div className="mt-4">
+                    <LineChart
+                      width={500}
+                      height={250}
+                      data={chartData}
+                      margin={{ top: 10, right: 20, bottom: 20, left: 0 }}
+                    >
+                      <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="year"
+                        stroke="#94a3b8"
+                        tick={{ fill: "#94a3b8", fontSize: 12 }}
+                        label={{
+                          value: "Roky",
+                          position: "insideBottom",
+                          offset: -10,
+                          fill: "#94a3b8",
+                        }}
+                      />
+                      <YAxis
+                        stroke="#94a3b8"
+                        tick={{ fill: "#94a3b8", fontSize: 12 }}
+                        tickFormatter={(val: number) =>
+                          `${(val / 1000).toFixed(0)}k`
+                        }
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1e293b",
+                          border: "1px solid #475569",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                        }}
+                        formatter={(val: number) => `${val.toFixed(0)} €`}
+                      />
+                      <Legend wrapperStyle={{ fontSize: "12px" }} />
+                      <Line
+                        type="monotone"
+                        dataKey="fv"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        name="Investície (rast)"
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="debt"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                        name="Dlhy (zostatok)"
+                        dot={false}
+                      />
+                      {crossoverYear !== null && (
+                        <ReferenceLine
+                          x={crossoverYear}
+                          stroke="#facc15"
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          label={{
+                            value: `Rok vyplatenia: ${new Date().getFullYear() + crossoverYear}`,
+                            position: "top",
+                            fill: "#facc15",
+                            fontSize: 11,
+                          }}
+                        />
+                      )}
+                    </LineChart>
                   </div>
                 )}
               </div>
-
-              {/* Recharts dual-line chart */}
-              {totalDebtPrincipal > 0 && (
-                <div className="mt-4">
-                  <LineChart
-                    width={500}
-                    height={250}
-                    data={chartData}
-                    margin={{ top: 10, right: 20, bottom: 20, left: 0 }}
-                  >
-                    <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="year"
-                      stroke="#94a3b8"
-                      tick={{ fill: "#94a3b8", fontSize: 12 }}
-                      label={{
-                        value: "Roky",
-                        position: "insideBottom",
-                        offset: -10,
-                        fill: "#94a3b8",
-                      }}
-                    />
-                    <YAxis
-                      stroke="#94a3b8"
-                      tick={{ fill: "#94a3b8", fontSize: 12 }}
-                      tickFormatter={(val: number) =>
-                        `${(val / 1000).toFixed(0)}k`
-                      }
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1e293b",
-                        border: "1px solid #475569",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                      formatter={(val: number) => `${val.toFixed(0)} €`}
-                    />
-                    <Legend wrapperStyle={{ fontSize: "12px" }} />
-                    <Line
-                      type="monotone"
-                      dataKey="fv"
-                      stroke="#10b981"
-                      strokeWidth={2}
-                      name="Investície (rast)"
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="debt"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      name="Dlhy (zostatok)"
-                      dot={false}
-                    />
-                    {crossoverYear !== null && (
-                      <ReferenceLine
-                        x={crossoverYear}
-                        stroke="#facc15"
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        label={{
-                          value: `Rok vyplatenia: ${new Date().getFullYear() + crossoverYear}`,
-                          position: "top",
-                          fill: "#facc15",
-                          fontSize: 11,
-                        }}
-                      />
-                    )}
-                  </LineChart>
-                </div>
-              )}
-            </div>
-          );
-        })()}
+            );
+          })()}
         </section>
       )}
 
       {/* Share CTA - výrazný zelený button */}
-      <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-5">
+      <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-4 md:p-5">
         <button
           ref={shareBtnRef}
           type="button"
@@ -1704,7 +1746,7 @@ export default function LegacyApp() {
           Zdieľajte vašu projekciu emailom
         </p>
       </section>
-    </>
+    </div>
   );
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -1848,7 +1890,7 @@ export default function LegacyApp() {
           aria-label="Zdieľať nastavenie"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
         >
-          <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-5 max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
 
             {/* Preview FV + Mix */}
