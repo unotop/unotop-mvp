@@ -292,126 +292,344 @@ export default function LegacyApp() {
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           <div className="space-y-5">
-            {/* Typ klienta */}
-            <fieldset className="space-y-2">
-              <legend className="text-xs text-slate-400 mb-2">
-                Typ klienta
-              </legend>
-              <div className="flex flex-col gap-2 text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="client-type"
-                    value="individual"
-                    checked={clientType === "individual"}
-                    onChange={(e) =>
-                      persistClientType(e.currentTarget.value as any)
-                    }
-                    className="accent-blue-500"
-                  />
-                  <span>Jednotlivec</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="client-type"
-                    value="family"
-                    checked={clientType === "family"}
-                    onChange={(e) =>
-                      persistClientType(e.currentTarget.value as any)
-                    }
-                    className="accent-blue-500"
-                  />
-                  <span>Rodina</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="client-type"
-                    value="firm"
-                    checked={clientType === "firm"}
-                    onChange={(e) =>
-                      persistClientType(e.currentTarget.value as any)
-                    }
-                    className="accent-blue-500"
-                  />
-                  <span>Firma</span>
-                </label>
-              </div>
-            </fieldset>
+            {/* Row 1: Typ klienta + Risk preferencia (2 columns) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Typ klienta */}
+              <fieldset className="space-y-2">
+                <legend className="text-xs text-slate-400 mb-2">
+                  Typ klienta
+                </legend>
+                <div className="flex flex-col gap-2 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="client-type"
+                      value="individual"
+                      checked={clientType === "individual"}
+                      onChange={(e) =>
+                        persistClientType(e.currentTarget.value as any)
+                      }
+                      className="accent-blue-500"
+                    />
+                    <span>Jednotlivec</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="client-type"
+                      value="family"
+                      checked={clientType === "family"}
+                      onChange={(e) =>
+                        persistClientType(e.currentTarget.value as any)
+                      }
+                      className="accent-blue-500"
+                    />
+                    <span>Rodina</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="client-type"
+                      value="firm"
+                      checked={clientType === "firm"}
+                      onChange={(e) =>
+                        persistClientType(e.currentTarget.value as any)
+                      }
+                      className="accent-blue-500"
+                    />
+                    <span>Firma</span>
+                  </label>
+                </div>
+              </fieldset>
 
-            {/* Preferencia rizika */}
-            <fieldset className="space-y-2">
-              <legend className="text-xs text-slate-400 mb-2">
-                Preferencia rizika
-              </legend>
-              <div className="flex flex-col gap-2 text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="risk-pref"
-                    value="konzervativny"
-                    checked={riskPref === "konzervativny"}
-                    onChange={(e) => persistRiskPref(e.currentTarget.value)}
-                    className="accent-emerald-500"
-                  />
-                  <span>Konzervatívny (risk cap 4.0)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="risk-pref"
-                    value="vyvazeny"
-                    checked={riskPref === "vyvazeny"}
-                    onChange={(e) => persistRiskPref(e.currentTarget.value)}
-                    className="accent-amber-500"
-                  />
-                  <span>Vyvážený (risk cap 6.0)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="risk-pref"
-                    value="rastovy"
-                    checked={riskPref === "rastovy"}
-                    onChange={(e) => persistRiskPref(e.currentTarget.value)}
-                    className="accent-red-500"
-                  />
-                  <span>Rastový (risk cap 7.5)</span>
-                </label>
-              </div>
-            </fieldset>
+              {/* Preferencia rizika */}
+              <fieldset className="space-y-2">
+                <legend className="text-xs text-slate-400 mb-2">
+                  Preferencia rizika
+                </legend>
+                <div className="flex flex-col gap-2 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="risk-pref"
+                      value="konzervativny"
+                      checked={riskPref === "konzervativny"}
+                      onChange={(e) => persistRiskPref(e.currentTarget.value)}
+                      className="accent-emerald-500"
+                    />
+                    <span>Konzervatívny (risk cap 4.0)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="risk-pref"
+                      value="vyvazeny"
+                      checked={riskPref === "vyvazeny"}
+                      onChange={(e) => persistRiskPref(e.currentTarget.value)}
+                      className="accent-amber-500"
+                    />
+                    <span>Vyvážený (risk cap 6.0)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="risk-pref"
+                      value="rastovy"
+                      checked={riskPref === "rastovy"}
+                      onChange={(e) => persistRiskPref(e.currentTarget.value)}
+                      className="accent-red-500"
+                    />
+                    <span>Rastový (risk cap 7.5)</span>
+                  </label>
+                </div>
+              </fieldset>
+            </div>
 
-            {/* Krízový bias slider */}
-            <div className="space-y-2">
-              <label
-                htmlFor="crisis-bias-slider"
-                className="text-xs text-slate-400 block"
+            {/* Row 2: Krízový bias (kratší slider) + tlačidlo "Mám úver" */}
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
+              <div className="space-y-2">
+                <label
+                  htmlFor="crisis-bias-slider"
+                  className="text-xs text-slate-400 block"
+                >
+                  Krízový bias (0 až 3)
+                </label>
+                <div className="flex items-center gap-3 max-w-xs">
+                  <input
+                    id="crisis-bias-slider"
+                    type="range"
+                    min={0}
+                    max={3}
+                    step={1}
+                    value={crisisBias}
+                    onChange={(e) =>
+                      persistCrisisBias(Number(e.currentTarget.value))
+                    }
+                    className="flex-1"
+                    aria-label="Krízový bias (0 až 3)"
+                  />
+                  <span className="text-sm font-semibold tabular-nums w-8 text-center">
+                    {crisisBias}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDebtsOpen(true);
+                  // Scroll to debts section after brief delay
+                  setTimeout(() => {
+                    document.getElementById("sec-debts")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }, 100);
+                }}
+                className="px-4 py-2 rounded-lg bg-amber-600/20 ring-1 ring-amber-500/40 text-sm font-medium hover:bg-amber-600/30 transition-colors whitespace-nowrap"
               >
-                Krízový bias (0 až 3)
-              </label>
-              <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-                <input
-                  id="crisis-bias-slider"
-                  type="range"
-                  min={0}
-                  max={3}
-                  step={1}
-                  value={crisisBias}
-                  onChange={(e) =>
-                    persistCrisisBias(Number(e.currentTarget.value))
-                  }
-                  className="w-full"
-                  aria-label="Krízový bias (0 až 3)"
-                />
-                <span className="text-sm font-semibold tabular-nums w-8 text-center">
-                  {crisisBias}
-                </span>
-              </div>
+                💳 Mám úver
+              </button>
             </div>
           </div>
         </section>
       )}
+
+      {/* Debt Panel - presunútý pod sec0 (Profil klienta) */}
+      <button
+        type="button"
+        aria-controls="sec-debts"
+        aria-expanded={debtsOpen}
+        onClick={() => setDebtsOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
+      >
+        <span id="debts-section-title">💳 Dlhy a hypotéky</span>
+        <svg
+          className={`w-5 h-5 transition-transform duration-300 ${debtsOpen ? "" : "rotate-180"}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {debtsOpen && (
+        <section
+          id="sec-debts"
+          role="region"
+          aria-labelledby="debts-section-title"
+          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
+        >
+          {debts.length === 0 ? (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-400">
+              Pridajte dlhy alebo hypotéky pre presnejšiu finančnú projekciu.
+            </p>
+            <button
+              type="button"
+              aria-label="Pridať prvý dlh"
+              className="px-4 py-2 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
+              onClick={() => {
+                addDebtRow();
+                setDebtsOpen(true);
+              }}
+            >
+              ➕ Pridať dlh/hypotéku
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Summary chips */}
+            <div className="flex gap-2 flex-wrap text-xs">
+              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                <span className="text-slate-400">Počet dlhov:</span>{" "}
+                <span className="font-medium text-white">{debts.length}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                <span className="text-slate-400">Celkové splátky:</span>{" "}
+                <span className="font-medium text-emerald-400 tabular-nums">
+                  {debts
+                    .reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0)
+                    .toFixed(0)}{" "}
+                  €/mes.
+                </span>
+              </div>
+              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                <span className="text-slate-400">Celkový zostatok:</span>{" "}
+                <span className="font-medium text-red-400 tabular-nums">
+                  {debts.reduce((a, b) => a + (b.principal || 0), 0).toFixed(0)}{" "}
+                  €
+                </span>
+              </div>
+            </div>
+
+            {/* Debts table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Názov
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Zostatok
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Úrok p.a.
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Splátka
+                    </th>
+                    <th className="px-2 py-2 font-medium text-slate-400">
+                      Zostáva
+                    </th>
+                    <th
+                      className="px-2 py-2 font-medium text-slate-400"
+                      aria-label="Akcie"
+                    ></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {debts.map((d, idx) => (
+                    <tr
+                      key={d.id}
+                      className="border-b border-white/5 hover:bg-slate-800/30 transition-colors"
+                    >
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Názov dlhu ${idx + 1}`}
+                          type="text"
+                          value={d.name}
+                          onChange={(e) =>
+                            updateDebt(d.id, { name: e.currentTarget.value })
+                          }
+                          className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
+                          placeholder="Názov"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Zostatok dlhu ${idx + 1}`}
+                          type="number"
+                          value={d.principal}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              principal: Number(e.currentTarget.value),
+                            })
+                          }
+                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Úrok p.a. dlhu ${idx + 1}`}
+                          type="number"
+                          step="0.1"
+                          value={d.ratePa}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              ratePa: Number(e.currentTarget.value),
+                            })
+                          }
+                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Splátka dlhu ${idx + 1}`}
+                          type="number"
+                          value={d.payment ?? d.monthly ?? 0}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              payment: Number(e.currentTarget.value),
+                            })
+                          }
+                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
+                          type="number"
+                          value={d.monthsLeft ?? 0}
+                          onChange={(e) =>
+                            updateDebt(d.id, {
+                              monthsLeft: Number(e.currentTarget.value),
+                            })
+                          }
+                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <button
+                          type="button"
+                          aria-label={`Zmazať dlh ${idx + 1}`}
+                          onClick={() => deleteDebt(d.id)}
+                          className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Add another debt button */}
+            <button
+              type="button"
+              aria-label="Pridať ďalší dlh"
+              className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-xs transition-colors"
+              onClick={addDebtRow}
+            >
+              ➕ Pridať ďalší dlh
+            </button>
+          </div>
+        )}
+        </section>
+      )}
+
       <button
         type="button"
         aria-controls="sec1"
@@ -1002,205 +1220,6 @@ export default function LegacyApp() {
             </label>
           </div>
         </>
-      )}
-
-      {/* Debt Panel - Standalone Section */}
-      <button
-        type="button"
-        aria-controls="sec-debts"
-        aria-expanded={debtsOpen}
-        onClick={() => setDebtsOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
-      >
-        <span id="debts-section-title">💳 Dlhy a hypotéky</span>
-        <svg
-          className={`w-5 h-5 transition-transform duration-300 ${debtsOpen ? "" : "rotate-180"}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {debtsOpen && (
-        <section
-          id="sec-debts"
-          role="region"
-          aria-labelledby="debts-section-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
-        >
-          {debts.length === 0 ? (
-          <div className="space-y-3">
-            <p className="text-sm text-slate-400">
-              Pridajte dlhy alebo hypotéky pre presnejšiu finančnú projekciu.
-            </p>
-            <button
-              type="button"
-              aria-label="Pridať prvý dlh"
-              className="px-4 py-2 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
-              onClick={() => {
-                addDebtRow();
-                setDebtsOpen(true);
-              }}
-            >
-              ➕ Pridať dlh/hypotéku
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Summary chips */}
-            <div className="flex gap-2 flex-wrap text-xs">
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                <span className="text-slate-400">Počet dlhov:</span>{" "}
-                <span className="font-medium text-white">{debts.length}</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                <span className="text-slate-400">Celkové splátky:</span>{" "}
-                <span className="font-medium text-emerald-400 tabular-nums">
-                  {debts
-                    .reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0)
-                    .toFixed(0)}{" "}
-                  €/mes.
-                </span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                <span className="text-slate-400">Celkový zostatok:</span>{" "}
-                <span className="font-medium text-red-400 tabular-nums">
-                  {debts.reduce((a, b) => a + (b.principal || 0), 0).toFixed(0)}{" "}
-                  €
-                </span>
-              </div>
-            </div>
-
-            {/* Debts table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-white/5">
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Názov
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Zostatok
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Úrok p.a.
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Splátka
-                    </th>
-                    <th className="px-2 py-2 font-medium text-slate-400">
-                      Zostáva
-                    </th>
-                    <th
-                      className="px-2 py-2 font-medium text-slate-400"
-                      aria-label="Akcie"
-                    ></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {debts.map((d, idx) => (
-                    <tr
-                      key={d.id}
-                      className="border-b border-white/5 hover:bg-slate-800/30 transition-colors"
-                    >
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Názov dlhu ${idx + 1}`}
-                          type="text"
-                          value={d.name}
-                          onChange={(e) =>
-                            updateDebt(d.id, { name: e.currentTarget.value })
-                          }
-                          className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
-                          placeholder="Názov"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Zostatok dlhu ${idx + 1}`}
-                          type="number"
-                          value={d.principal}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              principal: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Úrok p.a. dlhu ${idx + 1}`}
-                          type="number"
-                          step="0.1"
-                          value={d.ratePa}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              ratePa: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Splátka dlhu ${idx + 1}`}
-                          type="number"
-                          value={d.payment ?? d.monthly ?? 0}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              payment: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input
-                          aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
-                          type="number"
-                          value={d.monthsLeft ?? 0}
-                          onChange={(e) =>
-                            updateDebt(d.id, {
-                              monthsLeft: Number(e.currentTarget.value),
-                            })
-                          }
-                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
-                          placeholder="0"
-                        />
-                      </td>
-                      <td className="px-2 py-2">
-                        <button
-                          type="button"
-                          aria-label={`Zmazať dlh ${idx + 1}`}
-                          onClick={() => deleteDebt(d.id)}
-                          className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
-                        >
-                          🗑️
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Add another debt button */}
-            <button
-              type="button"
-              aria-label="Pridať ďalší dlh"
-              className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-xs transition-colors"
-              onClick={addDebtRow}
-            >
-              ➕ Pridať ďalší dlh
-            </button>
-          </div>
-        )}
-        </section>
       )}
 
       {/* Share modal stub */}
