@@ -1204,6 +1204,51 @@ export default function LegacyApp() {
     );
   }
 
+  /**
+   * Calculate real amortization for debts (month by month compound interest).
+   * Returns remaining principal after `months` for a single debt.
+   */
+  function calculateDebtRemaining(
+    principal: number,
+    ratePa: number,
+    monthlyPayment: number,
+    months: number
+  ): number {
+    if (months <= 0) return principal;
+    if (monthlyPayment <= 0 || ratePa < 0) return principal; // No payment → no reduction
+    
+    let remaining = principal;
+    const monthlyRate = ratePa / 12 / 100;
+    
+    for (let m = 0; m < months; m++) {
+      if (remaining <= 0) break;
+      const interest = remaining * monthlyRate;
+      const principalPaid = monthlyPayment - interest;
+      if (principalPaid <= 0) {
+        // Payment too low to cover interest → debt stays same or grows (edge case)
+        remaining += interest;
+      } else {
+        remaining -= principalPaid;
+      }
+    }
+    
+    return Math.max(0, remaining);
+  }
+
+  /**
+   * Calculate total debt remaining after `months` for all debts.
+   */
+  function calculateTotalDebtAtMonths(
+    debts: Array<{ principal: number; ratePa: number; payment?: number; monthly?: number }>,
+    months: number
+  ): number {
+    return debts.reduce((sum, d) => {
+      const payment = d.payment ?? d.monthly ?? 0;
+      const remaining = calculateDebtRemaining(d.principal, d.ratePa, payment, months);
+      return sum + remaining;
+    }, 0);
+  }
+
   function calculateFutureValue(
     lumpSum: number,
     monthly: number,
@@ -1410,9 +1455,8 @@ export default function LegacyApp() {
           const chartData: { year: number; fv: number; debt: number }[] = [];
           for (let y = 0; y <= years; y++) {
             const fvAtYear = calculateFutureValue(lump, monthly, y, approx);
-            // Simple linear amortization: debtRemaining = totalPrincipal * (1 - y/totalYears)
-            // Note: This is simplified. Real amortization depends on monthsLeft, but for viz purposes this works.
-            const debtAtYear = totalDebtPrincipal * Math.max(0, 1 - y / years);
+            // Real amortization: month-by-month compound interest calculation
+            const debtAtYear = calculateTotalDebtAtMonths(debts, y * 12);
             chartData.push({ year: y, fv: fvAtYear, debt: debtAtYear });
           }
 
