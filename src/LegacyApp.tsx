@@ -127,6 +127,7 @@ export default function LegacyApp() {
       return n;
     });
   const [wizardOpen, setWizardOpen] = React.useState(false);
+  const [wizardType, setWizardType] = React.useState<'reserve' | 'gold'>('reserve');
   const wizardTriggerRef = React.useRef<HTMLButtonElement | null>(null);
 
   // Uncontrolled hooks pre sec2 polia
@@ -1119,7 +1120,7 @@ export default function LegacyApp() {
             </label>
           </fieldset>
           <div className="mb-4" data-testid="mixpanel-slot">
-            <MixPanel mode="BASIC" onReserveOpen={() => setWizardOpen(true)} />
+            <MixPanel mode="BASIC" onReserveOpen={() => { setWizardType('reserve'); setWizardOpen(true); }} />
           </div>
         </section>
       )}
@@ -1612,29 +1613,38 @@ export default function LegacyApp() {
         {wizardOpen && (
           <div className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full">
             <h2 className="text-base font-semibold">Odporúčanie</h2>
-            <p className="text-sm text-slate-400">Nastaviť zlato na 12 %?</p>
+            <p className="text-sm text-slate-400">
+              {wizardType === 'reserve' 
+                ? 'Nastaviť rezervu na minimum (1000€ / 6 mesiacov)?'
+                : 'Nastaviť zlato na 12 %?'}
+            </p>
             <div className="flex gap-3 justify-end">
               <button
                 data-testid={TEST_IDS.WIZARD_ACTION_APPLY}
                 className="px-4 py-2 rounded bg-emerald-600 text-white"
-                aria-label="Apply reserve baseline"
+                aria-label={wizardType === 'reserve' ? 'Apply reserve baseline' : 'Apply gold 12%'}
                 onClick={() => {
-                  const cur = readV3();
-                  const reserveEur = Math.max(
-                    cur.reserveEur || cur.profile?.reserveEur || 0,
-                    1000
-                  );
-                  const reserveMonths = Math.max(
-                    cur.reserveMonths || cur.profile?.reserveMonths || 0,
-                    6
-                  );
-                  writeV3({
-                    profile: {
-                      ...(cur.profile || {}),
-                      reserveEur,
-                      reserveMonths,
-                    } as any,
-                  });
+                  if (wizardType === 'reserve') {
+                    const cur = readV3();
+                    const reserveEur = Math.max(
+                      cur.reserveEur || cur.profile?.reserveEur || 0,
+                      1000
+                    );
+                    const reserveMonths = Math.max(
+                      cur.reserveMonths || cur.profile?.reserveMonths || 0,
+                      6
+                    );
+                    writeV3({
+                      profile: {
+                        ...(cur.profile || {}),
+                        reserveEur,
+                        reserveMonths,
+                      } as any,
+                    });
+                  } else {
+                    // Gold wizard logic (TODO: implement in Sprint 3)
+                    alert('Gold 12% - implementácia v Sprint 3');
+                  }
                   setWizardOpen(false);
                   const focusFn = () => {
                     const el = document.querySelector<HTMLInputElement>(

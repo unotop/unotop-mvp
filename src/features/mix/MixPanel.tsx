@@ -122,14 +122,14 @@ export const MixPanel: React.FC<{
 
   const chipsRaw = chipsFromState(mix);
   const sum = mix.reduce((a, b) => a + b.pct, 0);
-  
+
   // Hard cap: Calculate max allowable value for each asset (prevent total > 100%)
   const getMaxAllowed = (currentPct: number) => {
     const otherSum = sum - currentPct;
     const remaining = 100 - otherSum;
     return Math.min(100, remaining);
   };
-  
+
   const chips = chipsRaw.map((c) => {
     if (c.startsWith("Zlato dorovnané")) return "🟡 Zlato dorovnané";
     if (c.startsWith("Dyn+Krypto obmedzené")) return "🚦 Dyn+Krypto obmedzené";

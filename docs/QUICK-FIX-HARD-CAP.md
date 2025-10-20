@@ -45,9 +45,11 @@ const getMaxAllowed = (currentPct: number) => {
 ## ✅ Správanie
 
 ### Pred fixom:
+
 - Zlato 100% + Dyn 100% + ETF 100% + ... = **700%** ❌
 
 ### Po fixe:
+
 - Ak súčet = 95% → max pre nulový slider = 5% (zostatok do 100%)
 - Ak súčet = 100% → max pre nulový slider = 0% (disabled prakticky)
 - Používateľ môže zvýšiť slider len ak je miesto v "budget-e" (zvyšok do 100%)
@@ -57,6 +59,7 @@ const getMaxAllowed = (currentPct: number) => {
 ## 📋 Zmeny v súboroch
 
 ### `src/features/mix/MixPanel.tsx`
+
 - **Lines 124-133**: Pridané `getMaxAllowed()` helper
 - **Lines 261, 296, 330, 364, 398, 432, 466**: Aplikované `max={getMaxAllowed(pct)}` na všetky 7 sliderov
 
@@ -65,6 +68,7 @@ const getMaxAllowed = (currentPct: number) => {
 ## 🧪 Validácia
 
 ### Testy: ✅ 17/17 PASS (5.99s)
+
 - `invariants.limits` (2/2)
 - `accessibility.ui` (9/9)
 - `acceptance.mix-cap` (3/3)
@@ -73,6 +77,7 @@ const getMaxAllowed = (currentPct: number) => {
 - `deeplink.banner` (1/1)
 
 ### Build: ✅ SUCCESS (3.47s)
+
 - Bundle: 165.83 kB gzipped (unchanged)
 
 ---
@@ -80,6 +85,7 @@ const getMaxAllowed = (currentPct: number) => {
 ## 🎨 UX Impact
 
 **Používateľ teraz vidí:**
+
 1. Súčet 98% → môže pridať max 2% k nulovému slideru ✅
 2. Súčet 100% → nulové slidery sú "locked" (max=0) ✅
 3. Súčet 102% → červený chip "Súčet 102%" + CTA "Dorovnať" (existujúce správanie) ✅

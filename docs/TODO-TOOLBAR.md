@@ -8,6 +8,7 @@
 ## 🎯 Požiadavky
 
 ### Layout:
+
 ```
 ┌────────────────────────────────────────────────────┐
 │ [Logo] UNOTOP  │  [Menu items]  │  [User/Share]   │ ← Sticky top
@@ -15,6 +16,7 @@
 ```
 
 ### Komponenty:
+
 1. **Logo + Názov appky** (ľavá strana)
 2. **Menu items** (stred):
    - Profil
@@ -40,14 +42,16 @@
 ## 🔧 Implementácia (draft)
 
 ### Súbory:
+
 - `src/components/Toolbar.tsx` (nový komponent)
 - `src/LegacyApp.tsx` (wrap v layout s toolbarom)
 
 ### Props:
+
 ```typescript
 interface ToolbarProps {
   onShareClick: () => void;
-  modeUi: 'BASIC' | 'PRO';
+  modeUi: "BASIC" | "PRO";
   onModeToggle: () => void;
 }
 ```
@@ -57,10 +61,11 @@ interface ToolbarProps {
 ## 📋 Checkpoint
 
 **Implementovať PO:**
+
 - ✅ Sprint 3 (Optimizer)
 - ✅ Sprint 4 (Share modal)
 - ✅ Sprint 5 (Debt panel)
-→ **Potom Toolbar** (aby sme mali čo linkovať v menu)
+  → **Potom Toolbar** (aby sme mali čo linkovať v menu)
 
 ---
 
