@@ -714,215 +714,7 @@ export default function LegacyApp() {
               <span className="tabular-nums">{monthlyContribution} €</span>
             </div>
           </div>
-          <div className="mt-6 space-y-3">
-            <button
-              type="button"
-              aria-label="Pridať dlh"
-              className="px-3 py-2 rounded bg-slate-800 text-xs"
-              onClick={() => {
-                setDebtsOpen(true);
-                if (!debts.length) addDebtRow();
-              }}
-            >
-              Pridať dlh
-            </button>
-            {debtsOpen && (
-              <section
-                role="region"
-                aria-labelledby="debts-title"
-                className="space-y-2 text-xs ring-1 ring-white/10 rounded p-3"
-              >
-                <header id="debts-title" className="font-semibold">
-                  Dlhy a hypotéky
-                </header>
-                <p
-                  role="note"
-                  data-testid="debt-crossover-note"
-                  className="text-xs text-slate-400"
-                >
-                  Crossover placeholder
-                </p>
-                <figure
-                  aria-label="Debt vs Invest chart"
-                  data-testid="debt-vs-invest-chart"
-                  className="mt-1 space-y-0.5"
-                >
-                  <figcaption className="text-xs font-medium">
-                    Zostatok hypotéky
-                  </figcaption>
-                  <div className="text-[10px] text-slate-300">
-                    Hodnota portfólia vs. zostatok
-                  </div>
-                  <svg
-                    width="200"
-                    height="40"
-                    role="img"
-                    aria-label="chart-placeholder"
-                    className="block mt-1 fill-slate-600"
-                  >
-                    <rect x="0" y="10" width="200" height="20" />
-                  </svg>
-                </figure>
-                <div className="flex gap-2 flex-wrap items-center">
-                  <button
-                    type="button"
-                    onClick={addDebtRow}
-                    className="px-2 py-1 rounded bg-slate-700"
-                  >
-                    + Riadok
-                  </button>
-                  {debts.length > 0 &&
-                    (() => {
-                      const sum = debts.reduce(
-                        (a, b) => a + (b.payment ?? b.monthly ?? 0),
-                        0
-                      );
-                      const sumFmt = (() => {
-                        try {
-                          return sum.toLocaleString("sk-SK");
-                        } catch {
-                          return String(sum);
-                        }
-                      })();
-                      return (
-                        <>
-                          <div
-                            className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1"
-                            aria-label="KPI dlhy chip"
-                          >
-                            <span>
-                              Dlhy: {debts.length} | Splátky: {sumFmt} €
-                            </span>
-                          </div>
-                          <div
-                            className="inline-flex items-center gap-1 rounded bg-slate-800 px-2 py-1"
-                            aria-label="Mesačné splátky chip"
-                          >
-                            <span>Mesačné splátky spolu: {sumFmt} €</span>
-                          </div>
-                        </>
-                      );
-                    })()}
-                </div>
-                {debts.length > 0 && (
-                  <p
-                    data-testid="debt-reason-line"
-                    className="text-[11px] text-slate-400 mt-1"
-                  >
-                    Dôvod: úrok {debts[0].ratePa} % vs. oč. výnos − 2 p.b.
-                  </p>
-                )}
-                {debts.length > 0 && (
-                  <table
-                    role="table"
-                    aria-label="Tabuľka dlhov"
-                    className="w-full text-left border-collapse mt-2"
-                  >
-                    <thead>
-                      <tr>
-                        <th scope="col" className="px-1 py-0.5">
-                          Názov
-                        </th>
-                        <th scope="col" className="px-1 py-0.5">
-                          Istina
-                        </th>
-                        <th scope="col" className="px-1 py-0.5">
-                          Úrok p.a.
-                        </th>
-                        <th scope="col" className="px-1 py-0.5">
-                          Mesačná splátka
-                        </th>
-                        <th scope="col" className="px-1 py-0.5">
-                          Zostáva (mesiace)
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-1 py-0.5"
-                          aria-label="Akcie"
-                        />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {debts.map((d) => (
-                        <tr key={d.id} className="odd:bg-slate-800/30">
-                          <td className="px-1 py-0.5">
-                            <input
-                              aria-label="Názov"
-                              type="text"
-                              value={d.name}
-                              onChange={(e) =>
-                                updateDebt(d.id, {
-                                  name: e.currentTarget.value,
-                                })
-                              }
-                            />
-                          </td>
-                          <td className="px-1 py-0.5">
-                            <input
-                              aria-label="Istina | Zostatok"
-                              type="number"
-                              value={d.principal}
-                              onChange={(e) =>
-                                updateDebt(d.id, {
-                                  principal: Number(e.currentTarget.value),
-                                })
-                              }
-                            />
-                          </td>
-                          <td className="px-1 py-0.5">
-                            <input
-                              aria-label="Úrok p.a."
-                              type="number"
-                              value={d.ratePa}
-                              onChange={(e) =>
-                                updateDebt(d.id, {
-                                  ratePa: Number(e.currentTarget.value),
-                                })
-                              }
-                            />
-                          </td>
-                          <td className="px-1 py-0.5">
-                            <input
-                              aria-label="Mesačná splátka | Splátka"
-                              type="number"
-                              value={d.payment ?? d.monthly ?? 0}
-                              onChange={(e) =>
-                                updateDebt(d.id, {
-                                  payment: Number(e.currentTarget.value),
-                                })
-                              }
-                            />
-                          </td>
-                          <td className="px-1 py-0.5">
-                            <input
-                              aria-label="Zostáva (mesiace) | Zostáva mesiacov"
-                              type="number"
-                              value={d.monthsLeft ?? 0}
-                              onChange={(e) =>
-                                updateDebt(d.id, {
-                                  monthsLeft: Number(e.currentTarget.value),
-                                })
-                              }
-                            />
-                          </td>
-                          <td className="px-1 py-0.5">
-                            <button
-                              type="button"
-                              aria-label="Zmazať"
-                              onClick={() => deleteDebt(d.id)}
-                              className="px-2 py-1 rounded bg-slate-700"
-                            >
-                              Zmazať
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </section>
-            )}
-          </div>
+          {/* Starý debt UI odstránený - teraz používame standalone section */}
         </section>
       )}
       {open2 && (
@@ -1243,6 +1035,153 @@ export default function LegacyApp() {
           </div>
         </>
       )}
+
+      {/* Debt Panel - Standalone Section */}
+      <section
+        id="sec-debts"
+        role="region"
+        aria-labelledby="debts-section-title"
+        className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5"
+      >
+        <header id="debts-section-title" className="mb-3 font-semibold">
+          💳 Dlhy a hypotéky
+        </header>
+
+        {debts.length === 0 ? (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-400">
+              Pridajte dlhy alebo hypotéky pre presnejšiu finančnú projekciu.
+            </p>
+            <button
+              type="button"
+              aria-label="Pridať prvý dlh"
+              className="px-4 py-2 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
+              onClick={() => {
+                addDebtRow();
+                setDebtsOpen(true);
+              }}
+            >
+              ➕ Pridať dlh/hypotéku
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Summary chips */}
+            <div className="flex gap-2 flex-wrap text-xs">
+              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                <span className="text-slate-400">Počet dlhov:</span>{" "}
+                <span className="font-medium text-white">{debts.length}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                <span className="text-slate-400">Celkové splátky:</span>{" "}
+                <span className="font-medium text-emerald-400 tabular-nums">
+                  {debts.reduce((a, b) => a + (b.payment ?? b.monthly ?? 0), 0).toFixed(0)} €/mes.
+                </span>
+              </div>
+              <div className="px-3 py-1.5 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                <span className="text-slate-400">Celkový zostatok:</span>{" "}
+                <span className="font-medium text-red-400 tabular-nums">
+                  {debts.reduce((a, b) => a + (b.principal || 0), 0).toFixed(0)} €
+                </span>
+              </div>
+            </div>
+
+            {/* Debts table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    <th className="px-2 py-2 font-medium text-slate-400">Názov</th>
+                    <th className="px-2 py-2 font-medium text-slate-400">Zostatok</th>
+                    <th className="px-2 py-2 font-medium text-slate-400">Úrok p.a.</th>
+                    <th className="px-2 py-2 font-medium text-slate-400">Splátka</th>
+                    <th className="px-2 py-2 font-medium text-slate-400">Zostáva</th>
+                    <th className="px-2 py-2 font-medium text-slate-400" aria-label="Akcie"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {debts.map((d, idx) => (
+                    <tr key={d.id} className="border-b border-white/5 hover:bg-slate-800/30 transition-colors">
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Názov dlhu ${idx + 1}`}
+                          type="text"
+                          value={d.name}
+                          onChange={(e) => updateDebt(d.id, { name: e.currentTarget.value })}
+                          className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
+                          placeholder="Názov"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Zostatok dlhu ${idx + 1}`}
+                          type="number"
+                          value={d.principal}
+                          onChange={(e) => updateDebt(d.id, { principal: Number(e.currentTarget.value) })}
+                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Úrok p.a. dlhu ${idx + 1}`}
+                          type="number"
+                          step="0.1"
+                          value={d.ratePa}
+                          onChange={(e) => updateDebt(d.id, { ratePa: Number(e.currentTarget.value) })}
+                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Splátka dlhu ${idx + 1}`}
+                          type="number"
+                          value={d.payment ?? d.monthly ?? 0}
+                          onChange={(e) => updateDebt(d.id, { payment: Number(e.currentTarget.value) })}
+                          className="w-24 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <input
+                          aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
+                          type="number"
+                          value={d.monthsLeft ?? 0}
+                          onChange={(e) => updateDebt(d.id, { monthsLeft: Number(e.currentTarget.value) })}
+                          className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                          placeholder="0"
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <button
+                          type="button"
+                          aria-label={`Zmazať dlh ${idx + 1}`}
+                          onClick={() => deleteDebt(d.id)}
+                          className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Add another debt button */}
+            <button
+              type="button"
+              aria-label="Pridať ďalší dlh"
+              className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-xs transition-colors"
+              onClick={addDebtRow}
+            >
+              ➕ Pridať ďalší dlh
+            </button>
+          </div>
+        )}
+      </section>
+
       {/* Share modal stub */}
     </div>
   );
@@ -1687,7 +1626,7 @@ export default function LegacyApp() {
         tabIndex={-1}
       >
         {wizardOpen && (
-          <div 
+          <div
             className="rounded-xl bg-slate-900 p-6 ring-1 ring-white/10 space-y-4 max-w-sm w-full relative z-[101]"
             onClick={(e) => e.stopPropagation()}
           >

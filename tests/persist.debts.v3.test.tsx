@@ -15,7 +15,8 @@ describe("Persist v3 – debts", () => {
 
   it("persists debts array with fields and appears in KPI chip", async () => {
     render(<App />);
-    const addBtn = await screen.findByRole("button", { name: /Pridať dlh/i });
+    // Nový standalone debt section má button "Pridať prvý dlh"
+    const addBtn = await screen.findByRole("button", { name: /Pridať prvý dlh/i });
     fireEvent.click(addBtn);
     // fill first row
     const nameInput = screen.getByRole("textbox", { name: /Názov/i });
@@ -28,9 +29,10 @@ describe("Persist v3 – debts", () => {
     fireEvent.change(pay, { target: { value: "400" } });
     const rem = screen.getByRole("spinbutton", { name: /Zostáva mesiacov/i });
     fireEvent.change(rem, { target: { value: "240" } });
-    // KPI chip should appear
+    // Summary chips v novej implementácii (Počet dlhov, Celkové splátky)
     await waitFor(() => {
-      expect(screen.getByText(/Dlhy: 1 \| Splátky: 400 €/)).toBeTruthy();
+      expect(screen.getByText(/Počet dlhov:/)).toBeTruthy();
+      expect(screen.getByText(/400 €\/mes\./)).toBeTruthy();
     });
     const d = readLS();
     expect(Array.isArray(d.debts)).toBe(true);
