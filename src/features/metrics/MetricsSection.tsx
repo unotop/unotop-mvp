@@ -68,7 +68,7 @@ export function MetricsSection({
     riskPref === "konzervativny" || riskPref === "rastovy"
       ? (riskPref as RiskPref)
       : "vyvazeny";
-  
+
   const cap = getRiskCap(validRiskPref);
   const risk =
     Array.isArray(mix) && mix.length > 0

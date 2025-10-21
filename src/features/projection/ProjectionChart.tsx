@@ -66,13 +66,13 @@ export function ProjectionChart({
   goalAssetsEur,
 }: ProjectionChartProps) {
   const horizonMonths = Math.max(1, Math.round(horizonYears * 12));
-  
+
   // Validate riskPref
   const validRiskPref: RiskPref =
     riskPref === "konzervativny" || riskPref === "rastovy"
       ? (riskPref as RiskPref)
       : "vyvazeny";
-  
+
   const annualYield = approxYieldAnnualFromMix(mix, validRiskPref);
 
   // Investičné vstupy
