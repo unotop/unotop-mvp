@@ -121,6 +121,11 @@ export function ProjectionChart({
     }))
   );
 
+  // Dependency key pre mix (aby useMemo reagoval na zmeny mixu)
+  const mixKey = JSON.stringify(
+    Array.isArray(mix) ? mix.map((m) => ({ key: m.key, pct: m.pct })) : []
+  );
+
   // Simulácia
   const result = React.useMemo(() => {
     return simulateProjection({
@@ -129,7 +134,7 @@ export function ProjectionChart({
       invest: investInput,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [horizonMonths, lumpSumEur, monthlyVklad, annualYield, debtsKey]);
+  }, [horizonMonths, lumpSumEur, monthlyVklad, mixKey, debtsKey]);
 
   // Príprava dát pre Recharts (konvertuj mesiace → roky, zaokrúhli hodnoty)
   const chartData = result.series

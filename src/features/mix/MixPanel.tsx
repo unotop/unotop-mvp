@@ -23,24 +23,56 @@ const ASSETS: AssetDef[] = [
   { key: "cash", label: "Hotovosť/rezerva" },
   { key: "crypto", label: "Krypto (BTC/ETH)" },
   { key: "real", label: "Reality (komerčné)" },
+  { key: "other", label: "Ostatné" },
 ];
 
 export const MixPanel: React.FC<{
   mode: "BASIC" | "PRO";
   onReserveOpen?: () => void;
 }> = ({ mode, onReserveOpen }) => {
-  // internal mix state
-  // Initial BASIC mix intentionally sums to 100 % (acceptance test expects ability to create drift from 100 before clicking Dorovnať)
-  // gold 5, dyn 0, etf 60, bonds 20, cash 5, crypto 5, real 5 => 100
-  const [mix, setMix] = React.useState<MixItem[]>(() => [
-    { key: "gold", pct: 5 },
-    { key: "dyn", pct: 0 },
-    { key: "etf", pct: 60 },
-    { key: "bonds", pct: 20 },
-    { key: "cash", pct: 5 },
-    { key: "crypto", pct: 5 },
-    { key: "real", pct: 5 },
-  ]);
+  // internal mix state - hydrate from v3 on mount
+  const [mix, setMix] = React.useState<MixItem[]>(() => {
+    try {
+      const raw =
+        localStorage.getItem("unotop:v3") || localStorage.getItem("unotop_v3");
+      if (raw) {
+        const p = JSON.parse(raw);
+        const stored = p.mix;
+        if (Array.isArray(stored) && stored.length > 0) {
+          // Merge s defaults (ak chýbajú keys)
+          const defaults: Record<AssetKey, number> = {
+            gold: 5,
+            dyn: 0,
+            etf: 60,
+            bonds: 20,
+            cash: 5,
+            crypto: 5,
+            real: 5,
+            other: 0,
+          };
+          const merged: MixItem[] = [];
+          const keys: AssetKey[] = ["gold", "dyn", "etf", "bonds", "cash", "crypto", "real", "other"];
+          for (const k of keys) {
+            const found = stored.find((m: any) => m.key === k);
+            merged.push({ key: k, pct: found?.pct ?? defaults[k] });
+          }
+          return merged;
+        }
+      }
+    } catch {}
+    // Fallback: Initial BASIC mix intentionally sums to 100 % 
+    // (acceptance test expects ability to create drift from 100 before clicking Dorovnať)
+    return [
+      { key: "gold", pct: 5 },
+      { key: "dyn", pct: 0 },
+      { key: "etf", pct: 60 },
+      { key: "bonds", pct: 20 },
+      { key: "cash", pct: 5 },
+      { key: "crypto", pct: 5 },
+      { key: "real", pct: 5 },
+      { key: "other", pct: 0 },
+    ];
+  });
   const riskPref = (() => {
     try {
       const raw =
@@ -63,10 +95,47 @@ export const MixPanel: React.FC<{
   const commitAsset = (key: AssetKey, pct: number) => {
     setMix((prev) => prev.map((i) => (i.key === key ? { ...i, pct } : i)));
   };
+  
+  // Persist after any slider/text commit (debounced by input hook already)
   React.useEffect(() => {
-    // persist after any slider/text commit (debounced by input hook already)
     writeV3({ mix: mix.map((m) => ({ key: m.key, pct: m.pct })) });
   }, [mix]);
+
+  // CRITICAL: Polling sync from localStorage (same pattern as MetricsSection)
+  // This ensures external changes (e.g., from LegacyApp normalize or other components) are reflected
+  React.useEffect(() => {
+    const syncFromStorage = () => {
+      try {
+        const raw =
+          localStorage.getItem("unotop:v3") || localStorage.getItem("unotop_v3");
+        if (raw) {
+          const p = JSON.parse(raw);
+          const stored = p.mix;
+          if (Array.isArray(stored) && stored.length > 0) {
+            const currentKey = JSON.stringify(mix.map(m => ({ key: m.key, pct: m.pct })));
+            const storedKey = JSON.stringify(stored.map((m: any) => ({ key: m.key, pct: m.pct })));
+            if (currentKey !== storedKey) {
+              // localStorage changed externally, sync to component state
+              const defaults: Record<AssetKey, number> = {
+                gold: 5, dyn: 0, etf: 60, bonds: 20, cash: 5, crypto: 5, real: 5, other: 0,
+              };
+              const merged: MixItem[] = [];
+              const keys: AssetKey[] = ["gold", "dyn", "etf", "bonds", "cash", "crypto", "real", "other"];
+              for (const k of keys) {
+                const found = stored.find((m: any) => m.key === k);
+                merged.push({ key: k, pct: found?.pct ?? defaults[k] });
+              }
+              setMix(merged);
+            }
+          }
+        }
+      } catch {}
+    };
+    syncFromStorage(); // initial
+    const interval = setInterval(syncFromStorage, 500); // poll every 500ms
+    return () => clearInterval(interval);
+  }, [mix]);
+
 
   // Controllers pre každý asset (bez map hook porušení)
   const goldPct = mix.find((m) => m.key === "gold")?.pct || 0;
@@ -76,6 +145,7 @@ export const MixPanel: React.FC<{
   const cashPct = mix.find((m) => m.key === "cash")?.pct || 0;
   const cryptoPct = mix.find((m) => m.key === "crypto")?.pct || 0;
   const realPct = mix.find((m) => m.key === "real")?.pct || 0;
+  const otherPct = mix.find((m) => m.key === "other")?.pct || 0;
 
   const goldCtl = useUncontrolledValueInput({
     initial: goldPct,
@@ -118,6 +188,12 @@ export const MixPanel: React.FC<{
     parse: (r) => Number(r.replace(",", ".")) || 0,
     clamp: (n) => Math.max(0, Math.min(100, n)),
     commit: (n) => commitAsset("real", n),
+  });
+  const otherCtl = useUncontrolledValueInput({
+    initial: otherPct,
+    parse: (r) => Number(r.replace(",", ".")) || 0,
+    clamp: (n) => Math.max(0, Math.min(100, n)),
+    commit: (n) => commitAsset("other", n),
   });
 
   const chipsRaw = chipsFromState(mix);
