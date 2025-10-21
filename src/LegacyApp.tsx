@@ -1198,7 +1198,7 @@ export default function LegacyApp() {
         >
           <div className="mb-4" data-testid="mixpanel-slot">
             <MixPanel
-              mode="BASIC"
+              mode={modeUi}
               onReserveOpen={() => {
                 setWizardType("reserve");
                 setWizardOpen(true);

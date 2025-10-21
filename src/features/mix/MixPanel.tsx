@@ -653,6 +653,47 @@ export const MixPanel: React.FC<{
             <span className="tabular-nums text-xs">{Math.round(realPct)}%</span>
           </div>
         </div>
+        {/* Other (PRO only) */}
+        {mode === "PRO" && (
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+            <label htmlFor="txt-other" className="text-xs">
+              Ostatné (iné aktíva)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="txt-other"
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                inputMode="decimal"
+                aria-label="Ostatné (iné aktíva)"
+                ref={otherCtl.ref}
+                onChange={otherCtl.onChange}
+                onBlur={otherCtl.onBlur}
+                className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
+              />
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={otherPct}
+                disabled={sum >= 100 && otherPct === 0}
+                onChange={(e) => {
+                  const requested = Number(e.target.value);
+                  const maxAllowed = getMaxAllowed(otherPct);
+                  const v = Math.min(requested, maxAllowed);
+                  commitAsset("other", v);
+                  otherCtl.syncToDom(v);
+                }}
+                aria-label="Ostatné (iné aktíva)"
+              />
+              <span className="tabular-nums text-xs">
+                {Math.round(otherPct)}%
+              </span>
+            </div>
+          </div>
+        )}
       </div>
       <div className="mt-4 flex flex-wrap gap-2 items-center">
         <div
@@ -686,48 +727,52 @@ export const MixPanel: React.FC<{
         >
           Optimalizuj
         </button>
-        <button
-          onClick={optimizeRisk}
-          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-          title="Maximalizuj výnos pri dodržaní risk cap"
-        >
-          Max výnos (riziko ≤ {cap})
-        </button>
-        <button
-          onClick={applyRecommended}
-          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-          title="Aplikuj odporúčaný mix podľa rizikovej preferencie"
-        >
-          Aplikovať odporúčaný mix portfólia
-        </button>
-        <button
-          onClick={applyRules}
-          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-          title="Uprav mix aby dodržiaval limity (Dyn+Krypto ≤22%, Dyn ≤15%)"
-        >
-          Upraviť podľa pravidiel
-        </button>
-        <button
-          onClick={() => {
-            // reset to initial seed mix (no normalization beyond seed)
-            const seed: MixItem[] = [
-              { key: "gold", pct: 5 },
-              { key: "dyn", pct: 0 },
-              { key: "etf", pct: 60 },
-              { key: "bonds", pct: 20 },
-              { key: "cash", pct: 5 },
-              { key: "crypto", pct: 5 },
-              { key: "real", pct: 5 },
-            ];
-            setMix(seed);
-            writeV3({ mix: seed });
-          }}
-          aria-label="Resetovať hodnoty"
-          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-          title="Resetuj mix na počiatočné hodnoty (Gold 5%, ETF 60%, Bonds 20%, atď.)"
-        >
-          Resetovať hodnoty
-        </button>
+        {mode === "PRO" && (
+          <>
+            <button
+              onClick={optimizeRisk}
+              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+              title="Maximalizuj výnos pri dodržaní risk cap"
+            >
+              Max výnos (riziko ≤ {cap})
+            </button>
+            <button
+              onClick={applyRecommended}
+              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+              title="Aplikuj odporúčaný mix podľa rizikovej preferencie"
+            >
+              Aplikovať odporúčaný mix portfólia
+            </button>
+            <button
+              onClick={applyRules}
+              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+              title="Uprav mix aby dodržiaval limity (Dyn+Krypto ≤22%, Dyn ≤15%)"
+            >
+              Upraviť podľa pravidiel
+            </button>
+            <button
+              onClick={() => {
+                // reset to initial seed mix (no normalization beyond seed)
+                const seed: MixItem[] = [
+                  { key: "gold", pct: 5 },
+                  { key: "dyn", pct: 0 },
+                  { key: "etf", pct: 60 },
+                  { key: "bonds", pct: 20 },
+                  { key: "cash", pct: 5 },
+                  { key: "crypto", pct: 5 },
+                  { key: "real", pct: 5 },
+                ];
+                setMix(seed);
+                writeV3({ mix: seed });
+              }}
+              aria-label="Resetovať hodnoty"
+              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+              title="Resetuj mix na počiatočné hodnoty (Gold 5%, ETF 60%, Bonds 20%, atď.)"
+            >
+              Resetovať hodnoty
+            </button>
+          </>
+        )}
       </div>
 
       {/* Dyn+Krypto constraint warning + CTA */}

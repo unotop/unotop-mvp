@@ -157,6 +157,11 @@ describe("Accessibility regression (core)", () => {
   it("Toast / status chip present with aria-live container after invariants action", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu (PRO-only tlačidlo)
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     const applyRulesBtn = await screen.findByRole("button", {
       name: /Upraviť podľa pravidiel/i,
     });
@@ -172,6 +177,11 @@ describe("Accessibility regression (core)", () => {
   it("Icon / key action buttons have accessible names", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu pre advanced buttons
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     // Force baseline & invariants area visible
     const names = [
       /Optimalizuj/i,

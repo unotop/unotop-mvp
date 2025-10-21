@@ -65,7 +65,8 @@ export const ScenarioChips: React.FC<{
 
   const base =
     "inline-flex items-center gap-1 px-2 py-1 rounded border text-xs bg-slate-600/20 text-slate-200 border-slate-500/40 hover:bg-slate-600/30 focus:outline-none focus:ring-2 focus:ring-slate-400/40 transition-all duration-200 hover:scale-105 active:scale-95";
-  const activeCls = "bg-amber-600/20 text-amber-200 border-amber-400/40 shadow-lg shadow-amber-500/30 animate-pulse";
+  const activeCls =
+    "bg-amber-600/20 text-amber-200 border-amber-400/40 shadow-lg shadow-amber-500/30 animate-pulse";
   const disabledCls = "opacity-50 cursor-not-allowed";
 
   const isDisabled = (label: Scenario) => !!active && active !== label;

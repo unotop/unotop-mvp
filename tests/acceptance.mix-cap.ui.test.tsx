@@ -60,6 +60,11 @@ describe("Acceptance: Mix cap & invariants UI", () => {
   it("Scenár 2 – invariants po Aplikovať odporúčaný mix", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu (PRO-only tlačidlo)
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     const recommendBtn = await screen.findByRole("button", {
       name: /Aplikovať odporúčaný mix portfólia/i,
     });
