@@ -201,7 +201,7 @@ export function ProjectionChart({
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 10, right: 20, bottom: 30, left: 10 }}
+            margin={{ top: 10, right: 20, bottom: 50, left: 10 }}
           >
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
             <XAxis
@@ -211,7 +211,7 @@ export function ProjectionChart({
               label={{
                 value: "Roky",
                 position: "insideBottom",
-                offset: -15,
+                offset: -20,
                 fill: "#94a3b8",
               }}
             />
@@ -238,7 +238,10 @@ export function ProjectionChart({
               formatter={(val: number) => formatCurrency(val)}
               labelFormatter={(year: number) => `Rok ${year.toFixed(1)}`}
             />
-            <Legend wrapperStyle={{ fontSize: "12px" }} />
+            <Legend
+              wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+              verticalAlign="bottom"
+            />
 
             {/* Investičná krivka (zelená) */}
             <Line
