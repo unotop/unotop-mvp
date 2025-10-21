@@ -1,5 +1,5 @@
 import React from "react";
-import { writeV3 } from "../../persist/v3";
+import { writeV3, readV3 } from "../../persist/v3";
 import {
   MixItem,
   normalize,
@@ -9,6 +9,7 @@ import {
 } from "./mix.service";
 import { TEST_IDS } from "../../testIds";
 import { useUncontrolledValueInput } from "../_hooks/useUncontrolledValueInput";
+import { riskScore0to10, getRiskCap, type RiskPref } from "./assetModel";
 
 type AssetKey = MixItem["key"];
 interface AssetDef {
@@ -82,23 +83,22 @@ export const MixPanel: React.FC<{
       { key: "other", pct: 0 },
     ];
   });
-  const riskPref = (() => {
+  
+  // Read riskPref from localStorage (used for risk calculation and cap)
+  const riskPref: RiskPref = (() => {
     try {
       const raw =
         localStorage.getItem("unotop:v3") || localStorage.getItem("unotop_v3");
       if (raw) {
         const p = JSON.parse(raw);
-        return p.profile?.riskPref || p.riskPref || "vyvazeny";
+        const pref = p.profile?.riskPref || p.riskPref || "vyvazeny";
+        if (pref === "konzervativny" || pref === "rastovy") return pref;
       }
     } catch {}
     return "vyvazeny";
   })();
-  const capMap: Record<string, number> = {
-    konzervativny: 4.0,
-    vyvazeny: 6.0,
-    rastovy: 7.5,
-  };
-  const cap = capMap[riskPref] ?? 6.0;
+  
+  const cap = getRiskCap(riskPref);
 
   // handlers commit update then persist once per action
   const commitAsset = (key: AssetKey, pct: number) => {
@@ -225,7 +225,6 @@ export const MixPanel: React.FC<{
     commit: (n) => commitAsset("other", n),
   });
 
-  const chipsRaw = chipsFromState(mix);
   const sum = mix.reduce((a, b) => a + b.pct, 0);
 
   // Hard cap: Calculate max allowable value for each asset (prevent total > 100%)
@@ -234,14 +233,6 @@ export const MixPanel: React.FC<{
     const remaining = 100 - otherSum;
     return Math.min(100, remaining);
   };
-
-  const chips = chipsRaw.map((c) => {
-    if (c.startsWith("Zlato dorovnané")) return "🟡 Zlato dorovnané";
-    if (c.startsWith("Dyn+Krypto obmedzené")) return "🚦 Dyn+Krypto obmedzené";
-    if (c.startsWith("Súčet dorovnaný")) return "✅ Súčet dorovnaný";
-    if (c.startsWith("⚠️")) return c; // už obsahuje emoji
-    return c;
-  });
 
   const [toast, setToast] = React.useState<string | null>(null);
   const applyGold12 = () => {
@@ -294,6 +285,21 @@ export const MixPanel: React.FC<{
     setTimeout(() => setToast(null), 1400);
   };
 
+  // Calculate risk score and summary metrics
+  const risk = riskScore0to10(mix, riskPref, 0);
+
+  // Summary bar status color
+  const sumDrift = Math.abs(sum - 100);
+  const sumStatusColor =
+    sumDrift <= 0.1 ? "text-green-400" : sumDrift <= 1.0 ? "text-yellow-400" : "text-red-400";
+
+  // Enhanced chips with risk check
+  const enhancedChips: string[] = [];
+  if (goldPct >= 12) enhancedChips.push("🟡 Zlato dorovnané");
+  if (dynPct + cryptoPct > 22) enhancedChips.push("🚦 Dyn+Krypto obmedzené");
+  if (sumDrift <= 0.1) enhancedChips.push("✅ Súčet dorovnaný");
+  if (risk > cap) enhancedChips.push("⚠️ Nad limit rizika");
+
   return (
     <section
       className="rounded-2xl ring-1 ring-white/10 bg-slate-900/60 p-4"
@@ -302,6 +308,36 @@ export const MixPanel: React.FC<{
       <header id="mix-panel-title" className="mb-3 font-semibold">
         Zloženie portfólia
       </header>
+
+      {/* Summary Bar */}
+      <div className="mb-3 p-2 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">Súčet portfólia:</span>
+          <span className={`font-bold tabular-nums ${sumStatusColor}`}>
+            {sum.toFixed(1)} %
+          </span>
+        </div>
+      </div>
+
+      {/* Chips Strip (visible in DOM) */}
+      {enhancedChips.length > 0 && (
+        <div
+          data-testid={TEST_IDS.CHIPS_STRIP}
+          className="mb-3 flex flex-wrap gap-2"
+        >
+          {enhancedChips.map((chip, idx) => (
+            <span
+              key={idx}
+              data-testid={TEST_IDS.SCENARIO_CHIP}
+              className="px-2 py-1 text-xs rounded bg-slate-800/60 ring-1 ring-white/10 text-slate-300"
+            >
+              {chip}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Insights (Gold 12%, Reserve) */}
       <div
         data-testid={TEST_IDS.INSIGHTS_WRAP}
         className="mb-3 flex flex-wrap gap-2"
@@ -676,21 +712,6 @@ export const MixPanel: React.FC<{
         >
           Resetovať hodnoty
         </button>
-      </div>
-      <div
-        data-testid={TEST_IDS.CHIPS_STRIP}
-        className="mt-4 flex flex-wrap gap-2"
-        aria-live="polite"
-      >
-        {chips.map((c) => (
-          <span
-            key={c}
-            data-testid={TEST_IDS.SCENARIO_CHIP}
-            className="px-2 py-1 rounded border border-slate-600 text-xs bg-slate-700/40"
-          >
-            {c}
-          </span>
-        ))}
       </div>
 
       {/* Dyn+Krypto constraint warning + CTA */}
