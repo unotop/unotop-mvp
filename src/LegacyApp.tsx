@@ -64,9 +64,6 @@ export default function LegacyApp() {
   const [varExp, setVarExp] = React.useState("");
   const [currentReserve, setCurrentReserve] = React.useState("");
   const [emergencyMonths, setEmergencyMonths] = React.useState("");
-  const [stocks, setStocks] = React.useState(0);
-  const [bonds, setBonds] = React.useState(0);
-  const [cash, setCash] = React.useState(0);
   const [shareOpen, setShareOpen] = React.useState(false);
   const shareBtnRef = React.useRef<HTMLButtonElement | null>(null);
   const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(
@@ -1206,25 +1203,6 @@ export default function LegacyApp() {
         </section>
       )}
       {/* Share button moved to right sticky panel for visibility */}
-      {/* Single toggle button (accessible name matches regex in test) */}
-      <div className="mt-2" aria-label="Prepínač režimu">
-        <button
-          type="button"
-          aria-label={`Prepínač režimu: ${modeUi}`}
-          className="px-2 py-1 rounded bg-slate-800 text-xs"
-          onClick={() => {
-            const next = modeUi === "BASIC" ? "PRO" : "BASIC";
-            setModeUi(next);
-            const cur = readV3();
-            writeV3({
-              profile: { ...(cur.profile || {}), modeUi: next } as any,
-              modeUi: next,
-            });
-          }}
-        >
-          Režim: {modeUi} (prepnuť na {modeUi === "BASIC" ? "PRO" : "BASIC"})
-        </button>
-      </div>
       {IS_TEST && (
         <>
           {/* ProfilePersistStub (Legacy) – odstránené risk_pref radios (duplicitné) */}
@@ -1276,39 +1254,6 @@ export default function LegacyApp() {
             {/* Legacy crisis bias spinbutton odstránený (duplicitný) */}
           </div>
           {/* Legacy IncomeExpense persist stubs odstránené – teraz viditeľné v sec1 */}
-          {/* Mix edit spinbuttony for tests (hidden from a11y tree to avoid duplicitné labely) */}
-          <div className="sr-only" aria-hidden="true">
-            <label>
-              Akcie %
-              <input
-                type="number"
-                role="spinbutton"
-                aria-label="Akcie %"
-                value={stocks}
-                onChange={(e) => setStocks(Number(e.currentTarget.value))}
-              />
-            </label>
-            <label>
-              Dlhopisy %
-              <input
-                type="number"
-                role="spinbutton"
-                aria-label="Dlhopisy %"
-                value={bonds}
-                onChange={(e) => setBonds(Number(e.currentTarget.value))}
-              />
-            </label>
-            <label>
-              Hotovosť %
-              <input
-                type="number"
-                role="spinbutton"
-                aria-label="Hotovosť %"
-                value={cash}
-                onChange={(e) => setCash(Number(e.currentTarget.value))}
-              />
-            </label>
-          </div>
         </>
       )}
 

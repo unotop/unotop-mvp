@@ -188,7 +188,6 @@ describe("Accessibility regression (core)", () => {
       /Dorovnať/i,
       /Upraviť podľa pravidiel/i,
       /Resetovať hodnoty/i,
-      /Prepínač režimu: BASIC|Prepínač režimu: PRO/i,
     ];
     // Optionally click rules to surface more chips (not strictly needed)
     const rulesBtn = await screen.findByRole("button", {
@@ -202,6 +201,12 @@ describe("Accessibility regression (core)", () => {
         `Missing button with accessible name matching ${rx}`
       ).toBeTruthy();
     });
+    
+    // Toolbar mode toggles - existujú 2 tlačidlá (BASIC + PRO)
+    const modeToggles = screen.queryAllByRole("button", {
+      name: /Prepnúť na (BASIC|PRO) režim/i,
+    });
+    expect(modeToggles.length).toBeGreaterThan(0);
   });
 
   it("Sticky complementary panel landmark present", () => {

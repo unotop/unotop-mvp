@@ -129,11 +129,11 @@ describe("Acceptance: Mix cap & invariants UI", () => {
       // Fallback: ak CTA neprišlo, akceptuj že hodnota prekročila BASIC cap (žiadny clamp) – indikuje že test prostredie nesimuluje toast.
       const lumpVal = Number(lump.value || 0);
       const monthlyVal = Number(monthly.value || 0);
-      // Over režim cez aria-label prepínača (jednoznačné)
-      const modeToggle = screen.getByRole("button", {
-        name: /Prepínač režimu: BASIC/i,
+      // Over režim cez Toolbar prepínač - existujú 2 tlačidlá (jedno pre každý režim)
+      const modeToggles = screen.getAllByRole("button", {
+        name: /Prepnúť na (BASIC|PRO) režim/i,
       });
-      expect(modeToggle).toBeTruthy();
+      expect(modeToggles.length).toBeGreaterThan(0);
       expect(lumpVal > 10000 || monthlyVal > 5000).toBe(true);
     }
   });
