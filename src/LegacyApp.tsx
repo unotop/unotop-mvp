@@ -29,7 +29,6 @@ export default function LegacyApp() {
   const [open3, setOpen3] = React.useState(true);
   const [open4, setOpen4] = React.useState(true); // sec4: Projekcia
   const [open5, setOpen5] = React.useState(true);
-  const [monthlyContribution, setMonthlyContribution] = React.useState(0);
   const monthlySliderRef = React.useRef<HTMLInputElement | null>(null);
   const [debtsOpen, setDebtsOpen] = React.useState(true); // Changed to true for consistent initial state
   const [debts, setDebts] = React.useState<Debt[]>(
@@ -66,7 +65,6 @@ export default function LegacyApp() {
   const [currentReserve, setCurrentReserve] = React.useState("");
   const [emergencyMonths, setEmergencyMonths] = React.useState("");
   const [lumpSum, setLumpSum] = React.useState("");
-  const [monthlyContribBox, setMonthlyContribBox] = React.useState("");
   const [horizon, setHorizon] = React.useState("");
   const [goalAsset, setGoalAsset] = React.useState("");
   const [stocks, setStocks] = React.useState(0);
@@ -977,7 +975,8 @@ export default function LegacyApp() {
               aria-label="Nastaviť mesačný vklad na 100 €"
               className="px-3 py-2 rounded bg-slate-800 text-xs hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-md"
               onClick={() => {
-                setMonthlyContribution(100);
+                setMonthlyVklad(100);
+                writeV3({ monthly: 100 });
                 const f = () => monthlySliderRef.current?.focus();
                 f();
                 requestAnimationFrame(f);
@@ -998,14 +997,16 @@ export default function LegacyApp() {
                 min={0}
                 max={1000}
                 step={10}
-                value={monthlyContribution}
+                value={monthlyVklad}
                 aria-label="Mesačný vklad – slider"
                 data-testid={TEST_IDS.MONTHLY_SLIDER}
-                onChange={(e) =>
-                  setMonthlyContribution(Number(e.currentTarget.value))
-                }
+                onChange={(e) => {
+                  const newVal = Number(e.currentTarget.value);
+                  setMonthlyVklad(newVal);
+                  writeV3({ monthly: newVal });
+                }}
               />
-              <span className="tabular-nums">{monthlyContribution} €</span>
+              <span className="tabular-nums">{monthlyVklad} €</span>
             </div>
           </div>
           {/* Starý debt UI odstránený - teraz používame standalone section */}
