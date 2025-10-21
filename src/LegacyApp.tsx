@@ -526,7 +526,7 @@ export default function LegacyApp() {
                         Zostáva (roky)
                       </th>
                       <th className="px-2 py-2 font-medium text-slate-400">
-                        Extra/mes.
+                        Mimoriadna splátka (mesačne)
                       </th>
                       <th
                         className="px-2 py-2 font-medium text-slate-400"
@@ -600,12 +600,14 @@ export default function LegacyApp() {
                             aria-label={`Zostáva rokov dlhu ${idx + 1}`}
                             type="number"
                             min="0"
-                            max="40"
-                            step="0.5"
-                            value={d.monthsLeft ? (d.monthsLeft / 12).toFixed(1) : ""}
+                            max="50"
+                            step="1"
+                            value={
+                              d.monthsLeft ? Math.round(d.monthsLeft / 12) : ""
+                            }
                             onChange={(e) => {
                               const years = Number(e.currentTarget.value);
-                              const months = Math.round(years * 12);
+                              const months = years * 12;
                               updateDebt(d.id, { monthsLeft: months });
                             }}
                             className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"

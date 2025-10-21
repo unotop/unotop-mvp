@@ -66,7 +66,7 @@ function approxYieldAnnualFromMix(mix: MixItem[]): number {
 function mapDebtToInput(debt: Debt): DebtInput {
   // Heuristic: ak úrok > 6%, pravdepodobne spotrebák, inak hypotéka
   const kind = debt.ratePa > 6 ? "consumer" : "mortgage";
-  
+
   // Extra mesačná splátka (ide od mesiaca 1)
   const recurringExtra =
     debt.extraMonthly && debt.extraMonthly > 0
@@ -147,9 +147,7 @@ export function ProjectionChart({
       : null;
   const currentYear = new Date().getFullYear();
   const crossoverCalendarYear =
-    crossoverYear !== null
-      ? Math.round(currentYear + crossoverYear)
-      : null;
+    crossoverYear !== null ? Math.round(currentYear + crossoverYear) : null;
 
   // Prázdny stav
   if (chartData.length === 0) {
@@ -165,13 +163,17 @@ export function ProjectionChart({
       {/* Prehľad výsledkov */}
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="p-2 rounded bg-slate-800/50 ring-1 ring-white/5">
-          <div className="text-slate-400 mb-0.5">Konečná hodnota (investície)</div>
+          <div className="text-slate-400 mb-0.5">
+            Konečná hodnota (investície)
+          </div>
           <div className="font-bold text-emerald-400 tabular-nums">
             {formatCurrency(result.finalInvestValue)}
           </div>
         </div>
         <div className="p-2 rounded bg-slate-800/50 ring-1 ring-white/5">
-          <div className="text-slate-400 mb-0.5">Zostatok dlhov ({horizonYears} r)</div>
+          <div className="text-slate-400 mb-0.5">
+            Zostatok dlhov ({horizonYears} r)
+          </div>
           <div className="font-bold text-red-400 tabular-nums">
             {formatCurrency(result.finalDebtBalance)}
           </div>
@@ -296,15 +298,19 @@ export function ProjectionChart({
       </div>
 
       {/* A11y description */}
-      <div className="sr-only" role="img" aria-label={
-        `Graf projekcie investícií a dlhov. ${
+      <div
+        className="sr-only"
+        role="img"
+        aria-label={`Graf projekcie investícií a dlhov. ${
           crossoverYear !== null
             ? `Bod prelomu nastáva po ${crossoverYear.toFixed(1)} rokoch.`
             : "Investície neprekročia dlhy v tomto horizonte."
-        }`
-      }>
-        Graf zobrazuje rast investícií (zelená čiara) a klesajúci zostatok dlhov (červená čiara) počas {horizonYears} rokov.
-        {crossoverYear !== null && ` Investície prekročia dlhy v roku ${crossoverCalendarYear}.`}
+        }`}
+      >
+        Graf zobrazuje rast investícií (zelená čiara) a klesajúci zostatok dlhov
+        (červená čiara) počas {horizonYears} rokov.
+        {crossoverYear !== null &&
+          ` Investície prekročia dlhy v roku ${crossoverCalendarYear}.`}
       </div>
     </div>
   );
