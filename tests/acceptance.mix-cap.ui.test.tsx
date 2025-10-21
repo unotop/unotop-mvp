@@ -16,6 +16,11 @@ describe("Acceptance: Mix cap & invariants UI", () => {
   it("Scenár 1 – Dorovnať upraví sumu na 100 % po úmyselnej odchýlke", async () => {
     const user = userEvent.setup();
     render(<App />);
+    
+    // Prepnúť na PRO režim (BASIC nemá spinbuttony)
+    const proButton = screen.getByRole("button", { name: /prepnúť na pro/i });
+    await user.click(proButton);
+    
     // Vytvor drift: upravíme dva assets aby sme garantovali sum != 100
     const spinboxes = screen.getAllByRole("spinbutton") as HTMLInputElement[];
     const a = spinboxes[0];

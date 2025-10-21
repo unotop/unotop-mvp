@@ -73,6 +73,50 @@ export function getAssetRisk(key: AssetKey, riskPref: RiskPref, crisisBias = 0):
 }
 
 /**
+ * Škálovanie rizika pri vysokej alokácii (diverzifikačná ochrana)
+ * 
+ * Pravidlá:
+ * 
+ * **Dynamické riadenie** (prísnejšie limity):
+ * - 0-11%:   base risk
+ * - 11-21%:  base risk + 2
+ * - 21-31%:  base risk + 4
+ * - 31%+:    base risk + 4 + exponenciálny rast
+ * 
+ * **Ostatné aktíva**:
+ * - 0-30%:   base risk
+ * - 30-40%:  base risk + 2 (high concentration warning)
+ * - 40%+:    base risk + 4 + exponenciálny rast
+ * 
+ * @param assetKey - Kľúč aktíva
+ * @param allocationPct - Alokácia v % (0-100)
+ * @param baseRisk - Základné riziko aktíva
+ * @returns Škálované riziko (max 15)
+ */
+export function getScaledRisk(
+  assetKey: AssetKey,
+  allocationPct: number,
+  baseRisk: number
+): number {
+  // Dynamické riadenie má prísnejšie pásma
+  if (assetKey === "dyn") {
+    if (allocationPct <= 11) return baseRisk;
+    if (allocationPct <= 21) return baseRisk + 2;
+    if (allocationPct <= 31) return baseRisk + 4;
+    // 31%+: exponenciálne
+    const excess = allocationPct - 31;
+    return Math.min(15, baseRisk + 4 + excess * 0.5);
+  }
+
+  // Všetky ostatné aktíva
+  if (allocationPct <= 30) return baseRisk;
+  if (allocationPct <= 40) return baseRisk + 2;
+  // 40%+: exponenciálne
+  const excess = allocationPct - 40;
+  return Math.min(15, baseRisk + 4 + excess * 0.3);
+}
+
+/**
  * Vypočítaj vážený ročný výnos z mixu
  * @returns Ročný výnos ako desatinné číslo (napr. 0.12 = 12 %)
  */
@@ -112,8 +156,10 @@ export function riskScore0to10(mix: MixItem[], riskPref: RiskPref, crisisBias = 
   let weightedRisk = 0;
   for (const item of mix) {
     const weight = item.pct / 100;
-    const risk = getAssetRisk(item.key, riskPref, effectiveBias);
-    weightedRisk += weight * risk;
+    const baseRisk = getAssetRisk(item.key, riskPref, effectiveBias);
+    // Aplikuj škálovanie rizika pri vysokej alokácii
+    const scaledRisk = getScaledRisk(item.key, item.pct, baseRisk);
+    weightedRisk += weight * scaledRisk;
   }
 
   return Math.min(10, Math.max(0, weightedRisk));

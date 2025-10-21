@@ -3,6 +3,7 @@ import PageLayout from "./app/PageLayout";
 import Toolbar from "./components/Toolbar";
 import Sidebar from "./components/Sidebar";
 import { MixPanel } from "./features/mix/MixPanel";
+import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import { calculateFutureValue } from "./engine/calculations";
@@ -1190,13 +1191,17 @@ export default function LegacyApp() {
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           <div className="mb-4" data-testid="mixpanel-slot">
-            <MixPanel
-              mode={modeUi}
-              onReserveOpen={() => {
-                setWizardType("reserve");
-                setWizardOpen(true);
-              }}
-            />
+            {modeUi === "BASIC" ? (
+              <PortfolioSelector />
+            ) : (
+              <MixPanel
+                mode={modeUi}
+                onReserveOpen={() => {
+                  setWizardType("reserve");
+                  setWizardOpen(true);
+                }}
+              />
+            )}
           </div>
         </section>
       )}
