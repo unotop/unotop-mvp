@@ -28,18 +28,16 @@ function calculateFutureValue(
   annualRate: number
 ): number {
   if (years <= 0) return lump;
-  
+
   const months = Math.round(years * 12);
   // Mesačná sadzba: (1 + r_annual)^(1/12) - 1
-  const rMonthly = annualRate > 0 
-    ? Math.pow(1 + annualRate, 1 / 12) - 1 
-    : 0;
-  
+  const rMonthly = annualRate > 0 ? Math.pow(1 + annualRate, 1 / 12) - 1 : 0;
+
   let V = lump;
   for (let t = 1; t <= months; t++) {
     V = (V + monthly) * (1 + rMonthly);
   }
-  
+
   return V;
 }
 

@@ -8,6 +8,11 @@ describe("A11y – Debts UI", () => {
     render(<App />);
     const sec = screen.getByRole("region", { name: /Dlhy .* hypotéky/i });
     expect(sec).toBeTruthy();
+    
+    // Pridaj dlh aby sa zobrazila tabuľka
+    const addBtn = screen.getByRole("button", { name: /Pridať.*dlh/i });
+    fireEvent.click(addBtn);
+    
     const table = screen.getByRole("table", { name: /Tabuľka dlhov/i });
     expect(table).toBeTruthy();
     // Header cells should have scope="col"
@@ -16,11 +21,19 @@ describe("A11y – Debts UI", () => {
     headers.forEach((h) => expect(h.getAttribute("scope")).toBe("col"));
   });
 
-  it("add/remove debt rows are accessible", () => {
+  it("add/remove debt rows are accessible", async () => {
     render(<App />);
-    const add = screen.getByRole("button", { name: /Pridať dlh/i });
+    
+    // Počkaj na debt section (musí byť expanded)
+    const sec = await screen.findByRole("region", { name: /Dlhy.*hypotéky/i });
+    expect(sec).toBeTruthy();
+    
+    // Teraz nájdi button v section
+    const add = await screen.findByRole("button", { name: /Pridať.*dlh/i }, { timeout: 3000 });
     fireEvent.click(add);
-    const deleteBtn = screen.getByRole("button", { name: /Zmazať/i });
-    expect(deleteBtn).toBeTruthy();
+    
+    // Použi getAllByRole lebo môže byť viac delete buttonov
+    const deleteBtns = await screen.findAllByRole("button", { name: /Zmazať/i });
+    expect(deleteBtns[0]).toBeTruthy();
   });
 });

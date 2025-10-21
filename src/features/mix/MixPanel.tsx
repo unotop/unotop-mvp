@@ -104,7 +104,9 @@ export const MixPanel: React.FC<{
   const commitAsset = (key: AssetKey, pct: number) => {
     // Zaokrúhli na celé čísla (odstráni desatinné miesta)
     const rounded = Math.round(pct);
-    setMix((prev) => prev.map((i) => (i.key === key ? { ...i, pct: rounded } : i)));
+    setMix((prev) =>
+      prev.map((i) => (i.key === key ? { ...i, pct: rounded } : i))
+    );
   };
 
   // Persist after any slider/text commit (debounced by input hook already)

@@ -77,7 +77,7 @@ export default function LegacyApp() {
   const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(
     () => (seed.profile?.modeUi as any) || "BASIC"
   );
-  
+
   // Mix state (syncs from localStorage via polling)
   const [mix, setMix] = React.useState<any[]>(() => {
     try {
@@ -86,7 +86,7 @@ export default function LegacyApp() {
       return [];
     }
   });
-  
+
   // Sync mix from localStorage (500ms polling like MetricsSection)
   React.useEffect(() => {
     const syncMix = () => {
@@ -99,7 +99,7 @@ export default function LegacyApp() {
     const interval = setInterval(syncMix, 500);
     return () => clearInterval(interval);
   }, [mix]);
-  
+
   const debounceRef = React.useRef<number | undefined>(undefined);
   function persistDebts(list: Debt[]) {
     const payload = {
@@ -530,28 +530,33 @@ export default function LegacyApp() {
 
               {/* Debts table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm border-collapse">
+                <table 
+                  className="w-full text-left text-sm border-collapse"
+                  role="table"
+                  aria-label="Tabuľka dlhov"
+                >
                   <thead>
                     <tr className="border-b border-white/5">
-                      <th className="px-2 py-2 font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
                         Názov
                       </th>
-                      <th className="px-2 py-2 font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
                         Zostatok
                       </th>
-                      <th className="px-2 py-2 font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
                         Úrok p.a.
                       </th>
-                      <th className="px-2 py-2 font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
                         Splátka
                       </th>
-                      <th className="px-2 py-2 font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
                         Zostáva (roky)
                       </th>
-                      <th className="px-2 py-2 font-medium text-slate-400">
+                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
                         Mimoriadna splátka (mesačne)
                       </th>
                       <th
+                        scope="col"
                         className="px-2 py-2 font-medium text-slate-400"
                         aria-label="Akcie"
                       ></th>
