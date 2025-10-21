@@ -83,7 +83,7 @@ export const MixPanel: React.FC<{
       { key: "other", pct: 0 },
     ];
   });
-  
+
   // Read riskPref from localStorage (used for risk calculation and cap)
   const riskPref: RiskPref = (() => {
     try {
@@ -97,12 +97,14 @@ export const MixPanel: React.FC<{
     } catch {}
     return "vyvazeny";
   })();
-  
+
   const cap = getRiskCap(riskPref);
 
   // handlers commit update then persist once per action
   const commitAsset = (key: AssetKey, pct: number) => {
-    setMix((prev) => prev.map((i) => (i.key === key ? { ...i, pct } : i)));
+    // Zaokrúhli na celé čísla (odstráni desatinné miesta)
+    const rounded = Math.round(pct);
+    setMix((prev) => prev.map((i) => (i.key === key ? { ...i, pct: rounded } : i)));
   };
 
   // Persist after any slider/text commit (debounced by input hook already)
@@ -291,7 +293,11 @@ export const MixPanel: React.FC<{
   // Summary bar status color
   const sumDrift = Math.abs(sum - 100);
   const sumStatusColor =
-    sumDrift <= 0.1 ? "text-green-400" : sumDrift <= 1.0 ? "text-yellow-400" : "text-red-400";
+    sumDrift <= 0.1
+      ? "text-green-400"
+      : sumDrift <= 1.0
+        ? "text-yellow-400"
+        : "text-red-400";
 
   // Enhanced chips with risk check
   const enhancedChips: string[] = [];

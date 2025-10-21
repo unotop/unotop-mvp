@@ -58,9 +58,9 @@ export function RiskGauge({
 
   // Pásma: zelená 0-4, žltá 4-7, červená 7-10
   const SEGMENTS = [
-    { from: 0, to: 4, color: "#10b981" },   // green-500 (tailwind)
-    { from: 4, to: 7, color: "#fbbf24" },   // yellow-400
-    { from: 7, to: 10, color: "#ef4444" },  // red-500
+    { from: 0, to: 4, color: "#10b981" }, // green-500 (tailwind)
+    { from: 4, to: 7, color: "#fbbf24" }, // yellow-400
+    { from: 7, to: 10, color: "#ef4444" }, // red-500
   ];
 
   // Background track (full 180°)

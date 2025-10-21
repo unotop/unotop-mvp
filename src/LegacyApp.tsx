@@ -77,6 +77,29 @@ export default function LegacyApp() {
   const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(
     () => (seed.profile?.modeUi as any) || "BASIC"
   );
+  
+  // Mix state (syncs from localStorage via polling)
+  const [mix, setMix] = React.useState<any[]>(() => {
+    try {
+      return (seed.mix as any) || [];
+    } catch {
+      return [];
+    }
+  });
+  
+  // Sync mix from localStorage (500ms polling like MetricsSection)
+  React.useEffect(() => {
+    const syncMix = () => {
+      const v3Data = readV3();
+      const stored = (v3Data.mix as any) || [];
+      if (JSON.stringify(stored) !== JSON.stringify(mix)) {
+        setMix(stored);
+      }
+    };
+    const interval = setInterval(syncMix, 500);
+    return () => clearInterval(interval);
+  }, [mix]);
+  
   const debounceRef = React.useRef<number | undefined>(undefined);
   function persistDebts(list: Debt[]) {
     const payload = {
@@ -1427,10 +1450,7 @@ export default function LegacyApp() {
             lumpSumEur={lumpSumEur}
             monthlyVklad={monthlyVklad}
             horizonYears={horizonYears}
-            mix={(() => {
-              const v3Data = readV3();
-              return (v3Data.mix as any) || [];
-            })()}
+            mix={mix}
             riskPref={riskPref}
             debts={debts}
             goalAssetsEur={goalAssetsEur}
