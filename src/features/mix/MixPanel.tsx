@@ -10,6 +10,8 @@ import {
 import { TEST_IDS } from "../../testIds";
 import { useUncontrolledValueInput } from "../_hooks/useUncontrolledValueInput";
 import { riskScore0to10, getRiskCap, type RiskPref } from "./assetModel";
+import { AssetSlider } from "./AssetSlider";
+import { ASSET_STYLES } from "./assetStyles";
 
 type AssetKey = MixItem["key"];
 interface AssetDef {
@@ -388,311 +390,68 @@ export const MixPanel: React.FC<{
           return null;
         })()}
       </div>
-      <div className="space-y-1.5">
-        {/* Gold */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-gold" className="text-xs">
-            Zlato (fyzické)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-gold"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="Zlato (fyzické)"
-              ref={goldCtl.ref}
-              onChange={goldCtl.onChange}
-              onBlur={goldCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={goldPct}
-              disabled={sum >= 100 && goldPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(goldPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("gold", v);
-                goldCtl.syncToDom(v);
-              }}
-              data-testid={TEST_IDS.GOLD_SLIDER}
-              aria-label="Zlato (fyzické)"
-            />
-            <span className="tabular-nums text-xs">{Math.round(goldPct)}%</span>
-          </div>
-        </div>
-        {/* Dyn */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-dyn" className="text-xs">
-            Dynamické riadenie
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-dyn"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="Dynamické riadenie"
-              ref={dynCtl.ref}
-              onChange={dynCtl.onChange}
-              onBlur={dynCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={dynPct}
-              disabled={sum >= 100 && dynPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(dynPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("dyn", v);
-                dynCtl.syncToDom(v);
-              }}
-              aria-label="Dynamické riadenie"
-            />
-            <span className="tabular-nums text-xs">{Math.round(dynPct)}%</span>
-          </div>
-        </div>
-        {/* ETF */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-etf" className="text-xs">
-            ETF (svet – aktívne)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-etf"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="ETF (svet – aktívne)"
-              ref={etfCtl.ref}
-              onChange={etfCtl.onChange}
-              onBlur={etfCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={etfPct}
-              disabled={sum >= 100 && etfPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(etfPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("etf", v);
-                etfCtl.syncToDom(v);
-              }}
-              aria-label="ETF (svet – aktívne)"
-            />
-            <span className="tabular-nums text-xs">{Math.round(etfPct)}%</span>
-          </div>
-        </div>
-        {/* Bonds */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-bonds" className="text-xs">
-            Garantovaný dlhopis 7,5% p.a.
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-bonds"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="Garantovaný dlhopis 7,5% p.a."
-              ref={bondsCtl.ref}
-              onChange={bondsCtl.onChange}
-              onBlur={bondsCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={bondsPct}
-              disabled={sum >= 100 && bondsPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(bondsPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("bonds", v);
-                bondsCtl.syncToDom(v);
-              }}
-              aria-label="Garantovaný dlhopis 7,5% p.a."
-            />
-            <span className="tabular-nums text-xs">
-              {Math.round(bondsPct)}%
-            </span>
-          </div>
-        </div>
-        {/* Cash */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-cash" className="text-xs">
-            Hotovosť/rezerva
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-cash"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="Hotovosť/rezerva"
-              ref={cashCtl.ref}
-              onChange={cashCtl.onChange}
-              onBlur={cashCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={cashPct}
-              disabled={sum >= 100 && cashPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(cashPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("cash", v);
-                cashCtl.syncToDom(v);
-              }}
-              aria-label="Hotovosť/rezerva"
-            />
-            <span className="tabular-nums text-xs">{Math.round(cashPct)}%</span>
-          </div>
-        </div>
-        {/* Crypto */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-crypto" className="text-xs">
-            Krypto (BTC/ETH)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-crypto"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="Krypto (BTC/ETH)"
-              ref={cryptoCtl.ref}
-              onChange={cryptoCtl.onChange}
-              onBlur={cryptoCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={cryptoPct}
-              disabled={sum >= 100 && cryptoPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(cryptoPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("crypto", v);
-                cryptoCtl.syncToDom(v);
-              }}
-              aria-label="Krypto (BTC/ETH)"
-            />
-            <span className="tabular-nums text-xs">
-              {Math.round(cryptoPct)}%
-            </span>
-          </div>
-        </div>
-        {/* Real */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-          <label htmlFor="txt-real" className="text-xs">
-            Reality (komerčné)
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              id="txt-real"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              inputMode="decimal"
-              aria-label="Reality (komerčné)"
-              ref={realCtl.ref}
-              onChange={realCtl.onChange}
-              onBlur={realCtl.onBlur}
-              className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-            />
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={realPct}
-              disabled={sum >= 100 && realPct === 0}
-              onChange={(e) => {
-                const requested = Number(e.target.value);
-                const maxAllowed = getMaxAllowed(realPct);
-                const v = Math.min(requested, maxAllowed);
-                commitAsset("real", v);
-                realCtl.syncToDom(v);
-              }}
-              aria-label="Reality (komerčné)"
-            />
-            <span className="tabular-nums text-xs">{Math.round(realPct)}%</span>
-          </div>
-        </div>
+      <div className="space-y-3">
+        {/* Color-coded asset sliders (PRO visual upgrade) */}
+        <AssetSlider
+          assetKey="gold"
+          pct={goldPct}
+          sum={sum}
+          controller={goldCtl}
+          onCommit={(pct) => commitAsset("gold", pct)}
+          testIdSlider={TEST_IDS.GOLD_SLIDER}
+          testIdInput={TEST_IDS.GOLD_INPUT}
+        />
+        <AssetSlider
+          assetKey="dyn"
+          pct={dynPct}
+          sum={sum}
+          controller={dynCtl}
+          onCommit={(pct) => commitAsset("dyn", pct)}
+        />
+        <AssetSlider
+          assetKey="etf"
+          pct={etfPct}
+          sum={sum}
+          controller={etfCtl}
+          onCommit={(pct) => commitAsset("etf", pct)}
+        />
+        <AssetSlider
+          assetKey="bonds"
+          pct={bondsPct}
+          sum={sum}
+          controller={bondsCtl}
+          onCommit={(pct) => commitAsset("bonds", pct)}
+        />
+        <AssetSlider
+          assetKey="cash"
+          pct={cashPct}
+          sum={sum}
+          controller={cashCtl}
+          onCommit={(pct) => commitAsset("cash", pct)}
+        />
+        <AssetSlider
+          assetKey="crypto"
+          pct={cryptoPct}
+          sum={sum}
+          controller={cryptoCtl}
+          onCommit={(pct) => commitAsset("crypto", pct)}
+        />
+        <AssetSlider
+          assetKey="real"
+          pct={realPct}
+          sum={sum}
+          controller={realCtl}
+          onCommit={(pct) => commitAsset("real", pct)}
+        />
         {/* Other (PRO only) */}
         {mode === "PRO" && (
-          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-            <label htmlFor="txt-other" className="text-xs">
-              Ostatné (iné aktíva)
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                id="txt-other"
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                inputMode="decimal"
-                aria-label="Ostatné (iné aktíva)"
-                ref={otherCtl.ref}
-                onChange={otherCtl.onChange}
-                onBlur={otherCtl.onBlur}
-                className="w-20 px-2 py-1 rounded bg-slate-800 text-sm"
-              />
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={otherPct}
-                disabled={sum >= 100 && otherPct === 0}
-                onChange={(e) => {
-                  const requested = Number(e.target.value);
-                  const maxAllowed = getMaxAllowed(otherPct);
-                  const v = Math.min(requested, maxAllowed);
-                  commitAsset("other", v);
-                  otherCtl.syncToDom(v);
-                }}
-                aria-label="Ostatné (iné aktíva)"
-              />
-              <span className="tabular-nums text-xs">
-                {Math.round(otherPct)}%
-              </span>
-            </div>
-          </div>
+          <AssetSlider
+            assetKey="other"
+            pct={otherPct}
+            sum={sum}
+            controller={otherCtl}
+            onCommit={(pct) => commitAsset("other", pct)}
+          />
         )}
       </div>
       <div className="mt-4 flex flex-wrap gap-2 items-center">
