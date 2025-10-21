@@ -14,16 +14,7 @@ import {
 } from "./features/mix/mix.service";
 import { RiskGauge } from "./components/RiskGauge";
 import { MetricsSection } from "./features/metrics/MetricsSection";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ReferenceLine,
-} from "recharts";
+import { ProjectionChart } from "./features/projection/ProjectionChart";
 
 const IS_TEST = process.env.NODE_ENV === "test";
 interface Debt extends PersistDebt {
@@ -1409,180 +1400,17 @@ export default function LegacyApp() {
           aria-labelledby="sec4-title"
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          {(() => {
-            const v3Data = readV3();
-            const mix: MixItem[] = (v3Data.mix as any) || [];
-            const goal = goalAssetsEur || 0;
-
-            if (!goal || goal <= 0) {
-              return (
-                <div className="text-sm text-slate-400">
-                  Nastavte cieľ aktív v sekcii Investičné nastavenia.
-                </div>
-              );
-            }
-
-            const lump = lumpSumEur || 0;
-            const monthly = monthlyVklad || 0;
-            const years = horizonYears || 10;
-            const approx = approxYieldAnnualFromMix(mix);
-            const fv = calculateFutureValue(lump, monthly, years, approx);
-            const pct = Math.max(
-              0,
-              Math.min(100, Math.round((fv / goal) * 100))
-            );
-
-            // Color-coded progress bar
-            const barColor =
-              pct >= 80
-                ? "bg-emerald-500"
-                : pct >= 50
-                  ? "bg-amber-500"
-                  : "bg-red-500";
-
-            // Prepare data for dual-line chart
-            const debts = v3Data.debts || [];
-            const totalDebtPrincipal = debts.reduce(
-              (sum, d) => sum + (d.principal || 0),
-              0
-            );
-            const chartData: { year: number; fv: number; debt: number }[] = [];
-            for (let y = 0; y <= years; y++) {
-              const fvAtYear = calculateFutureValue(lump, monthly, y, approx);
-              // Real amortization: month-by-month compound interest calculation
-              const debtAtYear = calculateTotalDebtAtMonths(debts, y * 12);
-              chartData.push({ year: y, fv: fvAtYear, debt: debtAtYear });
-            }
-
-            // Crossover detection: first year where FV >= debt
-            let crossoverYear: number | null = null;
-            if (totalDebtPrincipal > 0) {
-              for (let i = 0; i < chartData.length; i++) {
-                if (chartData[i].fv >= chartData[i].debt) {
-                  crossoverYear = chartData[i].year;
-                  break;
-                }
-              }
-            }
-
-            return (
-              <div className="space-y-3">
-                <div className="text-sm">
-                  <span className="text-slate-400">Progres k cieľu: </span>
-                  <span className="font-bold tabular-nums">{pct}%</span>
-                </div>
-
-                <div
-                  className="relative h-2 w-full rounded-full bg-slate-800 ring-1 ring-white/5 overflow-hidden"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={pct}
-                  aria-label={`Progres k cieľu ${pct}%`}
-                >
-                  <div
-                    className={`absolute inset-y-0 left-0 ${barColor} transition-all duration-300`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-
-                <div className="space-y-1 text-xs text-slate-400">
-                  <div>
-                    Odhad hodnoty v horizontu:{" "}
-                    <span className="tabular-nums font-medium text-slate-300">
-                      {fv.toFixed(0)} €
-                    </span>
-                  </div>
-                  <div>
-                    Cieľ:{" "}
-                    <span className="tabular-nums font-medium text-slate-300">
-                      {goal.toFixed(0)} €
-                    </span>
-                  </div>
-                  {totalDebtPrincipal > 0 && (
-                    <div>
-                      Celkový dlh:{" "}
-                      <span className="tabular-nums font-medium text-red-400">
-                        {totalDebtPrincipal.toFixed(0)} €
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Recharts dual-line chart */}
-                {totalDebtPrincipal > 0 && (
-                  <div className="mt-4">
-                    <LineChart
-                      width={500}
-                      height={250}
-                      data={chartData}
-                      margin={{ top: 10, right: 20, bottom: 20, left: 0 }}
-                    >
-                      <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
-                      <XAxis
-                        dataKey="year"
-                        stroke="#94a3b8"
-                        tick={{ fill: "#94a3b8", fontSize: 12 }}
-                        label={{
-                          value: "Roky",
-                          position: "insideBottom",
-                          offset: -10,
-                          fill: "#94a3b8",
-                        }}
-                      />
-                      <YAxis
-                        stroke="#94a3b8"
-                        tick={{ fill: "#94a3b8", fontSize: 12 }}
-                        tickFormatter={(val: number) =>
-                          `${(val / 1000).toFixed(0)}k`
-                        }
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1e293b",
-                          border: "1px solid #475569",
-                          borderRadius: "8px",
-                          fontSize: "12px",
-                        }}
-                        formatter={(val: number) => `${val.toFixed(0)} €`}
-                      />
-                      <Legend wrapperStyle={{ fontSize: "12px" }} />
-                      <Line
-                        type="monotone"
-                        dataKey="fv"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        name="Investície (rast)"
-                        dot={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="debt"
-                        stroke="#ef4444"
-                        strokeWidth={2}
-                        name="Dlhy (zostatok)"
-                        dot={false}
-                      />
-                      {crossoverYear !== null && (
-                        <ReferenceLine
-                          x={crossoverYear}
-                          stroke="#facc15"
-                          strokeWidth={2}
-                          strokeDasharray="5 5"
-                          label={{
-                            value: `Rok vyplatenia: ${new Date().getFullYear() + crossoverYear}`,
-                            position: "top",
-                            fill: "#facc15",
-                            fontSize: 11,
-                          }}
-                        />
-                      )}
-                    </LineChart>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          <ProjectionChart
+            lumpSumEur={lumpSumEur}
+            monthlyVklad={monthlyVklad}
+            horizonYears={horizonYears}
+            mix={(() => {
+              const v3Data = readV3();
+              return (v3Data.mix as any) || [];
+            })()}
+            debts={debts}
+            goalAssetsEur={goalAssetsEur}
+          />
         </section>
       )}
 

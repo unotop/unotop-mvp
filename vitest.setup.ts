@@ -34,3 +34,16 @@ try {
     return root;
   } as any;
 } catch {}
+
+// Mock ResizeObserver for Recharts ResponsiveContainer
+global.ResizeObserver = class ResizeObserver {
+  observe() {
+    // Mock implementation
+  }
+  unobserve() {
+    // Mock implementation
+  }
+  disconnect() {
+    // Mock implementation
+  }
+};

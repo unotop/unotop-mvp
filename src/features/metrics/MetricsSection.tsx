@@ -33,8 +33,7 @@ function approxYieldAnnualFromMix(mix: MixItem[]): number {
   const crypto = mix.find((i) => i.key === "crypto")?.pct || 0;
   const real = mix.find((i) => i.key === "real")?.pct || 0;
   const other = mix.find((i) => i.key === "other")?.pct || 0;
-  const totalPct =
-    gold + dyn + etf + bonds + cash + crypto + real + other;
+  const totalPct = gold + dyn + etf + bonds + cash + crypto + real + other;
   if (totalPct < 1) return 0.04;
   const weighted =
     (gold * 0.06 +
@@ -58,8 +57,7 @@ function calculateFutureValue(
   if (years <= 0) return lump;
   const fvLump = lump * Math.pow(1 + rate, years);
   if (monthly <= 0) return fvLump;
-  const fvMonthly =
-    monthly * 12 * ((Math.pow(1 + rate, years) - 1) / rate);
+  const fvMonthly = monthly * 12 * ((Math.pow(1 + rate, years) - 1) / rate);
   return fvLump + fvMonthly;
 }
 
@@ -99,17 +97,14 @@ export function MetricsSection({
   const cap = getRiskCap(riskPref);
   const risk = Array.isArray(mix) && mix.length > 0 ? riskScore(mix) : 0;
   const approxYield =
-    Array.isArray(mix) && mix.length > 0
-      ? approxYieldAnnualFromMix(mix)
-      : 0.04;
+    Array.isArray(mix) && mix.length > 0 ? approxYieldAnnualFromMix(mix) : 0.04;
   const fv = calculateFutureValue(
     lumpSumEur,
     monthlyVklad,
     horizonYears,
     approxYield
   );
-  const progress =
-    goalAssetsEur > 0 ? (fv / goalAssetsEur) * 100 : 0;
+  const progress = goalAssetsEur > 0 ? (fv / goalAssetsEur) * 100 : 0;
 
   return (
     <section
@@ -130,9 +125,7 @@ export function MetricsSection({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Scorecard: Riziko */}
           <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-            <div className="text-xs text-slate-400 mb-1">
-              Riziko (0–10)
-            </div>
+            <div className="text-xs text-slate-400 mb-1">Riziko (0–10)</div>
             <div className="text-lg font-bold tabular-nums">
               {!Array.isArray(mix) || mix.length === 0 ? (
                 "– (mix nezadaný)"
@@ -149,9 +142,7 @@ export function MetricsSection({
 
           {/* Scorecard: Výnos/rok */}
           <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-            <div className="text-xs text-slate-400 mb-1">
-              Výnos/rok (odhad)
-            </div>
+            <div className="text-xs text-slate-400 mb-1">Výnos/rok (odhad)</div>
             <div className="text-lg font-bold tabular-nums">
               {!Array.isArray(mix) || mix.length === 0
                 ? "– (mix nezadaný)"
@@ -161,14 +152,10 @@ export function MetricsSection({
 
           {/* Scorecard: Progres k cieľu */}
           <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-            <div className="text-xs text-slate-400 mb-1">
-              Progres k cieľu
-            </div>
+            <div className="text-xs text-slate-400 mb-1">Progres k cieľu</div>
             <div className="text-lg font-bold tabular-nums">
               {goalAssetsEur <= 0 ? (
-                <span className="text-slate-500 text-sm">
-                  Nastavte cieľ
-                </span>
+                <span className="text-slate-500 text-sm">Nastavte cieľ</span>
               ) : (
                 <>
                   {progress.toFixed(0)} %
@@ -203,8 +190,7 @@ export function MetricsSection({
                 <span className="text-amber-500 shrink-0">⚠️</span>
                 <span>
                   Portfolio prekračuje risk cap ({risk.toFixed(1)} {">"}{" "}
-                  {cap.toFixed(1)}). Znížte dynamické riadenie alebo
-                  krypto.
+                  {cap.toFixed(1)}). Znížte dynamické riadenie alebo krypto.
                 </span>
               </li>
             )}
@@ -212,8 +198,8 @@ export function MetricsSection({
               <li className="flex items-start gap-2">
                 <span className="text-blue-500 shrink-0">ℹ️</span>
                 <span>
-                  Pre splnenie cieľa ({goalAssetsEur.toLocaleString()} €)
-                  zvýšte mesačný vklad alebo horizont.
+                  Pre splnenie cieľa ({goalAssetsEur.toLocaleString()} €) zvýšte
+                  mesačný vklad alebo horizont.
                 </span>
               </li>
             )}
