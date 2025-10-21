@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar";
 import { MixPanel } from "./features/mix/MixPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
+import { calculateFutureValue } from "./engine/calculations";
 import { TEST_IDS } from "./testIds";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
 import {
@@ -1331,23 +1332,7 @@ export default function LegacyApp() {
     }, 0);
   }
 
-  function calculateFutureValue(
-    lumpSum: number,
-    monthly: number,
-    years: number,
-    annualRate: number
-  ): number {
-    if (years <= 0) return lumpSum;
-    if (annualRate > 0) {
-      const fvLump = lumpSum * Math.pow(1 + annualRate, years);
-      const fvMonthly =
-        monthly * 12 * ((Math.pow(1 + annualRate, years) - 1) / annualRate);
-      return fvLump + fvMonthly;
-    } else {
-      // Fallback bez úroku
-      return lumpSum + monthly * 12 * years;
-    }
-  }
+  // Helper removed: using calculateFutureValue from engine/calculations.ts
 
   const right = (
     <div className="space-y-4">
