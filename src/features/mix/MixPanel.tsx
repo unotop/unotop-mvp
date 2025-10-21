@@ -12,6 +12,7 @@ import { useUncontrolledValueInput } from "../_hooks/useUncontrolledValueInput";
 import { riskScore0to10, getRiskCap, type RiskPref } from "./assetModel";
 import { AssetSlider } from "./AssetSlider";
 import { ASSET_STYLES } from "./assetStyles";
+import { StatusChips, type StatusChip } from "./StatusChips";
 
 type AssetKey = MixItem["key"];
 interface AssetDef {
@@ -303,12 +304,86 @@ export const MixPanel: React.FC<{
         ? "text-yellow-400"
         : "text-red-400";
 
-  // Enhanced chips with risk check
-  const enhancedChips: string[] = [];
-  if (goldPct >= 12) enhancedChips.push("🟡 Zlato dorovnané");
-  if (dynPct + cryptoPct > 22) enhancedChips.push("🚦 Dyn+Krypto obmedzené");
-  if (sumDrift <= 0.1) enhancedChips.push("✅ Súčet dorovnaný");
-  if (risk > cap) enhancedChips.push("⚠️ Nad limit rizika");
+  // Enhanced status chips with tooltips
+  const statusChips: StatusChip[] = [];
+  
+  // Sum validation
+  if (sumDrift <= 0.1) {
+    statusChips.push({
+      id: "sum-ok",
+      icon: "✅",
+      label: "Súčet dorovnaný",
+      variant: "success",
+      tooltip: "Portfólio je správne vyvážené na 100%",
+    });
+  } else if (sumDrift > 1.0) {
+    statusChips.push({
+      id: "sum-drift",
+      icon: "⚠️",
+      label: `Súčet ${sum.toFixed(0)}%`,
+      variant: "warning",
+      tooltip: `Portfólio by malo byť 100%, aktuálne ${sum.toFixed(1)}%`,
+    });
+  }
+
+  // Gold recommendation
+  if (goldPct >= 12) {
+    statusChips.push({
+      id: "gold-ok",
+      icon: "🟡",
+      label: "Zlato dorovnané",
+      variant: "success",
+      tooltip: "Zlato >= 12% pre stabilitu portfólia",
+    });
+  } else if (goldPct < 12 && goldPct > 0) {
+    statusChips.push({
+      id: "gold-low",
+      icon: "🟡",
+      label: `Zlato ${goldPct.toFixed(0)}% (< 12%)`,
+      variant: "info",
+      tooltip: "Odporúčame navýšiť zlato na 12% pre stabilitu",
+    });
+  }
+
+  // Dyn + Crypto constraint
+  const dynCryptoSum = dynPct + cryptoPct;
+  if (dynCryptoSum > 22) {
+    statusChips.push({
+      id: "dyn-crypto-high",
+      icon: "🚦",
+      label: `Dyn+Krypto ${dynCryptoSum.toFixed(0)}% (> 22%)`,
+      variant: "warning",
+      tooltip: "Dynamické + Krypto by nemalo presiahnuť 22%",
+    });
+  }
+
+  // Risk cap validation
+  if (risk > cap) {
+    statusChips.push({
+      id: "risk-over",
+      icon: "🔴",
+      label: `Riziko ${risk.toFixed(1)} > ${cap.toFixed(1)}`,
+      variant: "error",
+      tooltip: `Portfólio prekračuje risk cap pre ${riskPref} profil`,
+    });
+  } else if (risk > cap * 0.9) {
+    // Warning if close to cap
+    statusChips.push({
+      id: "risk-near",
+      icon: "🟠",
+      label: `Riziko ${risk.toFixed(1)}/${cap.toFixed(1)}`,
+      variant: "warning",
+      tooltip: "Riziko blízko limitu, zvážte úpravu mixu",
+    });
+  } else {
+    statusChips.push({
+      id: "risk-ok",
+      icon: "✅",
+      label: `Riziko ${risk.toFixed(1)}/${cap.toFixed(1)}`,
+      variant: "success",
+      tooltip: "Riziko v rámci limitu",
+    });
+  }
 
   return (
     <section
@@ -329,23 +404,10 @@ export const MixPanel: React.FC<{
         </div>
       </div>
 
-      {/* Chips Strip (visible in DOM) */}
-      {enhancedChips.length > 0 && (
-        <div
-          data-testid={TEST_IDS.CHIPS_STRIP}
-          className="mb-3 flex flex-wrap gap-2"
-        >
-          {enhancedChips.map((chip, idx) => (
-            <span
-              key={idx}
-              data-testid={TEST_IDS.SCENARIO_CHIP}
-              className="px-2 py-1 text-xs rounded bg-slate-800/60 ring-1 ring-white/10 text-slate-300"
-            >
-              {chip}
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Enhanced Status Chips (with tooltips) */}
+      <div className="mb-3">
+        <StatusChips chips={statusChips} />
+      </div>
 
       {/* Insights (Gold 12%, Reserve) */}
       <div
