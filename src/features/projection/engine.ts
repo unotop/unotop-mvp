@@ -63,7 +63,10 @@ export function simulateProjection(
 
   // Inicializácia stavov dlhov
   const debtStates: DebtState[] = debts.map((d) => {
-    const r = d.annualRate / 100 / 12; // mesačná sadzba
+    // Mesačná sadzba: (1 + r_annual)^(1/12) - 1 (konzistentná kapitalizácia)
+    const r = d.annualRate > 0 
+      ? Math.pow(1 + d.annualRate / 100, 1 / 12) - 1 
+      : 0;
     const M = calculateAnnuity(d.principal, r, d.termMonths);
     return {
       id: d.id,

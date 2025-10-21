@@ -56,11 +56,13 @@ export function RiskGauge({
   const r = pixelSize / 2 - stroke * 0.7;
   const valueToDeg = (v: number) => -90 + (clamp(v) / 10) * 180;
 
-  // Pásma: zelená 0-4, žltá 4-7, červená 7-10
   const SEGMENTS = [
-    { from: 0, to: 4, color: "#10b981" }, // green-500 (tailwind)
-    { from: 4, to: 7, color: "#fbbf24" }, // yellow-400
-    { from: 7, to: 10, color: "#ef4444" }, // red-500
+    { from: 0, to: 2, color: "#5FBF8F" },
+    { from: 2, to: 4, color: "#8FD17F" },
+    { from: 4, to: 6, color: "#E1C65A" },
+    { from: 6, to: 7.5, color: "#E6A857" },
+    { from: 7.5, to: 9, color: "#E1755C" },
+    { from: 9, to: 10, color: "#D06464" },
   ];
 
   // Background track (full 180°)
@@ -119,7 +121,7 @@ export function RiskGauge({
     <div
       className="flex flex-col items-center select-none"
       role="meter"
-      aria-label={`Risk gauge: ${current.toFixed(1)}/10`}
+      aria-label="Riziko portfólia"
       aria-valuemin={0}
       aria-valuemax={10}
       aria-valuenow={Number(full)}

@@ -17,17 +17,30 @@ interface MetricsSectionProps {
   goalAssetsEur: number;
 }
 
+/**
+ * Vypočítaj budúcu hodnotu s mesačnou kapitalizáciou
+ * (zhodné s engine.ts)
+ */
 function calculateFutureValue(
   lump: number,
   monthly: number,
   years: number,
-  rate: number
+  annualRate: number
 ): number {
   if (years <= 0) return lump;
-  const fvLump = lump * Math.pow(1 + rate, years);
-  if (monthly <= 0) return fvLump;
-  const fvMonthly = monthly * 12 * ((Math.pow(1 + rate, years) - 1) / rate);
-  return fvLump + fvMonthly;
+  
+  const months = Math.round(years * 12);
+  // Mesačná sadzba: (1 + r_annual)^(1/12) - 1
+  const rMonthly = annualRate > 0 
+    ? Math.pow(1 + annualRate, 1 / 12) - 1 
+    : 0;
+  
+  let V = lump;
+  for (let t = 1; t <= months; t++) {
+    V = (V + monthly) * (1 + rMonthly);
+  }
+  
+  return V;
 }
 
 export function MetricsSection({
