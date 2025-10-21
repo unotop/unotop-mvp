@@ -1,7 +1,13 @@
 import React from "react";
 import { readV3 } from "../../persist/v3";
-import { riskScore, type MixItem } from "../mix/mix.service";
+import type { MixItem } from "../mix/mix.service";
 import { RiskGauge } from "../../components/RiskGauge";
+import {
+  approxYieldAnnualFromMix,
+  riskScore0to10,
+  getRiskCap,
+  type RiskPref,
+} from "../mix/assetModel";
 
 interface MetricsSectionProps {
   riskPref: string;
@@ -9,43 +15,6 @@ interface MetricsSectionProps {
   monthlyVklad: number;
   horizonYears: number;
   goalAssetsEur: number;
-}
-
-function getRiskCap(riskPref: string): number {
-  switch (riskPref) {
-    case "konzervativny":
-      return 4.0;
-    case "rastovy":
-      return 7.5;
-    case "vyvazeny":
-    default:
-      return 6.0;
-  }
-}
-
-function approxYieldAnnualFromMix(mix: MixItem[]): number {
-  if (!Array.isArray(mix) || mix.length === 0) return 0.04;
-  const gold = mix.find((i) => i.key === "gold")?.pct || 0;
-  const dyn = mix.find((i) => i.key === "dyn")?.pct || 0;
-  const etf = mix.find((i) => i.key === "etf")?.pct || 0;
-  const bonds = mix.find((i) => i.key === "bonds")?.pct || 0;
-  const cash = mix.find((i) => i.key === "cash")?.pct || 0;
-  const crypto = mix.find((i) => i.key === "crypto")?.pct || 0;
-  const real = mix.find((i) => i.key === "real")?.pct || 0;
-  const other = mix.find((i) => i.key === "other")?.pct || 0;
-  const totalPct = gold + dyn + etf + bonds + cash + crypto + real + other;
-  if (totalPct < 1) return 0.04;
-  const weighted =
-    (gold * 0.06 +
-      dyn * 0.08 +
-      etf * 0.07 +
-      bonds * 0.03 +
-      cash * 0.01 +
-      crypto * 0.15 +
-      real * 0.05 +
-      other * 0.04) /
-    totalPct;
-  return weighted;
 }
 
 function calculateFutureValue(
@@ -94,10 +63,21 @@ export function MetricsSection({
     return () => clearInterval(interval);
   }, [mix]);
 
-  const cap = getRiskCap(riskPref);
-  const risk = Array.isArray(mix) && mix.length > 0 ? riskScore(mix) : 0;
+  // Validate riskPref and use assetModel functions
+  const validRiskPref: RiskPref =
+    riskPref === "konzervativny" || riskPref === "rastovy"
+      ? (riskPref as RiskPref)
+      : "vyvazeny";
+  
+  const cap = getRiskCap(validRiskPref);
+  const risk =
+    Array.isArray(mix) && mix.length > 0
+      ? riskScore0to10(mix, validRiskPref, 0)
+      : 0;
   const approxYield =
-    Array.isArray(mix) && mix.length > 0 ? approxYieldAnnualFromMix(mix) : 0.04;
+    Array.isArray(mix) && mix.length > 0
+      ? approxYieldAnnualFromMix(mix, validRiskPref)
+      : 0.04;
   const fv = calculateFutureValue(
     lumpSumEur,
     monthlyVklad,

@@ -1431,6 +1431,7 @@ export default function LegacyApp() {
               const v3Data = readV3();
               return (v3Data.mix as any) || [];
             })()}
+            riskPref={riskPref}
             debts={debts}
             goalAssetsEur={goalAssetsEur}
           />

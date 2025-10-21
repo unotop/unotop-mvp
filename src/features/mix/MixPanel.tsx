@@ -51,7 +51,16 @@ export const MixPanel: React.FC<{
             other: 0,
           };
           const merged: MixItem[] = [];
-          const keys: AssetKey[] = ["gold", "dyn", "etf", "bonds", "cash", "crypto", "real", "other"];
+          const keys: AssetKey[] = [
+            "gold",
+            "dyn",
+            "etf",
+            "bonds",
+            "cash",
+            "crypto",
+            "real",
+            "other",
+          ];
           for (const k of keys) {
             const found = stored.find((m: any) => m.key === k);
             merged.push({ key: k, pct: found?.pct ?? defaults[k] });
@@ -60,7 +69,7 @@ export const MixPanel: React.FC<{
         }
       }
     } catch {}
-    // Fallback: Initial BASIC mix intentionally sums to 100 % 
+    // Fallback: Initial BASIC mix intentionally sums to 100 %
     // (acceptance test expects ability to create drift from 100 before clicking Dorovnať)
     return [
       { key: "gold", pct: 5 },
@@ -95,7 +104,7 @@ export const MixPanel: React.FC<{
   const commitAsset = (key: AssetKey, pct: number) => {
     setMix((prev) => prev.map((i) => (i.key === key ? { ...i, pct } : i)));
   };
-  
+
   // Persist after any slider/text commit (debounced by input hook already)
   React.useEffect(() => {
     writeV3({ mix: mix.map((m) => ({ key: m.key, pct: m.pct })) });
@@ -107,20 +116,41 @@ export const MixPanel: React.FC<{
     const syncFromStorage = () => {
       try {
         const raw =
-          localStorage.getItem("unotop:v3") || localStorage.getItem("unotop_v3");
+          localStorage.getItem("unotop:v3") ||
+          localStorage.getItem("unotop_v3");
         if (raw) {
           const p = JSON.parse(raw);
           const stored = p.mix;
           if (Array.isArray(stored) && stored.length > 0) {
-            const currentKey = JSON.stringify(mix.map(m => ({ key: m.key, pct: m.pct })));
-            const storedKey = JSON.stringify(stored.map((m: any) => ({ key: m.key, pct: m.pct })));
+            const currentKey = JSON.stringify(
+              mix.map((m) => ({ key: m.key, pct: m.pct }))
+            );
+            const storedKey = JSON.stringify(
+              stored.map((m: any) => ({ key: m.key, pct: m.pct }))
+            );
             if (currentKey !== storedKey) {
               // localStorage changed externally, sync to component state
               const defaults: Record<AssetKey, number> = {
-                gold: 5, dyn: 0, etf: 60, bonds: 20, cash: 5, crypto: 5, real: 5, other: 0,
+                gold: 5,
+                dyn: 0,
+                etf: 60,
+                bonds: 20,
+                cash: 5,
+                crypto: 5,
+                real: 5,
+                other: 0,
               };
               const merged: MixItem[] = [];
-              const keys: AssetKey[] = ["gold", "dyn", "etf", "bonds", "cash", "crypto", "real", "other"];
+              const keys: AssetKey[] = [
+                "gold",
+                "dyn",
+                "etf",
+                "bonds",
+                "cash",
+                "crypto",
+                "real",
+                "other",
+              ];
               for (const k of keys) {
                 const found = stored.find((m: any) => m.key === k);
                 merged.push({ key: k, pct: found?.pct ?? defaults[k] });
@@ -135,7 +165,6 @@ export const MixPanel: React.FC<{
     const interval = setInterval(syncFromStorage, 500); // poll every 500ms
     return () => clearInterval(interval);
   }, [mix]);
-
 
   // Controllers pre každý asset (bez map hook porušení)
   const goldPct = mix.find((m) => m.key === "gold")?.pct || 0;

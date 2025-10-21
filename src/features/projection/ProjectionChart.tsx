@@ -1,7 +1,3 @@
-/**
- * ProjectionChart - Vizualizácia investícií vs. dlhov s crossover markerom
- */
-
 import React from "react";
 import {
   LineChart,
@@ -18,6 +14,7 @@ import type { MixItem } from "../mix/mix.service";
 import type { Debt } from "../../persist/v3";
 import { simulateProjection, monthsToYears, formatCurrency } from "./engine";
 import type { DebtInput, InvestInput } from "./types";
+import { approxYieldAnnualFromMix, type RiskPref } from "../mix/assetModel";
 
 interface ProjectionChartProps {
   // Investičné vstupy
@@ -25,39 +22,11 @@ interface ProjectionChartProps {
   monthlyVklad: number;
   horizonYears: number;
   mix: MixItem[];
+  riskPref: string; // "konzervativny" | "vyvazeny" | "rastovy"
   // Dlhy
   debts: Debt[];
   // Voliteľné
   goalAssetsEur?: number;
-}
-
-/**
- * Odhad ročného výnosu z mixu
- * (Reuse z mix.service.ts alebo MetricsSection)
- */
-function approxYieldAnnualFromMix(mix: MixItem[]): number {
-  if (!Array.isArray(mix) || mix.length === 0) return 0.04;
-  const gold = mix.find((i) => i.key === "gold")?.pct || 0;
-  const dyn = mix.find((i) => i.key === "dyn")?.pct || 0;
-  const etf = mix.find((i) => i.key === "etf")?.pct || 0;
-  const bonds = mix.find((i) => i.key === "bonds")?.pct || 0;
-  const cash = mix.find((i) => i.key === "cash")?.pct || 0;
-  const crypto = mix.find((i) => i.key === "crypto")?.pct || 0;
-  const real = mix.find((i) => i.key === "real")?.pct || 0;
-  const other = mix.find((i) => i.key === "other")?.pct || 0;
-  const totalPct = gold + dyn + etf + bonds + cash + crypto + real + other;
-  if (totalPct < 1) return 0.04;
-  const weighted =
-    (gold * 0.06 +
-      dyn * 0.08 +
-      etf * 0.07 +
-      bonds * 0.03 +
-      cash * 0.01 +
-      crypto * 0.15 +
-      real * 0.05 +
-      other * 0.04) /
-    totalPct;
-  return weighted;
 }
 
 /**
@@ -92,11 +61,19 @@ export function ProjectionChart({
   monthlyVklad,
   horizonYears,
   mix,
+  riskPref,
   debts,
   goalAssetsEur,
 }: ProjectionChartProps) {
   const horizonMonths = Math.max(1, Math.round(horizonYears * 12));
-  const annualYield = approxYieldAnnualFromMix(mix);
+  
+  // Validate riskPref
+  const validRiskPref: RiskPref =
+    riskPref === "konzervativny" || riskPref === "rastovy"
+      ? (riskPref as RiskPref)
+      : "vyvazeny";
+  
+  const annualYield = approxYieldAnnualFromMix(mix, validRiskPref);
 
   // Investičné vstupy
   const investInput: InvestInput = {
