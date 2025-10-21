@@ -530,29 +530,47 @@ export default function LegacyApp() {
 
               {/* Debts table */}
               <div className="overflow-x-auto">
-                <table 
+                <table
                   className="w-full text-left text-sm border-collapse"
                   role="table"
                   aria-label="Tabuľka dlhov"
                 >
                   <thead>
                     <tr className="border-b border-white/5">
-                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
+                      <th
+                        scope="col"
+                        className="px-2 py-2 font-medium text-slate-400"
+                      >
                         Názov
                       </th>
-                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
+                      <th
+                        scope="col"
+                        className="px-2 py-2 font-medium text-slate-400"
+                      >
                         Zostatok
                       </th>
-                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
+                      <th
+                        scope="col"
+                        className="px-2 py-2 font-medium text-slate-400"
+                      >
                         Úrok p.a.
                       </th>
-                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
+                      <th
+                        scope="col"
+                        className="px-2 py-2 font-medium text-slate-400"
+                      >
                         Splátka
                       </th>
-                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
+                      <th
+                        scope="col"
+                        className="px-2 py-2 font-medium text-slate-400"
+                      >
                         Zostáva (roky)
                       </th>
-                      <th scope="col" className="px-2 py-2 font-medium text-slate-400">
+                      <th
+                        scope="col"
+                        className="px-2 py-2 font-medium text-slate-400"
+                      >
                         Mimoriadna splátka (mesačne)
                       </th>
                       <th
@@ -922,7 +940,7 @@ export default function LegacyApp() {
                 if (!needsReserve) return null;
                 return (
                   <div
-                    className="p-3 rounded-lg bg-amber-800/30 ring-1 ring-amber-500/40 text-amber-200 text-sm"
+                    className="p-3 rounded-lg bg-amber-800/30 ring-1 ring-amber-500/40 text-amber-200 text-sm animate-[fadeIn_0.3s_ease-in]"
                     role="status"
                   >
                     <div className="font-semibold mb-1">
@@ -941,7 +959,8 @@ export default function LegacyApp() {
                           profile: { currentReserve: 1000, emergencyMonths: 6 },
                         });
                       }}
-                      className="px-3 py-1.5 rounded bg-amber-600/40 hover:bg-amber-600/60 text-sm font-medium"
+                      className="px-3 py-1.5 rounded bg-amber-600/40 hover:bg-amber-600/60 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-amber-500/20"
+                      title="Nastav rezervu na 1000 € a 6 mesiacov"
                     >
                       Aplikovať minimum (1000 € / 6 mes.)
                     </button>
@@ -956,7 +975,7 @@ export default function LegacyApp() {
             <button
               type="button"
               aria-label="Nastaviť mesačný vklad na 100 €"
-              className="px-3 py-2 rounded bg-slate-800 text-xs"
+              className="px-3 py-2 rounded bg-slate-800 text-xs hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-md"
               onClick={() => {
                 setMonthlyContribution(100);
                 const f = () => monthlySliderRef.current?.focus();
@@ -964,6 +983,7 @@ export default function LegacyApp() {
                 requestAnimationFrame(f);
                 setTimeout(f, 0);
               }}
+              title="Nastav mesačný vklad na 100 € a fokusuj slider"
             >
               Nastaviť mesačný vklad
             </button>

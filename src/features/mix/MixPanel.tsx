@@ -348,15 +348,16 @@ export const MixPanel: React.FC<{
       {/* Insights (Gold 12%, Reserve) */}
       <div
         data-testid={TEST_IDS.INSIGHTS_WRAP}
-        className="mb-3 flex flex-wrap gap-2"
+        className="mb-3 flex flex-wrap gap-2 animate-[fadeIn_0.3s_ease-in]"
       >
         <button
           type="button"
           onClick={applyGold12}
           data-testid="insight-gold-12"
-          className="px-3 py-1 text-xs rounded bg-amber-500/10 ring-1 ring-amber-500/40"
+          className="px-3 py-1 text-xs rounded bg-amber-500/10 ring-1 ring-amber-500/40 hover:bg-amber-500/20 hover:ring-amber-500/60 hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/20"
+          title="Navýš zlato na odporúčanú úroveň pre stabilitu portfólia"
         >
-          Gold 12 % (odporúčanie)
+          💡 Gold 12 % (odporúčanie)
         </button>
         {(() => {
           // Read reserve status from persisted profile to conditionally surface insight
@@ -374,10 +375,11 @@ export const MixPanel: React.FC<{
                   <button
                     type="button"
                     onClick={() => onReserveOpen?.()}
-                    className="px-3 py-1 text-xs rounded bg-emerald-500/10 ring-1 ring-emerald-500/40"
+                    className="px-3 py-1 text-xs rounded bg-emerald-500/10 ring-1 ring-emerald-500/40 hover:bg-emerald-500/20 hover:ring-emerald-500/60 hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/20"
                     data-testid="insight-reserve"
+                    title="Doplň rezervu na minimálne 1000 € alebo 6 mesiacov"
                   >
-                    Rezervu doplň
+                    💡 Rezervu doplň
                   </button>
                 );
               }
@@ -671,32 +673,37 @@ export const MixPanel: React.FC<{
         <button
           onClick={normalizeAll}
           disabled={Math.round(sum) === 100}
-          className="px-2 py-1 rounded bg-slate-700 text-xs disabled:opacity-50"
+          className="px-2 py-1 rounded bg-slate-700 text-xs disabled:opacity-50 hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200 disabled:hover:scale-100"
+          title="Normalizuj mix na presne 100 %"
         >
           Dorovnať
         </button>
         <button
           onClick={optimizeRisk}
-          className="px-2 py-1 rounded bg-slate-700 text-xs"
+          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
           aria-label="Optimalizuj"
+          title="Optimalizuj mix pre maximálny výnos pri dodržaní risk cap"
         >
           Optimalizuj
         </button>
         <button
           onClick={optimizeRisk}
-          className="px-2 py-1 rounded bg-slate-700 text-xs"
+          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+          title="Maximalizuj výnos pri dodržaní risk cap"
         >
           Max výnos (riziko ≤ {cap})
         </button>
         <button
           onClick={applyRecommended}
-          className="px-2 py-1 rounded bg-slate-700 text-xs"
+          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+          title="Aplikuj odporúčaný mix podľa rizikovej preferencie"
         >
           Aplikovať odporúčaný mix portfólia
         </button>
         <button
           onClick={applyRules}
-          className="px-2 py-1 rounded bg-slate-700 text-xs"
+          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+          title="Uprav mix aby dodržiaval limity (Dyn+Krypto ≤22%, Dyn ≤15%)"
         >
           Upraviť podľa pravidiel
         </button>
@@ -716,7 +723,8 @@ export const MixPanel: React.FC<{
             writeV3({ mix: seed });
           }}
           aria-label="Resetovať hodnoty"
-          className="px-2 py-1 rounded bg-slate-700 text-xs"
+          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+          title="Resetuj mix na počiatočné hodnoty (Gold 5%, ETF 60%, Bonds 20%, atď.)"
         >
           Resetovať hodnoty
         </button>
