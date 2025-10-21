@@ -57,16 +57,13 @@ export default function LegacyApp() {
   const [goalAssetsEur, setGoalAssetsEur] = React.useState(
     () => (seed.profile?.goalAssetsEur as any) || 0
   );
-  // test-only / accessibility stubs
+  // test-only / accessibility stubs (sec1 cashflow only)
   const [crisisIdx, setCrisisIdx] = React.useState(0);
   const [monthlyIncome, setMonthlyIncome] = React.useState("");
   const [fixedExp, setFixedExp] = React.useState("");
   const [varExp, setVarExp] = React.useState("");
   const [currentReserve, setCurrentReserve] = React.useState("");
   const [emergencyMonths, setEmergencyMonths] = React.useState("");
-  const [lumpSum, setLumpSum] = React.useState("");
-  const [horizon, setHorizon] = React.useState("");
-  const [goalAsset, setGoalAsset] = React.useState("");
   const [stocks, setStocks] = React.useState(0);
   const [bonds, setBonds] = React.useState(0);
   const [cash, setCash] = React.useState(0);
