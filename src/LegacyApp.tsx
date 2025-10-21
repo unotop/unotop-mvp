@@ -13,6 +13,7 @@ import {
   type MixItem,
 } from "./features/mix/mix.service";
 import { RiskGauge } from "./components/RiskGauge";
+import { MetricsSection } from "./features/metrics/MetricsSection";
 import {
   LineChart,
   Line,
@@ -1370,143 +1371,15 @@ export default function LegacyApp() {
           />
         </svg>
       </button>
-      {open5 &&
-        (() => {
-          const v3Data = readV3();
-          const mix: MixItem[] = (v3Data.mix as any) || [];
-          // Use local riskPref state instead of reading from localStorage
-          const currentRiskPref = riskPref; // from sec0 state
-          const cap = getRiskCap(currentRiskPref);
-
-          return (
-            <section
-              id="sec5"
-              role="region"
-              aria-labelledby="sec5-title"
-              className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
-            >
-              <div className="space-y-4">
-                {/* SVG Risk Gauge (prominentný, väčší) */}
-                {Array.isArray(mix) && mix.length > 0 && (
-                  <div className="flex justify-center py-4">
-                    <RiskGauge value={riskScore(mix)} size="lg" />
-                  </div>
-                )}
-
-                {/* 3 Scorecards (horizontal layout) */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {/* Scorecard: Riziko */}
-                  <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                    <div className="text-xs text-slate-400 mb-1">
-                      Riziko (0–10)
-                    </div>
-                    <div className="text-lg font-bold tabular-nums">
-                      {(() => {
-                        if (!Array.isArray(mix) || mix.length === 0)
-                          return "– (mix nezadaný)";
-                        const risk = riskScore(mix);
-                        return (
-                          <>
-                            {risk.toFixed(1)} / {cap.toFixed(1)}
-                            {risk > cap && (
-                              <span className="ml-2 text-amber-500">⚠️</span>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Scorecard: Výnos/rok */}
-                  <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                    <div className="text-xs text-slate-400 mb-1">
-                      Výnos/rok (odhad)
-                    </div>
-                    <div className="text-lg font-bold tabular-nums">
-                      {(() => {
-                        if (!Array.isArray(mix) || mix.length === 0)
-                          return "– (mix nezadaný)";
-                        const approx = approxYieldAnnualFromMix(mix);
-                        return `${(approx * 100).toFixed(1)} %`;
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Scorecard: Progres k cieľu */}
-                  <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                    <div className="text-xs text-slate-400 mb-1">
-                      Progres k cieľu
-                    </div>
-                    <div className="text-lg font-bold tabular-nums">
-                      {(() => {
-                        if (!goalAssetsEur || goalAssetsEur <= 0)
-                          return "– (cieľ nezadaný)";
-                        if (!Array.isArray(mix) || mix.length === 0)
-                          return "– (mix nezadaný)";
-                        const lump = lumpSumEur || 0;
-                        const monthly = monthlyVklad || 0;
-                        const years = horizonYears || 10;
-                        const approx = approxYieldAnnualFromMix(mix);
-                        const fv = calculateFutureValue(
-                          lump,
-                          monthly,
-                          years,
-                          approx
-                        );
-                        const progress = (fv / goalAssetsEur) * 100;
-                        return `${progress.toFixed(0)} %`;
-                      })()}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Insights: Gold 12% recommendation */}
-                {(() => {
-                  if (!Array.isArray(mix) || mix.length === 0) return null;
-                  const goldPct = mix.find((i) => i.key === "gold")?.pct || 0;
-                  if (goldPct >= 12) return null;
-                  return (
-                    <div className="p-3 rounded-lg bg-amber-900/20 ring-1 ring-amber-500/30 text-sm">
-                      <div className="font-medium text-amber-400 mb-1">
-                        💡 Zlato pod minimum
-                      </div>
-                      <div className="text-slate-300 mb-2">
-                        Odporúčame zlato ≥ 12 % pre stabilitu portfólia.
-                      </div>
-                      <button
-                        type="button"
-                        aria-label="Nastaviť zlato na 12%"
-                        className="px-3 py-1.5 rounded bg-amber-600/30 ring-1 ring-amber-500/50 text-xs font-medium hover:bg-amber-600/40 transition-colors"
-                        onClick={() => {
-                          setWizardType("gold");
-                          setWizardOpen(true);
-                        }}
-                      >
-                        Nastaviť zlato na 12 %
-                      </button>
-                    </div>
-                  );
-                })()}
-
-                {/* CTA: Max výnos */}
-                <div className="pt-2 border-t border-white/5">
-                  <button
-                    type="button"
-                    aria-label="Max výnos (riziko ≤ cap)"
-                    className="w-full px-3 py-2 rounded bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 transition-colors"
-                    onClick={() => {
-                      if (!Array.isArray(mix) || mix.length === 0) return;
-                      const optimized = applyRiskConstrainedMix(mix, cap);
-                      writeV3({ mix: optimized as any });
-                    }}
-                  >
-                    Max výnos (riziko ≤ cap)
-                  </button>
-                </div>
-              </div>
-            </section>
-          );
-        })()}
+      {open5 && (
+        <MetricsSection
+          riskPref={riskPref}
+          lumpSumEur={lumpSumEur}
+          monthlyVklad={monthlyVklad}
+          horizonYears={horizonYears}
+          goalAssetsEur={goalAssetsEur}
+        />
+      )}
       <button
         type="button"
         aria-controls="sec4"
