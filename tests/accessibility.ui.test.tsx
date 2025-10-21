@@ -201,7 +201,7 @@ describe("Accessibility regression (core)", () => {
         `Missing button with accessible name matching ${rx}`
       ).toBeTruthy();
     });
-    
+
     // Toolbar mode toggles - existujú 2 tlačidlá (BASIC + PRO)
     const modeToggles = screen.queryAllByRole("button", {
       name: /Prepnúť na (BASIC|PRO) režim/i,

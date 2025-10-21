@@ -1,5 +1,6 @@
 import React from "react";
 import { readV3 } from "../../persist/v3";
+import { createMixListener } from "../../persist/mixEvents";
 import type { MixItem } from "../mix/mix.service";
 import { RiskGauge } from "../../components/RiskGauge";
 import {
@@ -54,24 +55,21 @@ export function MetricsSection({
     return (v3Data.mix as any) || [];
   });
 
-  // Sync mix from localStorage periodically (500ms polling)
+  // Event-based sync: listen to mix changes (replaces 500ms polling)
   React.useEffect(() => {
-    const syncMix = () => {
-      const v3Data = readV3();
-      const newMix = (v3Data.mix as any) || [];
-      // Only update if actually changed (avoid unnecessary rerenders)
+    // Initial sync
+    const v3Data = readV3();
+    const initialMix = (v3Data.mix as any) || [];
+    if (JSON.stringify(initialMix) !== JSON.stringify(mix)) {
+      setMix(initialMix);
+    }
+
+    // Listen to changes
+    return createMixListener((newMix) => {
       if (JSON.stringify(newMix) !== JSON.stringify(mix)) {
         setMix(newMix);
       }
-    };
-
-    // Initial sync
-    syncMix();
-
-    // Polling interval
-    const interval = setInterval(syncMix, 500);
-
-    return () => clearInterval(interval);
+    });
   }, [mix]);
 
   // Validate riskPref and use assetModel functions

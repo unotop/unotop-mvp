@@ -1,4 +1,6 @@
 // src/persist/v3.ts
+import { emitMixChangeEvent } from "./mixEvents";
+
 export type Debt = { 
   id: string; 
   name: string; 
@@ -81,5 +83,11 @@ export function writeV3(patch: Partial<V3>): V3 {
     localStorage.setItem(KEY_V3_COLON, json);
     localStorage.setItem(KEY_V3_UNDERSCORE, json);
   } catch {}
+  
+  // Emit event if mix changed (for event-based sync)
+  if (patch.mix) {
+    emitMixChangeEvent();
+  }
+  
   return next;
 }

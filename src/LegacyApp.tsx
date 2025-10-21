@@ -4,6 +4,7 @@ import Toolbar from "./components/Toolbar";
 import Sidebar from "./components/Sidebar";
 import { MixPanel } from "./features/mix/MixPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
+import { createMixListener } from "./persist/mixEvents";
 import { TEST_IDS } from "./testIds";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
 import {
@@ -79,17 +80,13 @@ export default function LegacyApp() {
     }
   });
 
-  // Sync mix from localStorage (500ms polling like MetricsSection)
+  // Event-based sync: listen to mix changes from other components (replaces 500ms polling)
   React.useEffect(() => {
-    const syncMix = () => {
-      const v3Data = readV3();
-      const stored = (v3Data.mix as any) || [];
-      if (JSON.stringify(stored) !== JSON.stringify(mix)) {
-        setMix(stored);
+    return createMixListener((newMix) => {
+      if (JSON.stringify(newMix) !== JSON.stringify(mix)) {
+        setMix(newMix);
       }
-    };
-    const interval = setInterval(syncMix, 500);
-    return () => clearInterval(interval);
+    });
   }, [mix]);
 
   const debounceRef = React.useRef<number | undefined>(undefined);
