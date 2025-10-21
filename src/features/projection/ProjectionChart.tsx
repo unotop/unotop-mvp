@@ -111,7 +111,7 @@ export function ProjectionChart({
       invest: investInput,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [horizonMonths, lumpSumEur, monthlyVklad, mixKey, debtsKey]);
+  }, [horizonMonths, lumpSumEur, monthlyVklad, mixKey, debtsKey, riskPref]);
 
   // Príprava dát pre Recharts (konvertuj mesiace → roky, zaokrúhli hodnoty)
   const chartData = result.series
