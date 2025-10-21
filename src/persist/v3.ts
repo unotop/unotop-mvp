@@ -1,5 +1,14 @@
 // src/persist/v3.ts
-export type Debt = { id: string; name: string; principal: number; ratePa: number; monthly: number; monthsLeft?: number; remaining?: number };
+export type Debt = { 
+  id: string; 
+  name: string; 
+  principal: number; 
+  ratePa: number; 
+  monthly: number; 
+  monthsLeft?: number; 
+  remaining?: number;
+  extraMonthly?: number; // mimoriadna splátka (mesačná, ide na istinu)
+};
 export type MixItem = { key: string; pct: number };
 export type Profile = { 
   monthlyIncome?: number; 

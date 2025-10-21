@@ -61,20 +61,26 @@ function approxYieldAnnualFromMix(mix: MixItem[]): number {
 }
 
 /**
- * Konverzia Debt → DebtInput (pridaj kind detection)
+ * Konverzia Debt → DebtInput (pridaj kind detection + extra payments)
  */
 function mapDebtToInput(debt: Debt): DebtInput {
   // Heuristic: ak úrok > 6%, pravdepodobne spotrebák, inak hypotéka
   const kind = debt.ratePa > 6 ? "consumer" : "mortgage";
+  
+  // Extra mesačná splátka (ide od mesiaca 1)
+  const recurringExtra =
+    debt.extraMonthly && debt.extraMonthly > 0
+      ? { startMonth: 1, amount: debt.extraMonthly }
+      : undefined;
+
   return {
     id: debt.id,
     kind,
     principal: debt.principal,
     annualRate: debt.ratePa,
     termMonths: debt.monthsLeft || 360, // default 30 rokov ak nie je zadané
-    // TODO: Extra splátky (zatiaľ žiadne, rozšíriť v UI)
-    oneOffExtras: [],
-    recurringExtra: undefined,
+    oneOffExtras: [], // Zatiaľ žiadne jednorazové (UI môžeme pridať neskôr)
+    recurringExtra,
   };
 }
 
@@ -104,6 +110,17 @@ export function ProjectionChart({
     .filter((d) => d.principal > 0)
     .map(mapDebtToInput);
 
+  // Dependency key pre debts (aby useMemo správne reagoval na zmeny)
+  const debtsKey = JSON.stringify(
+    debts.map((d) => ({
+      id: d.id,
+      principal: d.principal,
+      ratePa: d.ratePa,
+      monthsLeft: d.monthsLeft,
+      extraMonthly: d.extraMonthly,
+    }))
+  );
+
   // Simulácia
   const result = React.useMemo(() => {
     return simulateProjection({
@@ -111,7 +128,8 @@ export function ProjectionChart({
       debts: debtInputs,
       invest: investInput,
     });
-  }, [horizonMonths, investInput, debtInputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [horizonMonths, lumpSumEur, monthlyVklad, annualYield, debtsKey]);
 
   // Príprava dát pre Recharts (konvertuj mesiace → roky, zaokrúhli hodnoty)
   const chartData = result.series

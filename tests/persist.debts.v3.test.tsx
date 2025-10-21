@@ -27,10 +27,12 @@ describe("Persist v3 – debts", () => {
     fireEvent.change(bal, { target: { value: "100000" } });
     const rate = screen.getByRole("spinbutton", { name: /Úrok p\.a\./i });
     fireEvent.change(rate, { target: { value: "5" } });
-    const pay = screen.getByRole("spinbutton", { name: /Splátka/i });
+    // Presný aria-label (nie regex) aby sa odlíšil od Extra splátky
+    const pay = screen.getByRole("spinbutton", { name: "Splátka dlhu 1" });
     fireEvent.change(pay, { target: { value: "400" } });
-    const rem = screen.getByRole("spinbutton", { name: /Zostáva mesiacov/i });
-    fireEvent.change(rem, { target: { value: "240" } });
+    // Nový label: "Zostáva rokov" (nie mesiacov)
+    const rem = screen.getByRole("spinbutton", { name: /Zostáva rokov/i });
+    fireEvent.change(rem, { target: { value: "20" } }); // 20 rokov = 240 mesiacov
     // Summary chips v novej implementácii (Počet dlhov, Celkové splátky)
     await waitFor(() => {
       expect(screen.getByText(/Počet dlhov:/)).toBeTruthy();

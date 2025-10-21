@@ -523,7 +523,10 @@ export default function LegacyApp() {
                         Splátka
                       </th>
                       <th className="px-2 py-2 font-medium text-slate-400">
-                        Zostáva
+                        Zostáva (roky)
+                      </th>
+                      <th className="px-2 py-2 font-medium text-slate-400">
+                        Extra/mes.
                       </th>
                       <th
                         className="px-2 py-2 font-medium text-slate-400"
@@ -594,16 +597,34 @@ export default function LegacyApp() {
                         </td>
                         <td className="px-2 py-2">
                           <input
-                            aria-label={`Zostáva mesiacov dlhu ${idx + 1}`}
+                            aria-label={`Zostáva rokov dlhu ${idx + 1}`}
                             type="number"
-                            value={d.monthsLeft ?? 0}
+                            min="0"
+                            max="40"
+                            step="0.5"
+                            value={d.monthsLeft ? (d.monthsLeft / 12).toFixed(1) : ""}
+                            onChange={(e) => {
+                              const years = Number(e.currentTarget.value);
+                              const months = Math.round(years * 12);
+                              updateDebt(d.id, { monthsLeft: months });
+                            }}
+                            className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input
+                            aria-label={`Extra mesačná splátka dlhu ${idx + 1}`}
+                            type="number"
+                            value={d.extraMonthly ?? 0}
                             onChange={(e) =>
                               updateDebt(d.id, {
-                                monthsLeft: Number(e.currentTarget.value),
+                                extraMonthly: Number(e.currentTarget.value),
                               })
                             }
                             className="w-20 bg-slate-800 rounded px-2 py-1 text-sm tabular-nums"
                             placeholder="0"
+                            title="Mimoriadna splátka (ide na istinu)"
                           />
                         </td>
                         <td className="px-2 py-2">
