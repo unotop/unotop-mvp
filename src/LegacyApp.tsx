@@ -5,9 +5,11 @@ import Sidebar from "./components/Sidebar";
 import { MixPanel } from "./features/mix/MixPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { ProfileSection } from "./features/profile/ProfileSection";
+import { InvestSection } from "./features/invest/InvestSection";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import { calculateFutureValue } from "./engine/calculations";
+import { approxYieldAnnualFromMix } from "./features/mix/assetModel";
 import { TEST_IDS } from "./testIds";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
 import {
@@ -37,19 +39,6 @@ export default function LegacyApp() {
   const [debtsOpen, setDebtsOpen] = React.useState(true); // Changed to true for consistent initial state
   const [debts, setDebts] = React.useState<Debt[]>(
     () => (seed.debts as any as Debt[]) || []
-  );
-  // Investičné nastavenia (sec2) state
-  const [lumpSumEur, setLumpSumEur] = React.useState(
-    () => (seed.profile?.lumpSumEur as any) || 0
-  );
-  const [monthlyVklad, setMonthlyVklad] = React.useState(
-    () => (seed as any).monthly || 0
-  );
-  const [horizonYears, setHorizonYears] = React.useState(
-    () => (seed.profile?.horizonYears as any) || 10
-  );
-  const [goalAssetsEur, setGoalAssetsEur] = React.useState(
-    () => (seed.profile?.goalAssetsEur as any) || 0
   );
   // test-only / accessibility stubs (sec1 cashflow only)
   const [crisisIdx, setCrisisIdx] = React.useState(0);
@@ -139,47 +128,6 @@ export default function LegacyApp() {
 
   // Sidebar state (for Toolbar hamburger menu)
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
-
-  // Uncontrolled hooks pre sec2 polia
-  const lumpSumCtl = useUncontrolledValueInput({
-    initial: lumpSumEur,
-    parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
-    commit: (n) => {
-      setLumpSumEur(n);
-      const cur = readV3();
-      writeV3({ profile: { ...(cur.profile || {}), lumpSumEur: n } as any });
-    },
-  });
-  const monthlyVkladCtl = useUncontrolledValueInput({
-    initial: monthlyVklad,
-    parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
-    commit: (n) => {
-      setMonthlyVklad(n);
-      writeV3({ monthly: n });
-    },
-  });
-  const horizonCtl = useUncontrolledValueInput({
-    initial: horizonYears,
-    parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(1, Math.min(50, n)),
-    commit: (n) => {
-      setHorizonYears(n);
-      const cur = readV3();
-      writeV3({ profile: { ...(cur.profile || {}), horizonYears: n } as any });
-    },
-  });
-  const goalCtl = useUncontrolledValueInput({
-    initial: goalAssetsEur,
-    parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
-    commit: (n) => {
-      setGoalAssetsEur(n);
-      const cur = readV3();
-      writeV3({ profile: { ...(cur.profile || {}), goalAssetsEur: n } as any });
-    },
-  });
 
   // Mode toggle handler (BASIC/PRO)
   const handleModeToggle = () => {
@@ -771,7 +719,6 @@ export default function LegacyApp() {
               aria-label="Nastaviť mesačný vklad na 100 €"
               className="px-3 py-2 rounded bg-slate-800 text-xs hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-md"
               onClick={() => {
-                setMonthlyVklad(100);
                 writeV3({ monthly: 100 });
                 const f = () => monthlySliderRef.current?.focus();
                 f();
@@ -793,177 +740,23 @@ export default function LegacyApp() {
                 min={0}
                 max={1000}
                 step={10}
-                value={monthlyVklad}
+                value={(seed as any).monthly || 0}
                 aria-label="Mesačný vklad – slider"
                 data-testid={TEST_IDS.MONTHLY_SLIDER}
                 onChange={(e) => {
                   const newVal = Number(e.currentTarget.value);
-                  setMonthlyVklad(newVal);
                   writeV3({ monthly: newVal });
                 }}
               />
-              <span className="tabular-nums">{monthlyVklad} €</span>
+              <span className="tabular-nums">{(seed as any).monthly || 0} €</span>
             </div>
           </div>
           {/* Starý debt UI odstránený - teraz používame standalone section */}
         </section>
       )}
-      <button
-        type="button"
-        aria-controls="sec2"
-        aria-expanded={open2}
-        onClick={() => setOpen2((v) => !v)}
-        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
-      >
-        <span id="invest-title">Investičné nastavenia</span>
-        <svg
-          className={`w-5 h-5 transition-transform duration-300 ${open2 ? "" : "rotate-180"}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-      {open2 && (
-        <section
-          id="sec2"
-          role="region"
-          aria-labelledby="invest-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="lump-sum-input">Jednorazová investícia</label>
-              <input
-                id="lump-sum-input"
-                type="text"
-                role="textbox"
-                inputMode="decimal"
-                aria-label="Jednorazová investícia"
-                ref={lumpSumCtl.ref}
-                onChange={lumpSumCtl.onChange}
-                onBlur={lumpSumCtl.onBlur}
-                defaultValue={lumpSumCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="monthly-vklad-input">Mesačný vklad</label>
-              <input
-                id="monthly-vklad-input"
-                type="text"
-                role="textbox"
-                inputMode="decimal"
-                aria-label="Mesačný vklad"
-                ref={monthlyVkladCtl.ref}
-                onChange={monthlyVkladCtl.onChange}
-                onBlur={monthlyVkladCtl.onBlur}
-                defaultValue={monthlyVkladCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="horizon-input">Horizont (roky)</label>
-              <input
-                id="horizon-input"
-                type="text"
-                role="textbox"
-                inputMode="decimal"
-                aria-label="Horizont (roky)"
-                ref={horizonCtl.ref}
-                onChange={horizonCtl.onChange}
-                onBlur={horizonCtl.onBlur}
-                defaultValue={horizonCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
-              />
-            </div>
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="goal-input">Cieľ majetku</label>
-              <input
-                id="goal-input"
-                type="text"
-                role="textbox"
-                inputMode="decimal"
-                aria-label="Cieľ majetku"
-                ref={goalCtl.ref}
-                onChange={goalCtl.onChange}
-                onBlur={goalCtl.onBlur}
-                defaultValue={goalCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
-              />
-            </div>
+      {/* sec2: Investičné nastavenia - extracted component */}
+      <InvestSection open={open2} onToggle={() => setOpen2((v) => !v)} />
 
-            {/* Insight: Zvýš vklad (conditional) */}
-            {(() => {
-              const lump = lumpSumEur || 0;
-              const monthly = monthlyVklad || 0;
-              const years = horizonYears || 10;
-              const goal = goalAssetsEur || 0;
-              if (goal <= 0) return null;
-              const v3 = readV3();
-              const mix = (v3.mix || [
-                { key: "gold", pct: 12 },
-                { key: "dyn", pct: 20 },
-                { key: "etf", pct: 40 },
-                { key: "bonds", pct: 20 },
-                { key: "cash", pct: 5 },
-                { key: "crypto", pct: 2 },
-                { key: "real", pct: 1 },
-              ]) as MixItem[];
-              const approx = approxYieldAnnualFromMix(mix);
-              const fv = calculateFutureValue(lump, monthly, years, approx);
-              if (fv >= goal) return null;
-              // Calculate recommended monthly: solve FV = goal for monthly
-              // FV = lump*(1+r)^Y + monthly*12*((1+r)^Y-1)/r = goal
-              // monthly*12*((1+r)^Y-1)/r = goal - lump*(1+r)^Y
-              const fvLump = lump * Math.pow(1 + approx, years);
-              const diff = goal - fvLump;
-              let recommended = 0;
-              if (approx > 0) {
-                const factor =
-                  12 * ((Math.pow(1 + approx, years) - 1) / approx);
-                recommended = diff / factor;
-              } else {
-                recommended = diff / (12 * years);
-              }
-              recommended = Math.max(0, Math.ceil(recommended));
-              return (
-                <div
-                  className="mt-3 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-xs text-amber-300"
-                  role="status"
-                  aria-live="polite"
-                >
-                  ⚠️ Nedosiahnete cieľ (odhad {fv.toFixed(0)} € vs. cieľ{" "}
-                  {goal.toFixed(0)} €).
-                  <button
-                    type="button"
-                    className="ml-2 px-2 py-1 rounded bg-amber-600 text-white text-xs"
-                    onClick={() => {
-                      const cur = readV3();
-                      writeV3({
-                        profile: {
-                          ...(cur.profile || {}),
-                          monthlyVklad: recommended,
-                        } as any,
-                        monthly: recommended,
-                      });
-                      setMonthlyVklad(recommended);
-                    }}
-                  >
-                    Zvýš vklad na {recommended} €/mes.
-                  </button>
-                </div>
-              );
-            })()}
-          </div>
-        </section>
-      )}
       <button
         type="button"
         aria-controls="sec3"
@@ -1067,24 +860,6 @@ export default function LegacyApp() {
     </div>
   );
 
-  // Helper funkcie pre výpočet výnosu a projekcie (zdieľané sec4 + sec5)
-  function approxYieldAnnualFromMix(mix: MixItem[]): number {
-    if (!Array.isArray(mix) || mix.length === 0) return 0;
-    const etf = mix.find((m: MixItem) => m.key === "etf")?.pct || 0;
-    const dyn = mix.find((m: MixItem) => m.key === "dyn")?.pct || 0;
-    const bonds = mix.find((m: MixItem) => m.key === "bonds")?.pct || 0;
-    const crypto = mix.find((m: MixItem) => m.key === "crypto")?.pct || 0;
-    const gold = mix.find((m: MixItem) => m.key === "gold")?.pct || 0;
-    return (
-      (etf * 0.06 +
-        dyn * 0.08 +
-        bonds * 0.045 +
-        crypto * 0.15 * 0.5 +
-        gold * 0.0) /
-      100
-    );
-  }
-
   /**
    * Calculate real amortization for debts (month by month compound interest).
    * Returns remaining principal after `months` for a single debt.
@@ -1168,11 +943,13 @@ export default function LegacyApp() {
       </button>
       {open5 && (
         <MetricsSection
-          riskPref={seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"}
-          lumpSumEur={lumpSumEur}
-          monthlyVklad={monthlyVklad}
-          horizonYears={horizonYears}
-          goalAssetsEur={goalAssetsEur}
+          riskPref={
+            seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+          }
+          lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
+          monthlyVklad={(seed as any).monthly || 0}
+          horizonYears={(seed.profile?.horizonYears as any) || 10}
+          goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
         />
       )}
       <button
@@ -1205,13 +982,15 @@ export default function LegacyApp() {
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           <ProjectionChart
-            lumpSumEur={lumpSumEur}
-            monthlyVklad={monthlyVklad}
-            horizonYears={horizonYears}
+            lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
+            monthlyVklad={(seed as any).monthly || 0}
+            horizonYears={(seed.profile?.horizonYears as any) || 10}
             mix={mix}
-            riskPref={seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"}
+            riskPref={
+              seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+            }
             debts={debts}
-            goalAssetsEur={goalAssetsEur}
+            goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
           />
         </section>
       )}
@@ -1400,11 +1179,12 @@ export default function LegacyApp() {
             {(() => {
               const v3Data = readV3();
               const mix: MixItem[] = (v3Data.mix as any) || [];
-              const lump = lumpSumEur || 0;
-              const monthly = monthlyVklad || 0;
-              const years = horizonYears || 10;
-              const goal = goalAssetsEur || 0;
-              const approx = approxYieldAnnualFromMix(mix);
+              const lump = (v3Data.profile?.lumpSumEur as any) || 0;
+              const monthly = (v3Data as any).monthly || 0;
+              const years = (v3Data.profile?.horizonYears as any) || 10;
+              const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
+              const riskPref = (v3Data.profile?.riskPref || (v3Data as any).riskPref || "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+              const approx = approxYieldAnnualFromMix(mix, riskPref);
               const fv = calculateFutureValue(lump, monthly, years, approx);
               const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
 
@@ -1502,11 +1282,12 @@ export default function LegacyApp() {
                   // TODO: Generate mailto link with template + deeplink
                   const v3Data = readV3();
                   const mix: MixItem[] = (v3Data.mix as any) || [];
-                  const lump = lumpSumEur || 0;
-                  const monthly = monthlyVklad || 0;
-                  const years = horizonYears || 10;
-                  const goal = goalAssetsEur || 0;
-                  const approx = approxYieldAnnualFromMix(mix);
+                  const lump = (v3Data.profile?.lumpSumEur as any) || 0;
+                  const monthly = (v3Data as any).monthly || 0;
+                  const years = (v3Data.profile?.horizonYears as any) || 10;
+                  const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
+                  const riskPref = (v3Data.profile?.riskPref || (v3Data as any).riskPref || "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+                  const approx = approxYieldAnnualFromMix(mix, riskPref);
                   const fv = calculateFutureValue(lump, monthly, years, approx);
 
                   // Generate deeplink
