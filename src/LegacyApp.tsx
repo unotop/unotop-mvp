@@ -159,6 +159,14 @@ export default function LegacyApp() {
     const cur = readV3();
     writeV3({ profile: { ...(cur.profile || {}), modeUi: newMode } as any });
   };
+
+  // Reset handler (clear all localStorage)
+  const handleReset = () => {
+    localStorage.removeItem("unotop:v3");
+    localStorage.removeItem("unotop_v3");
+    window.location.reload();
+  };
+
   // Risk cap mapping helper
   const getRiskCap = (pref: string): number => {
     if (pref === "konzervativny") return 4.0;
@@ -656,20 +664,71 @@ export default function LegacyApp() {
                   </span>
                 </div>
               </div>
-            </div>
 
-            {/* Right column: Rezerva */}
-            <div className="space-y-3">
-              {/* Free cash badge */}
+              {/* Mesačný vklad - MOVED FROM BOTTOM (compact layout) */}
+              {(() => {
+                const income = Number(monthlyIncome) || 0;
+                const fixed = Number(fixedExp) || 0;
+                const variable = Number(varExp) || 0;
+                const freeCash = income - fixed - variable;
+                const maxVklad = Math.max(0, freeCash);
+                const currentVklad = (seed as any).monthly || 0;
+                const isLosing = freeCash < 0;
+
+                return (
+                  <div className="ml-4 mt-3 p-3 rounded-lg bg-slate-800/40 ring-1 ring-slate-700/60 space-y-2">
+                    <label
+                      htmlFor="monthly-vklad-slider"
+                      className="text-xs text-slate-400 block font-medium"
+                    >
+                      Mesačný vklad do investícií
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id="monthly-vklad-slider"
+                        ref={monthlySliderRef}
+                        type="range"
+                        min={0}
+                        max={maxVklad}
+                        step={10}
+                        value={Math.min(currentVklad, maxVklad)}
+                        aria-label="Mesačný vklad do investícií"
+                        data-testid={TEST_IDS.MONTHLY_SLIDER}
+                        onChange={(e) => {
+                          const newVal = Number(e.currentTarget.value);
+                          writeV3({ monthly: newVal });
+                        }}
+                        disabled={isLosing}
+                        className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span className="text-sm tabular-nums font-semibold w-20 text-right">
+                        {Math.min(currentVklad, maxVklad)} €
+                      </span>
+                    </div>
+                    {isLosing && (
+                      <p className="text-xs text-amber-400 flex items-center gap-1">
+                        <span>⚠️</span>
+                        <span>
+                          Vaše výdavky presahujú príjem. Upravte rozpočet pred
+                          investovaním.
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Voľné prostriedky badge */}
               {(() => {
                 const income = Number(monthlyIncome) || 0;
                 const fixed = Number(fixedExp) || 0;
                 const variable = Number(varExp) || 0;
                 const freeCash = income - fixed - variable;
                 const isPositive = freeCash >= 0;
+
                 return (
                   <div
-                    className={`p-2 rounded-lg text-sm font-semibold ${
+                    className={`mt-3 p-2.5 rounded-lg text-sm font-semibold transition-colors duration-300 ${
                       isPositive
                         ? "bg-emerald-800/40 ring-1 ring-emerald-500/40 text-emerald-200"
                         : "bg-red-800/40 ring-1 ring-red-500/40 text-red-200"
@@ -678,14 +737,19 @@ export default function LegacyApp() {
                     aria-label="Voľné prostriedky"
                   >
                     <div className="text-xs text-slate-300 mb-0.5">
-                      Voľné prostriedky
+                      Voľné prostriedky (po investíciách)
                     </div>
-                    <div className="text-lg tabular-nums">
-                      {freeCash.toFixed(0)} € / mes.
+                    <div className="text-base tabular-nums">
+                      {(freeCash - ((seed as any).monthly || 0)).toFixed(0)} € /
+                      mes.
                     </div>
                   </div>
                 );
               })()}
+            </div>
+
+            {/* Right column: Rezerva */}
+            <div className="space-y-3">
               <div className="space-y-1.5">
                 <label
                   htmlFor="current-reserve-input"
@@ -763,48 +827,6 @@ export default function LegacyApp() {
                   </div>
                 );
               })()}
-            </div>
-          </div>
-
-          {/* Mesačný vklad slider */}
-          <div className="space-y-3">
-            <button
-              type="button"
-              aria-label="Nastaviť mesačný vklad na 100 €"
-              className="px-3 py-2 rounded bg-slate-800 text-xs hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all duration-200 hover:shadow-md"
-              onClick={() => {
-                writeV3({ monthly: 100 });
-                const f = () => monthlySliderRef.current?.focus();
-                f();
-                requestAnimationFrame(f);
-                setTimeout(f, 0);
-              }}
-              title="Nastav mesačný vklad na 100 € a fokusuj slider"
-            >
-              Nastaviť mesačný vklad
-            </button>
-            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 text-xs">
-              <label htmlFor="monthly-contrib-slider">
-                Mesačný vklad – slider
-              </label>
-              <input
-                id="monthly-contrib-slider"
-                ref={monthlySliderRef}
-                type="range"
-                min={0}
-                max={1000}
-                step={10}
-                value={(seed as any).monthly || 0}
-                aria-label="Mesačný vklad – slider"
-                data-testid={TEST_IDS.MONTHLY_SLIDER}
-                onChange={(e) => {
-                  const newVal = Number(e.currentTarget.value);
-                  writeV3({ monthly: newVal });
-                }}
-              />
-              <span className="tabular-nums">
-                {(seed as any).monthly || 0} €
-              </span>
             </div>
           </div>
           {/* Starý debt UI odstránený - teraz používame standalone section */}
@@ -1029,10 +1051,15 @@ export default function LegacyApp() {
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         modeUi={modeUi}
         onModeToggle={handleModeToggle}
+        onReset={handleReset}
       />
 
       {/* Sidebar Navigation (overlay) */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        mode="PRO"
+      />
 
       {/* Deeplink Banner (pod toolbarom) */}
       {showLinkBanner && (
@@ -1223,7 +1250,7 @@ export default function LegacyApp() {
                           .filter((i) => i.pct > 0)
                           .map((item) => {
                             const labels: Record<string, string> = {
-                              gold: "🪙 Zlato",
+                              gold: "🥇 Zlato",
                               dyn: "📊 Dyn. riadenie",
                               etf: "🌍 ETF svet",
                               bonds: "📜 Dlhopisy",

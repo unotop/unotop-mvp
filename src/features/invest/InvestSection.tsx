@@ -24,9 +24,6 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
   const [lumpSumEur, setLumpSumEur] = React.useState(
     () => (seed.profile?.lumpSumEur as any) || 0
   );
-  const [monthlyVklad, setMonthlyVklad] = React.useState(
-    () => (seed as any).monthly || 0
-  );
   const [horizonYears, setHorizonYears] = React.useState(
     () => (seed.profile?.horizonYears as any) || 10
   );
@@ -43,16 +40,6 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
       setLumpSumEur(n);
       const cur = readV3();
       writeV3({ profile: { ...(cur.profile || {}), lumpSumEur: n } as any });
-    },
-  });
-
-  const monthlyVkladCtl = useUncontrolledValueInput({
-    initial: monthlyVklad,
-    parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
-    commit: (n) => {
-      setMonthlyVklad(n);
-      writeV3({ monthly: n });
     },
   });
 
@@ -81,13 +68,13 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
   // Recommendation logic: "Zvýš vklad"
   const renderRecommendation = () => {
     const lump = lumpSumEur || 0;
-    const monthly = monthlyVklad || 0;
+    const v3 = readV3();
+    const monthly = (v3 as any).monthly || 0;
     const years = horizonYears || 10;
     const goal = goalAssetsEur || 0;
 
     if (goal <= 0) return null;
 
-    const v3 = readV3();
     const mix = (v3.mix || [
       { key: "gold", pct: 12 },
       { key: "dyn", pct: 20 },
@@ -140,7 +127,7 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
               } as any,
               monthly: recommended,
             });
-            setMonthlyVklad(recommended);
+            // Note: No local state update needed (read from v3)
           }}
         >
           Zvýš vklad na {recommended} €/mes.
@@ -182,6 +169,11 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           <div className="space-y-4">
+            {/* Note: Mesačný vklad nastavte v sekcii Cashflow */}
+            <p className="text-xs text-slate-400 italic mb-3">
+              💡 Mesačný vklad nastavte v sekcii <strong>Cashflow &amp; rezerva</strong>
+            </p>
+
             {/* Jednorazová investícia */}
             <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
               <label htmlFor="lump-sum-input">Jednorazová investícia</label>
@@ -195,23 +187,6 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
                 onChange={lumpSumCtl.onChange}
                 onBlur={lumpSumCtl.onBlur}
                 defaultValue={lumpSumCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
-              />
-            </div>
-
-            {/* Mesačný vklad */}
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="monthly-vklad-input">Mesačný vklad</label>
-              <input
-                id="monthly-vklad-input"
-                type="text"
-                role="textbox"
-                inputMode="decimal"
-                aria-label="Mesačný vklad"
-                ref={monthlyVkladCtl.ref}
-                onChange={monthlyVkladCtl.onChange}
-                onBlur={monthlyVkladCtl.onBlur}
-                defaultValue={monthlyVkladCtl.defaultValue}
                 className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
               />
             </div>
