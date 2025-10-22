@@ -35,13 +35,13 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "blue",
     description: "Nízke riziko, stabilný rast. Vhodné pre začiatočníkov a konzervatívnych investorov.",
     mix: [
-      { key: "gold", pct: 18 },    // Stabilizátor
-      { key: "etf", pct: 22 },     // Rast (pod 30%)
-      { key: "bonds", pct: 30 },   // Hlavná ochrana
-      { key: "dyn", pct: 10 },     // Pod 11% (base risk)
-      { key: "cash", pct: 12 },    // Likvidita (6 mesiacov výdavkov)
-      { key: "crypto", pct: 0 },   // Vyhnutie sa volatilite
-      { key: "real", pct: 5 },     // Mierny príjem (ak kvalifikovaný)
+      { key: "gold", pct: 20 },    // Zvýšená stabilita
+      { key: "etf", pct: 20 },     // Znížené pre nižšie riziko
+      { key: "bonds", pct: 32 },   // Hlavná ochrana (zvýšená)
+      { key: "dyn", pct: 8 },      // Znížené pod 10% (nižší base risk)
+      { key: "cash", pct: 12 },    // Likvidita
+      { key: "crypto", pct: 0 },   // Zero volatilita
+      { key: "real", pct: 5 },     // Mierny príjem
       { key: "other", pct: 3 },
     ],
     targetRisk: { min: 3.0, max: 4.0 },
@@ -54,12 +54,12 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     description: "Vyvážený pomer rizika a výnosu. Vhodné pre väčšinu investorov s dlhodobým horizontom.",
     mix: [
       { key: "gold", pct: 12 },    // Stabilizátor
-      { key: "etf", pct: 28 },     // Pod 30% (bez penalizácie)
+      { key: "etf", pct: 28 },     // Pod 30%
       { key: "bonds", pct: 18 },   // Ochrana
-      { key: "dyn", pct: 18 },     // 11-21% (risk +2)
+      { key: "dyn", pct: 18 },     // 11-21%
       { key: "cash", pct: 9 },     // Likvidita
       { key: "crypto", pct: 4 },   // Mierny risk
-      { key: "real", pct: 5 },     // Príjem (ak kvalifikovaný)
+      { key: "real", pct: 5 },     // Príjem
       { key: "other", pct: 6 },
     ],
     targetRisk: { min: 4.5, max: 6.0 },
@@ -71,16 +71,16 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "green",
     description: "Vyššie riziko, maximálny potenciálny výnos. Vhodné pre skúsených investorov s vysokou toleranciou rizika.",
     mix: [
-      { key: "gold", pct: 10 },    // Minimum (stabilita)
-      { key: "etf", pct: 30 },     // Hranica (bez penalizácie)
-      { key: "bonds", pct: 10 },   // Minimum ochrana
-      { key: "dyn", pct: 23 },     // 21-31% (risk +4)
-      { key: "cash", pct: 6 },     // Minimum likvidita
-      { key: "crypto", pct: 8 },   // Agresívny rast
-      { key: "real", pct: 8 },     // Príjem (ak kvalifikovaný)
+      { key: "gold", pct: 12 },    // Zvýšená stabilita (10→12)
+      { key: "etf", pct: 30 },     // Hranica
+      { key: "bonds", pct: 12 },   // Zvýšená ochrana (10→12)
+      { key: "dyn", pct: 20 },     // Znížené (23→20) pre nižšie riziko
+      { key: "cash", pct: 6 },     // Likvidita
+      { key: "crypto", pct: 7 },   // Znížené (8→7)
+      { key: "real", pct: 8 },     // Príjem
       { key: "other", pct: 5 },
     ],
-    targetRisk: { min: 7.0, max: 7.5 },
+    targetRisk: { min: 6.5, max: 7.5 }, // Adjusted min (7.0→6.5)
   },
 ];
 

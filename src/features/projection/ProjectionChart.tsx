@@ -179,8 +179,8 @@ export function ProjectionChart({
       )}
 
       {/* Recharts graf */}
-      <div className="w-full h-80">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full" style={{ height: '320px' }}>
+        <ResponsiveContainer width="100%" height={320}>
           <LineChart
             data={chartData}
             margin={{ top: 10, right: 20, bottom: 45, left: 10 }}

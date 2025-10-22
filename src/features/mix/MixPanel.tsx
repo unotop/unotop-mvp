@@ -306,7 +306,7 @@ export const MixPanel: React.FC<{
 
   // Enhanced status chips with tooltips
   const statusChips: StatusChip[] = [];
-  
+
   // Sum validation
   if (sumDrift <= 0.1) {
     statusChips.push({

@@ -98,7 +98,9 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
       { key: "real", pct: 1 },
     ]) as MixItem[];
 
-    const riskPref = (v3.profile?.riskPref || (v3 as any).riskPref || "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+    const riskPref = (v3.profile?.riskPref ||
+      (v3 as any).riskPref ||
+      "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
     const approx = approxYieldAnnualFromMix(mix, riskPref);
     const fv = calculateFutureValue(lump, monthly, years, approx);
 
@@ -124,8 +126,8 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
         role="status"
         aria-live="polite"
       >
-        ⚠️ Nedosiahnete cieľ (odhad {fv.toFixed(0)} € vs. cieľ{" "}
-        {goal.toFixed(0)} €).
+        ⚠️ Nedosiahnete cieľ (odhad {fv.toFixed(0)} € vs. cieľ {goal.toFixed(0)}{" "}
+        €).
         <button
           type="button"
           className="ml-2 px-2 py-1 rounded bg-amber-600 text-white text-xs hover:bg-amber-700 transition-colors"
