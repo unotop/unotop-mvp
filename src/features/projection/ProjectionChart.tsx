@@ -122,12 +122,18 @@ export function ProjectionChart({
       year: monthsToYears(p.month),
       investície: Math.round(p.investValue),
       dlhy: Math.round(p.totalDebtBalance),
+      čistý: Math.round(p.investValue - p.totalDebtBalance), // Net Worth = investície - dlhy
     }));
 
   // Debug: skontroluj chartData (dočasné)
   React.useEffect(() => {
     if (chartData.length > 0) {
-      console.log('ProjectionChart chartData:', chartData.slice(0, 3), '...', chartData[chartData.length - 1]);
+      console.log(
+        "ProjectionChart chartData:",
+        chartData.slice(0, 3),
+        "...",
+        chartData[chartData.length - 1]
+      );
     }
   }, [chartData]);
 
@@ -152,21 +158,23 @@ export function ProjectionChart({
   return (
     <div className="space-y-3">
       {/* Prehľad výsledkov */}
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-white/5">
-          <div className="text-slate-400 mb-0.5">
-            Konečná hodnota (investície)
-          </div>
-          <div className="font-bold text-emerald-400 tabular-nums">
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-blue-500/20">
+          <div className="text-slate-400 mb-0.5">Investície ({horizonYears} r)</div>
+          <div className="font-bold text-blue-400 tabular-nums">
             {formatCurrency(result.finalInvestValue)}
           </div>
         </div>
-        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-white/5">
-          <div className="text-slate-400 mb-0.5">
-            Zostatok dlhov ({horizonYears} r)
-          </div>
+        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-red-500/20">
+          <div className="text-slate-400 mb-0.5">Zostatok dlhov</div>
           <div className="font-bold text-red-400 tabular-nums">
             {formatCurrency(result.finalDebtBalance)}
+          </div>
+        </div>
+        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-emerald-500/20">
+          <div className="text-slate-400 mb-0.5">Čistý majetok</div>
+          <div className="font-bold text-emerald-400 tabular-nums">
+            {formatCurrency(result.finalInvestValue - result.finalDebtBalance)}
           </div>
         </div>
       </div>
@@ -210,7 +218,7 @@ export function ProjectionChart({
             <YAxis
               stroke="#94a3b8"
               tick={{ fill: "#94a3b8", fontSize: 12 }}
-              domain={[0, 'auto']}
+              domain={[0, "auto"]}
               padding={{ top: 20, bottom: 0 }}
               tickFormatter={(val: number) =>
                 val >= 1000 ? `${(val / 1000).toFixed(0)}k` : `${val}`
@@ -237,14 +245,15 @@ export function ProjectionChart({
               verticalAlign="bottom"
             />
 
-            {/* Investičná krivka (zelená) */}
+            {/* Investičná krivka (modrá - zmenené z zelenej pre lepšiu vizuálnu hierarchiu) */}
             <Line
               type="monotone"
               dataKey="investície"
-              stroke="#10b981"
-              strokeWidth={3}
+              stroke="#3b82f6"
+              strokeWidth={2}
               name="Investície (rast)"
               dot={false}
+              isAnimationActive={false}
             />
 
             {/* Dlhová krivka (červená) - skryť v BASIC režime */}
@@ -253,11 +262,24 @@ export function ProjectionChart({
                 type="monotone"
                 dataKey="dlhy"
                 stroke="#ef4444"
-                strokeWidth={3}
+                strokeWidth={2}
                 name="Dlhy (zostatok)"
                 dot={false}
+                isAnimationActive={false}
               />
             )}
+
+            {/* Čistý majetok (zelená - Net Worth) */}
+            <Line
+              type="monotone"
+              dataKey="čistý"
+              stroke="#10b981"
+              strokeWidth={2.5}
+              name="Čistý majetok"
+              dot={false}
+              isAnimationActive={false}
+              strokeDasharray="0"
+            />
 
             {/* Cieľ (referenceline) */}
             {goalAssetsEur && goalAssetsEur > 0 && (
@@ -298,14 +320,15 @@ export function ProjectionChart({
       <div
         className="sr-only"
         role="img"
-        aria-label={`Graf projekcie investícií a dlhov. ${
+        aria-label={`Graf projekcie investícií, dlhov a čistého majetku. ${
           crossoverYear !== null
             ? `Bod prelomu nastáva po ${crossoverYear.toFixed(1)} rokoch.`
             : "Investície neprekročia dlhy v tomto horizonte."
         }`}
       >
-        Graf zobrazuje rast investícií (zelená čiara) a klesajúci zostatok dlhov
-        (červená čiara) počas {horizonYears} rokov.
+        Graf zobrazuje rast investícií (modrá čiara), klesajúci zostatok dlhov
+        (červená čiara) a čistý majetok (zelená čiara) počas {horizonYears}{" "}
+        rokov.
         {crossoverYear !== null &&
           ` Investície prekročia dlhy v roku ${crossoverCalendarYear}.`}
       </div>
