@@ -7,7 +7,7 @@ import { findBestPortfolio } from './domain/optimizer';
 
 (function runSanity(){
   if(typeof window === 'undefined') return;
-  if(!import.meta?.env?.DEV) return;
+  if(!(import.meta as any)?.env?.DEV) return;
   const assets = getAssetsByScenario('base');
   const fv = fvMonthly({ initial: 10000, monthly: 500, years: 10, rate: 0.08 });
   console.log('[sanity] FV sample 10y ≈', Math.round(fv));

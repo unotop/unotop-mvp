@@ -12,17 +12,19 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\" \"index.html\"",
     "test:clean": "rimraf node_modules/.vitest || true",
     "test:watch": "npm run test:clean && vitest",
-  "test": "npm run test:clean && vitest run",
+    "test": "npm run test:clean && vitest run",
+    "test:critical": "npm run test:clean && vitest run tests/invariants.limits.test.tsx tests/accessibility.ui.test.tsx tests/acceptance.mix-cap.ui.test.tsx tests/persist.roundtrip.test.tsx tests/persist.debts.v3.test.tsx tests/deeplink.banner.test.tsx",
     "test:ui": "vitest --ui",
     "audit": "vite-node scripts/audit-current-vs-legacy.ts | Out-File -Encoding utf8 audit.json"
   },
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "recharts": "^3.2.1"
+    "recharts": "^3.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^14.5.2",

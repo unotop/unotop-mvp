@@ -15,7 +15,10 @@ describe("Persist v3 – debts", () => {
 
   it("persists debts array with fields and appears in KPI chip", async () => {
     render(<App />);
-    const addBtn = await screen.findByRole("button", { name: /Pridať dlh/i });
+    // Nový standalone debt section má button "Pridať prvý dlh"
+    const addBtn = await screen.findByRole("button", {
+      name: /Pridať prvý dlh/i,
+    });
     fireEvent.click(addBtn);
     // fill first row
     const nameInput = screen.getByRole("textbox", { name: /Názov/i });
@@ -24,13 +27,16 @@ describe("Persist v3 – debts", () => {
     fireEvent.change(bal, { target: { value: "100000" } });
     const rate = screen.getByRole("spinbutton", { name: /Úrok p\.a\./i });
     fireEvent.change(rate, { target: { value: "5" } });
-    const pay = screen.getByRole("spinbutton", { name: /Splátka/i });
+    // Presný aria-label (nie regex) aby sa odlíšil od Extra splátky
+    const pay = screen.getByRole("spinbutton", { name: "Splátka dlhu 1" });
     fireEvent.change(pay, { target: { value: "400" } });
-    const rem = screen.getByRole("spinbutton", { name: /Zostáva mesiacov/i });
-    fireEvent.change(rem, { target: { value: "240" } });
-    // KPI chip should appear
+    // Nový label: "Zostáva rokov" (nie mesiacov)
+    const rem = screen.getByRole("spinbutton", { name: /Zostáva rokov/i });
+    fireEvent.change(rem, { target: { value: "20" } }); // 20 rokov = 240 mesiacov
+    // Summary chips v novej implementácii (Počet dlhov, Celkové splátky)
     await waitFor(() => {
-      expect(screen.getByText(/Dlhy: 1 \| Splátky: 400 €/)).toBeTruthy();
+      expect(screen.getByText(/Počet dlhov:/)).toBeTruthy();
+      expect(screen.getByText(/400 €\/mes\./)).toBeTruthy();
     });
     const d = readLS();
     expect(Array.isArray(d.debts)).toBe(true);

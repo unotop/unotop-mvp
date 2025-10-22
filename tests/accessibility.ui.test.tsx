@@ -75,11 +75,11 @@ describe("Accessibility regression (core)", () => {
   it("Collapsy (1–4): aria-controls existuje, aria-expanded toggluje na click aj Enter/Space a panely sa mount/unmount", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Po merged paneli: Metriky už NIE sú collapsible (vždy visible v pravom stĺpci)
     const headers = [
-      screen.getByRole("button", { name: /1\).*Cashflow/i }),
-      screen.getByRole("button", { name: /2\).*Investi.*nastavenia/i }),
-      screen.getByRole("button", { name: /3\).*(Zloženie|Projekcia)/i }),
-      screen.getByRole("button", { name: /4\).*(Metriky|odporúčania)/i }),
+      screen.getByRole("button", { name: /Cashflow.*rezerva/i }),
+      screen.getByRole("button", { name: /Investi.*nastavenia/i }),
+      screen.getByRole("button", { name: /Zloženie.*portfólia/i }),
     ];
     for (const headerBtn of headers) {
       const controlsId = headerBtn.getAttribute("aria-controls");
@@ -157,6 +157,11 @@ describe("Accessibility regression (core)", () => {
   it("Toast / status chip present with aria-live container after invariants action", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu (PRO-only tlačidlo)
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     const applyRulesBtn = await screen.findByRole("button", {
       name: /Upraviť podľa pravidiel/i,
     });
@@ -172,13 +177,17 @@ describe("Accessibility regression (core)", () => {
   it("Icon / key action buttons have accessible names", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu pre advanced buttons
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     // Force baseline & invariants area visible
     const names = [
       /Optimalizuj/i,
       /Dorovnať/i,
       /Upraviť podľa pravidiel/i,
       /Resetovať hodnoty/i,
-      /Prepínač režimu: BASIC|Prepínač režimu: PRO/i,
     ];
     // Optionally click rules to surface more chips (not strictly needed)
     const rulesBtn = await screen.findByRole("button", {
@@ -192,6 +201,12 @@ describe("Accessibility regression (core)", () => {
         `Missing button with accessible name matching ${rx}`
       ).toBeTruthy();
     });
+
+    // Toolbar mode toggles - existujú 2 tlačidlá (BASIC + PRO)
+    const modeToggles = screen.queryAllByRole("button", {
+      name: /Prepnúť na (BASIC|PRO) režim/i,
+    });
+    expect(modeToggles.length).toBeGreaterThan(0);
   });
 
   it("Sticky complementary panel landmark present", () => {

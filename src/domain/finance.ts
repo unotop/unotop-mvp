@@ -48,7 +48,8 @@ export function fairRoundTo100(weights: Record<string, number>): Record<string, 
 
 // Lightweight self-checks (won't throw in production, only console)
 (function tests(){
-  if(typeof window === 'undefined' || !import.meta?.env?.DEV) return;
+  // Use (import.meta as any).env for TS compatibility (build-time check may not include Vite types)
+  if(typeof window === 'undefined' || !(import.meta as any)?.env?.DEV) return;
   const approx = (a:number,b:number,e=1e-6)=> Math.abs(a-b)<e;
   console.assert(approx(fvMonthly({initial:1000, monthly:0, years:1, rate:0}),1000), 'fvMonthly lumpsum zero rate');
   console.assert(fvMonthly({initial:0, monthly:100, years:1, rate:0}) === 1200, 'fvMonthly annuity zero rate');

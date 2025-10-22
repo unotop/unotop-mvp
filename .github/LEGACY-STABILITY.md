@@ -1,0 +1,235 @@
+# LEGACY-STABILITY
+
+Tento dokument obsahuje Dodatok: Stabilná a ľahko upraviteľná architektúra (extrahovaný z TOP TIER PROMPT) – jediný zdroj pravdy pre layout a modulárnu štruktúru.
+
+## Dodatok: Stabilná a ľahko upraviteľná architektúra
+
+1. Štruktúra projektu (nemeniť bez dôvodu)
+   src/
+   app/
+   PageLayout.tsx // layout kontrakt (ľavý obsah + pravý sticky)
+   routes.tsx // (ak máme router), BASIC/PRO prepínač
+   features/
+   mix/
+   MixPanel.tsx // vizuál
+   mix.service.ts // čistá logika (normalize, setGoldTarget)
+   mix.config.ts // definícia sliderov/percent, ID, poradia
+   reserve/
+   ReservePanel.tsx
+   ReserveWizard.tsx
+   reserve.service.ts
+   debts/
+   DebtsPanel.tsx
+   debts.service.ts
+   metrics/
+   MetricsPanel.tsx
+   projection/
+   ProjectionCard.tsx
+   share/
+   ShareButton.tsx
+   ShareModal.tsx
+   deeplink/
+   DeepLinkBanner.tsx
+   persist/
+   v3.ts // readV3 / writeV3 – jediný dotyk s localStorage
+   ui/
+   Buttons.tsx, Inputs.tsx, Chips.tsx, Dialog.tsx
+   testIds.ts
+   main.tsx
+   Pravidlo: komponenty UI nikdy nepíšu priamo do localStorage. Všetko ide cez persist/v3.ts alebo \*.service.ts.
+
+---
+
+2. Stabilný layout (pravý panel vždy sticky)
+   Jediné miesto, kde sa rieši lepenie pravého panelu: PageLayout.tsx.
+   // app/PageLayout.tsx
+   export default function PageLayout({ left, right }: { left: React.ReactNode; right: React.ReactNode }) {
+   return (
+   <div className="grid grid-cols-12 gap-4 px-4 py-4 max-w-[1320px] mx-auto">
+   <main className="col-span-12 lg:col-span-8 space-y-4">{left}</main>
+   <aside className="col-span-12 lg:col-span-4 space-y-4">
+   <div className="sticky top-4 flex flex-col gap-4">{right}</div>
+   </aside>
+   </div>
+   );
+   }
+   • Nikdy nevkladať sticky štýly do panelov; len do PageLayout.
+   • Všetky stránky/hlavný root používajú:
+   <PageLayout left={<LeftStack />} right={<RightStack />} />
+   → Presun panelu = zmena poradia v LeftStack/RightStack, nie CSS.
+
+---
+
+3. CTA & tlačidlá – „registry pattern“ (ľahké skrytie/presun)
+   Každé tlačidlo/akcia je v konfigu, UI iba mapuje:
+   // features/mix/mix.config.ts
+   export const MIX_ACTIONS = [
+   { id: 'applySelection', label: 'Použiť vybraný mix (inline)', onClick: 'mix/applyInline' },
+   { id: 'recommend', label: 'Aplikovať odporúčaný mix portfólia', onClick: 'mix/applyRecommended' },
+   { id: 'share', label: 'Zdieľať', onClick: 'share/open' },
+   { id: 'optimize', label: 'Optimalizuj', onClick: 'mix/optimize' },
+   { id: 'normalize', label: 'Dorovnať', onClick: 'mix/normalize' },
+   ] as const;
+   // features/mix/MixPanel.tsx (výpis akcií)
+   {MIX_ACTIONS.map(a => (
+   <Button key={a.id} onClick={() => actions.exec(a.onClick)}>{a.label}</Button>
+   ))}
+   • Skryť/presunúť tlačidlo = edit MIX_ACTIONS (bez zásahu do JSX).
+   • actions.exec(topic) mapuje na funkcie v mix.service.ts / share.modal atď.
+
+---
+
+4. BASIC vs PRO – vypínanie/UI level bez rozbitia kódu
+   • Stav UI režimu je výhradne v profile.modeUi ('BASIC'|'PRO').
+   • Viditeľnosť panelov/fíčur rieši iba routes.tsx (alebo LeftStack/RightStack):
+   {modeUi === 'BASIC' ? <BasicMixSlice/> : <ProMixPanel/>}
+   • Biznis logika je rovnaká (service vrstva). BASIC je len skrátený pohľad.
+
+---
+
+5. Slidery a logika: servis vs. UI
+   • mix.service.ts:
+   o normalize(list), setGoldTarget(list, target), caps, sum, chipsFromState(state).
+   o Čisté funkcie, žiadny React, žiadna perzistencia.
+   • UI (MixPanel.tsx) importuje mix.service.ts, vyrenderuje slidery podľa mix.config.ts (poradie, min/max, id).
+   → Zmena/sladenie slidera = zmena v mix.config.ts alebo CSS, nie rozkop Rex.
+
+---
+
+6. Wizardy & modaly – jeden unifikovaný wrapper
+   ui/Dialog.tsx – jediný modálny wrapper (role, aria, Esc close, návrat fokusu).
+   ReserveWizard.tsx, ShareModal.tsx používajú len tento wrapper.
+   • Záruka: modaly sa unmountujú po zatvorení (žiadne „hidden“).
+   • Fokus sa vracia na spúšťací element cez ref.
+
+---
+
+7. Chips & Insights – deklaratívne
+   • insights.config.ts: definuj podmienku a akciu (id + label). UI iba zobrazuje dostupné karty.
+   • chips sú generované čistou funkciou chipsFromState – v DOM sú vždy viditeľné.
+
+---
+
+8. Perzistencia – jediný dotykový bod
+   • UI nikdy nesiaha na localStorage; len writeV3/readV3.
+   • Hydration guard: prvý render bez persist efektu.
+   • StrictMode v testoch vypnutý v main.tsx, v prod zapnutý.
+
+---
+
+9. Test IDs, labely a prístupnosť
+   • Jediný zdroj TEST_IDS v src/testIds.ts.
+   • Labely pre dlhy sú unikátne (1. bez suffixu, ďalšie #2, #3).
+   • Pre type="range" používaj v testoch data-testid (stabilita).
+   • Modaly: role="dialog", aria-modal="true", Esc zatvára, fokus sa vracia.
+
+---
+
+10. Štýlové konzervy (aby sa layout nerozsypal)
+    • Tailwind utility len v layout komponentoch (PageLayout, panely).
+    Žiadne absolútne pozicovanie pre hlavné bloky.
+    • Z-index mapa:
+    o base 0–10: bežné karty
+    o modaly 1000+
+    o toast/bannery 1100+
+    • Všetky panely v kartách majú rovnaké paddingy a radius (rounded-2xl p-4 shadow-sm).
+
+---
+
+11. Čo nesmieme robiť (red flags)
+    • Sticky dávať priamo do panelu → rozbije pravý stĺpec. Sticky len v PageLayout.
+    • Priamy localStorage.setItem v komponentoch → zakázané.
+    • Rozsiahle „kopíruj-vlož“ bloky do LegacyApp.tsx → rozdeliť do features/\*.
+    • Vymýšľať nové data-testid ad hoc → pridať do testIds.ts.
+    • Meniť texty/chipsy do nečitateľných variácií → držať sa promptu (BASIC copy „Gold 12 % (odporúčanie)“ atď.).
+
+---
+
+12. Ako bezpečne odstraňovať/presúvať veci
+    • Odstrániť tlačidlo: vymaž z \*.config.ts (napr. MIX_ACTIONS).
+    • Presunúť panel: v LeftStack/RightStack zmeň poradie.
+    • Schovať v BASIC: v routes.tsx podmienka na modeUi.
+    • Zmeniť cieľ i percento zlata: v mix.service.ts exportuj MIN_GOLD_DEFAULT = 12 → zmeníš na jednom mieste.
+
+---
+
+13. Git / PR disciplina (aby sa dalo vrátiť späť)
+    • Každá zmena v UI = samostatný PR (max ~200 LOC).
+    • Názvy vetiev:
+    o feat/ui-... (len UI),
+    o feat/infra-... (len infra),
+    o fix/bug-....
+    • V PR popise vždy: „Zmenené komponenty“, „Dopad na layout“, „Testy, ktoré sa tým dotýkajú“.
+    • Nikdy nerobiť UI aj infra v jednom PR.
+
+---
+
+14. Mini checklist pred merge
+    • Pravý panel sticky ostal vpravo (desktop), neschádza pod ľavý.
+    • Odstránené/pridané tlačidlá sa riešili cez \*.config.ts.
+    • Žiadny priamy localStorage mimo persist/v3.ts.
+    • Wizardy unmountujú po close; Esc vracia fokus.
+    • Chips sú v viditeľnom DOM.
+    • Selektívne testy (reserve wizard, limits, deeplink, a11y) → PASS.
+
+---
+
+15. Implementované panely (Phase 1 – BASIC režim)
+
+    **sec2 (Investičné nastavenia)**
+    • 4 textboxy s uncontrolled hooks (debounce ~120ms, blur flush):
+    - Jednorazová investícia (lumpSumEur) → persist do profile.lumpSumEur
+    - Mesačný vklad (monthlyVklad) → persist do v3.monthly (back-compat mirror)
+    - Investičný horizont (horizonYears) → persist do profile.horizonYears
+    - Cieľ majetku (goalAssetsEur) → persist do profile.goalAssetsEur
+      • type="text" + role="textbox" (compatibility s testami)
+      • Žiadne sr-only invest stubs (odstránené po implementácii)
+      • A11y: aria-label na každom poli
+      • Umiestnenie: src/LegacyApp.tsx (state ~lines 27-35, hooks ~lines 165-230, UI ~lines 500-560)
+
+    **sec5 (Metriky & odporúčania)**
+    • 3 scorecards (read-only, live update):
+    - Riziko (0–10): riskScore(mix) vs. risk cap (4.0/6.0/7.5), ⚠️ ak over
+    - Výnos/rok (odhad): approxYieldAnnualFromMix(mix)
+    - Progres k cieľu: FV vs. goalAssetsEur (%)
+      • CTA: "Max výnos (riziko ≤ cap)" (placeholder)
+      • Žiadne grafy, len číselné karty
+      • Helper funkcie: approxYieldAnnualFromMix(), calculateFutureValue() (zdieľané s sec4)
+      • Umiestnenie: src/LegacyApp.tsx (helpers ~lines 807-842, UI ~lines 840-940)
+
+    **sec4 (Projekcia – lightweight)**
+    • CSS progress bar (žiadne nové balíky, žiadne Recharts)
+    • A11y: role="progressbar", aria-valuemin/max/now, aria-label
+    • Live reaktivita na zmeny v sec2 (lump sum, monthly, horizon, goal) aj na mix
+    • Výpočet: FV = P0 _ (1+r)^Y + PM _ 12 \* ((1+r)^Y - 1) / r
+    • Fallback: ak goal <= 0 → hint "Nastavte cieľ aktív..."
+    • Žiadne zapisovanie do persistu (iba čítanie z v3)
+    • Umiestnenie: src/LegacyApp.tsx (~lines 945-1010)
+
+    **Pravidlo: BEZ auto-normalizácie**
+    • Ručné zásahy v mixe nenormalizuj okamžite
+    • Zobraz chip "Súčet X %" (ak drift)
+    • CTA "Dorovnať" to vyrieši manuálne
+    • Používateľ má kontrolu nad každou zmenou
+
+---
+
+16. Test stratégia (Phase 1)
+
+    **Kritické testy (npm run test:critical):**
+    • tests/invariants.limits.test.tsx (2 tests)
+    • tests/accessibility.ui.test.tsx (9 tests)
+    • tests/acceptance.mix-cap.ui.test.tsx (3 tests)
+    • tests/persist.roundtrip.test.tsx (1 test)
+    • tests/persist.debts.v3.test.tsx (1 test)
+    • tests/deeplink.banner.test.tsx (1 test)
+    **Spolu: 17 tests – musia byť všetky PASS pred merge**
+
+    **Preskočené testy (Phase 1):**
+    • Debt UI testy (9 tests) – očakávané FAIL, implementované v Phase 2
+    • Chart legend testy – očakávané FAIL, PRO režim
+    • Dôvod: BASIC režim nemá debt panel (len tlačidlo "Pridať dlh")
+
+---
+
+TOTO JE OFICIÁLNY STABILITY ADDENDUM.

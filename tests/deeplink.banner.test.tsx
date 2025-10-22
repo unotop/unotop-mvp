@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import App from "../src/LegacyApp";
@@ -10,10 +10,7 @@ function encState(payload: any) {
 describe("Deep-link banner", () => {
   beforeEach(() => {
     localStorage.clear();
-    vi.useFakeTimers();
-  });
-  afterEach(() => {
-    vi.useRealTimers();
+    // Fake timers removed: banner now renders synchronously on initial paint.
   });
 
   it("shows on #state= load, can be closed, and does not show on reload without hash", async () => {
@@ -45,9 +42,9 @@ describe("Deep-link banner", () => {
       writable: true,
     });
     render(<App />);
-    // Banner visible
+    // Banner visible (synchronous)
     expect(
-      await screen.findByText(/Konfigurácia načítaná zo zdieľaného linku\./i)
+      screen.getByText(/Konfigurácia načítaná zo zdieľaného linku\./i)
     ).toBeTruthy();
     // Close via X
     fireEvent.click(screen.getByRole("button", { name: /Zavrieť oznámenie/i }));

@@ -1,63 +1,8 @@
 /**
- * Stav pred layout – placeholder.
- * Legacy pre-layout logika bola odstránená kvôli masívnym TS chybám (>2000).
- * Ak treba obnoviť časť, vytiahneme ju selektívne z histórie.
+ * Legacy pre-layout file sanitized. Original content removed due to TypeScript errors.
+ * Acts only as an empty module placeholder now.
  */
-export {}; // empty module keeps TS happy
-
-// NOTE: Žiadny ďalší kód tu zámerne nie je.
-  const BOND_RISK = 2;
-
-  const RE =
-    scn === "conservative" ? 0.075 : scn === "aggressive" ? 0.095 : 0.087;
-  const RE_RISK = scn === "aggressive" ? 5 : 4;
-
-  return {
-    "ETF (svet – aktívne)": { expReturn: ETF, risk: ETF_RISK },
-    "Zlato (fyzické)": { expReturn: GOLD, risk: GOLD_RISK },
-    "Krypto (BTC/ETH)": { expReturn: CRYPTO, risk: CRYPTO_RISK },
-    "Dynamické riadenie": { expReturn: DYNAMIC, risk: DYNAMIC_RISK },
-    "Garantovaný dlhopis 7,5% p.a.": { expReturn: BOND9, risk: BOND_RISK },
-    "Hotovosť/rezerva": { expReturn: 0.0, risk: 2 },
-    "Reality (komerčné)": { expReturn: RE, risk: RE_RISK },
-  };
-}
-
-// END LEGACY (intentionally omitted)
-  "ETF (svet – aktívne)": 40,
-  "Zlato (fyzické)": 10,
-  "Krypto (BTC/ETH)": 10,
-  "Dynamické riadenie": 20,
-  "Garantovaný dlhopis 7,5% p.a.": 15,
-  "Hotovosť/rezerva": 5,
-  "Reality (komerčné)": 0,
-};
-type RecArgs = {
-  years: number;
-  income: number;
-  monthlyInvest: number;
-  oneTime: number;
-  missingReserve: number;
-  reUnlocked: boolean;
-  assetsKeys: string[];
-};
-
-/* ============================
-   Gauge helpers & component
-============================ */
-function gaugeNeedle(value: number, cx: number, cy: number, r: number) {
-  const needleLen = r * 0.85;
-  const ang = Math.PI - (value / 100) * Math.PI;
-  const nx = cx + needleLen * Math.cos(ang);
-  const ny = cy - needleLen * Math.sin(ang);
-  return { nx, ny };
-}
-
-function RiskGauge({ value }: { value: number }) {
-  const size = 140;
-  const cx = size / 2;
-  const cy = size / 2 + 20;
-  const r = 70;
+export {};
   const { nx, ny } = gaugeNeedle(value, cx, cy, r);
 
   const segments = [

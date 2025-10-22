@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../src/LegacyApp";
 
@@ -16,6 +16,11 @@ describe("Acceptance: Mix cap & invariants UI", () => {
   it("Scenár 1 – Dorovnať upraví sumu na 100 % po úmyselnej odchýlke", async () => {
     const user = userEvent.setup();
     render(<App />);
+
+    // Prepnúť na PRO režim (BASIC nemá spinbuttony)
+    const proButton = screen.getByRole("button", { name: /prepnúť na pro/i });
+    await user.click(proButton);
+
     // Vytvor drift: upravíme dva assets aby sme garantovali sum != 100
     const spinboxes = screen.getAllByRole("spinbutton") as HTMLInputElement[];
     const a = spinboxes[0];
@@ -60,6 +65,11 @@ describe("Acceptance: Mix cap & invariants UI", () => {
   it("Scenár 2 – invariants po Aplikovať odporúčaný mix", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu (PRO-only tlačidlo)
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     const recommendBtn = await screen.findByRole("button", {
       name: /Aplikovať odporúčaný mix portfólia/i,
     });
@@ -81,7 +91,9 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     const lump = screen.getByRole("textbox", {
       name: /Jednorazová investícia/i,
     }) as HTMLInputElement;
-    const monthly = screen.getByRole("textbox", {
+
+    // Mesačný vklad je teraz slider v sec1 (Cashflow), nie textbox v sec2
+    const monthly = screen.getByRole("slider", {
       name: /Mesačný vklad/i,
     }) as HTMLInputElement;
 
@@ -103,9 +115,8 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     if (!ctaFound) {
       const trialMonthlyValues = [6000, 12000];
       for (const v of trialMonthlyValues) {
-        await user.clear(monthly);
-        await user.type(monthly, String(v));
-        monthly.blur();
+        // Slider používa fireEvent namiesto user.clear/type
+        fireEvent.change(monthly, { target: { value: String(v) } });
         await new Promise((r) => setTimeout(r, 60));
         if (screen.queryByText(/Prepnúť.*PRO/i)) {
           ctaFound = true;
@@ -124,11 +135,11 @@ describe("Acceptance: Mix cap & invariants UI", () => {
       // Fallback: ak CTA neprišlo, akceptuj že hodnota prekročila BASIC cap (žiadny clamp) – indikuje že test prostredie nesimuluje toast.
       const lumpVal = Number(lump.value || 0);
       const monthlyVal = Number(monthly.value || 0);
-      // Over režim cez aria-label prepínača (jednoznačné)
-      const modeToggle = screen.getByRole("button", {
-        name: /Prepínač režimu: BASIC/i,
+      // Over režim cez Toolbar prepínač - existujú 2 tlačidlá (jedno pre každý režim)
+      const modeToggles = screen.getAllByRole("button", {
+        name: /Prepnúť na (BASIC|PRO) režim/i,
       });
-      expect(modeToggle).toBeTruthy();
+      expect(modeToggles.length).toBeGreaterThan(0);
       expect(lumpVal > 10000 || monthlyVal > 5000).toBe(true);
     }
   });

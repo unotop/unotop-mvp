@@ -14,6 +14,11 @@ describe("Invariants limits & idempotencia", () => {
   it('po "Upraviť podľa pravidiel" platia limity a sumárne chipy', async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu (PRO-only tlačidlo)
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     const btn = await screen.findByRole("button", {
       name: /Upraviť podľa pravidiel/i,
     });
@@ -29,6 +34,11 @@ describe("Invariants limits & idempotencia", () => {
   it("idempotencia – druhé kliknutie bez zmeny", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Prepni do PRO režimu
+    const proBtn = await screen.findByRole("button", {
+      name: /Prepnúť na PRO režim/i,
+    });
+    await user.click(proBtn);
     const btn = await screen.findByRole("button", {
       name: /Upraviť podľa pravidiel/i,
     });
