@@ -653,7 +653,11 @@ export default function LegacyApp() {
                 aria-label="Pridať ďalší dlh"
                 className="px-3 py-1.5 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 hover:scale-105 active:scale-95 transition-all"
                 onClick={addDebtRow}
-                title={modeUi === "BASIC" ? "💡 Tip: V PRO režime vidíte prehľadné vizuálne karty s výpočtom úrokov" : undefined}
+                title={
+                  modeUi === "BASIC"
+                    ? "💡 Tip: V PRO režime vidíte prehľadné vizuálne karty s výpočtom úrokov"
+                    : undefined
+                }
               >
                 ➕ Pridať ďalší dlh
               </button>

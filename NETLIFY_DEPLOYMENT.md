@@ -3,7 +3,7 @@
 **Build Status:** ✅ SUCCESS  
 **Build Date:** 22. október 2025  
 **Branch:** main (merged from feat/legacy-basic)  
-**Version:** 0.6.0-beta  
+**Version:** 0.6.0-beta
 
 ---
 
@@ -22,24 +22,29 @@ dist/assets/index-BFQpgWTK.js   622.95 kB │ gzip: 184.23 kB
 ## 🌐 Netlify Deploy Kroky
 
 ### 1. Push do GitHub
+
 ```bash
 git push origin main
 ```
 
 ### 2. Netlify Site Settings
+
 - **Build Command:** `npm run build`
 - **Publish Directory:** `dist`
 - **Node Version:** 18.x (alebo 20.x)
 
 ### 3. Environment Variables (ak sú potrebné)
+
 ```
 NODE_ENV=production
 ```
 
 ### 4. Deploy
+
 Netlify automaticky deployuje pri push-e do `main`.
 
 ### 5. Custom Domain (voliteľné)
+
 - Nastaviť v Netlify: Site settings → Domain management
 - DNS: CNAME record → `your-site.netlify.app`
 
@@ -59,6 +64,7 @@ Netlify automaticky deployuje pri push-e do `main`.
 ## 🧪 Post-Deploy Testing
 
 ### 1. Basic User Flow
+
 1. Open site → BASIC mode (default)
 2. Select risk profile (Vyvažený)
 3. Set investment params (4 cards)
@@ -66,6 +72,7 @@ Netlify automaticky deployuje pri push-e do `main`.
 5. View projection (graph + metrics)
 
 ### 2. PRO User Flow
+
 1. Toggle to PRO mode (header)
 2. Adjust mix with sliders (8 assets)
 3. Add debt → see visual card + amortization
@@ -73,10 +80,12 @@ Netlify automaticky deployuje pri push-e do `main`.
 5. Optimize mix (🎯 Optimalizuj button)
 
 ### 3. Mobile Responsiveness
+
 - Test na iOS Safari + Android Chrome
 - Všetky komponenty by mali byť responsive
 
 ### 4. Performance
+
 - Lighthouse score: Target 90+ (Desktop), 80+ (Mobile)
 - Bundle size warning: Známe (code-splitting post-MVP)
 
@@ -87,6 +96,7 @@ Netlify automaticky deployuje pri push-e do `main`.
 ### Features Deployed
 
 **BASIC Režim:**
+
 - ✅ Risk profile selection (radio buttons)
 - ✅ Visual cards (2×2 grid investičné nastavenia)
 - ✅ 3 portfolio presets (konzervativne/vyvažene/dynamicky)
@@ -95,6 +105,7 @@ Netlify automaticky deployuje pri push-e do `main`.
 - ✅ Simple debt table
 
 **PRO Režim:**
+
 - ✅ Mix panel (8 asset sliders)
 - ✅ Actions: Optimalizuj, Export/Import, Dorovnať, Rules
 - ✅ Visual debt cards (amortization insights)
@@ -102,6 +113,7 @@ Netlify automaticky deployuje pri push-e do `main`.
 - ✅ Advanced controls
 
 **UX Improvements:**
+
 - ✅ BASIC/PRO toggle (sticky header)
 - ✅ Default risk profile (Vyvažený)
 - ✅ Tooltip pre debt table (BASIC)
@@ -109,6 +121,7 @@ Netlify automaticky deployuje pri push-e do `main`.
 - ✅ Deep-link support
 
 **Bugfixes:**
+
 - ✅ Voľné prostriedky: live localStorage read
 - ✅ Optimalizuj button: accessible name
 - ✅ All critical tests passing
@@ -127,16 +140,19 @@ Netlify automaticky deployuje pri push-e do `main`.
 ## 📈 Next Steps (Post-Launch)
 
 ### Phase 6: Optimization
+
 1. Code-splitting (dynamic imports)
 2. Lazy load Recharts
 3. Image optimization
 
 ### Phase 7: Onboarding
+
 1. Welcome banner (localStorage flag)
 2. Tooltip tour (react-joyride)
 3. Progress indicator
 
 ### Phase 8: Analytics
+
 1. Google Analytics / Plausible
 2. User flow tracking
 3. A/B testing (BASIC vs PRO default)
@@ -147,9 +163,10 @@ Netlify automaticky deployuje pri push-e do `main`.
 
 **Production URL:** `https://your-site.netlify.app` (TBD)  
 **Status Page:** Netlify Dashboard  
-**Error Tracking:** Browser console (post-MVP: Sentry)  
+**Error Tracking:** Browser console (post-MVP: Sentry)
 
 **User Support:**
+
 - GitHub Issues: Bug reports
 - Email: (TBD)
 - FAQ: (TBD)
