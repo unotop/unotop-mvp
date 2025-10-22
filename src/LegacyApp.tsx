@@ -63,6 +63,14 @@ export default function LegacyApp() {
     }
   });
 
+  // Investment params sync (pre ProjectionMetricsPanel reaktivitu)
+  const [investParams, setInvestParams] = React.useState(() => ({
+    lumpSumEur: (seed.profile?.lumpSumEur as any) || 0,
+    monthlyVklad: (seed as any).monthly || 0,
+    horizonYears: (seed.profile?.horizonYears as any) || 10,
+    goalAssetsEur: (seed.profile?.goalAssetsEur as any) || 0,
+  }));
+
   // Event-based sync: listen to mix changes from other components (replaces 500ms polling)
   React.useEffect(() => {
     return createMixListener((newMix) => {
@@ -71,6 +79,20 @@ export default function LegacyApp() {
       }
     });
   }, [mix]);
+
+  // Sync invest params from persist (100ms polling)
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const v3 = readV3();
+      setInvestParams({
+        lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
+        monthlyVklad: (v3 as any).monthly || 0,
+        horizonYears: (v3.profile?.horizonYears as any) || 10,
+        goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   const debounceRef = React.useRef<number | undefined>(undefined);
   function persistDebts(list: Debt[]) {
@@ -925,10 +947,10 @@ export default function LegacyApp() {
       {/* Spojený panel: Projekcia + Metriky (oba režimy) */}
       <ProjectionMetricsPanel
         mix={mix}
-        lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
-        monthlyVklad={(seed as any).monthly || 0}
-        horizonYears={(seed.profile?.horizonYears as any) || 10}
-        goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
+        lumpSumEur={investParams.lumpSumEur}
+        monthlyVklad={investParams.monthlyVklad}
+        horizonYears={investParams.horizonYears}
+        goalAssetsEur={investParams.goalAssetsEur}
         riskPref={
           seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
         }

@@ -1,6 +1,7 @@
 import React from "react";
 import { writeV3, readV3 } from "../../persist/v3";
 import { useUncontrolledValueInput } from "../_hooks/useUncontrolledValueInput";
+import { calculateFutureValue } from "../../engine/calculations";
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -133,6 +134,14 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   // Voľné prostriedky (live calculation)
   const freeCash = monthlyIncome - fixedExp - varExp;
 
+  // FV (Future Value) - konečná hodnota investície
+  const fv = React.useMemo(() => {
+    if (horizonYears <= 0) return 0;
+    // Predpokladaný ročný výnos: 6% (konzervatívny odhad)
+    const approxYield = 0.06;
+    return calculateFutureValue(lumpSumEur, monthlyVklad, approxYield, horizonYears);
+  }, [lumpSumEur, monthlyVklad, horizonYears]);
+
   return (
     <>
       <button
@@ -210,10 +219,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
             </div>
           </div>
 
-          {/* 2. Cashflow */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-300">Cashflow</h3>
-            <div className="grid grid-cols-1 gap-3">
+          {/* 2. Cashflow + Investície (2-column grid na desktop) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Ľavý stĺpec: Cashflow */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-slate-300">Cashflow</h3>
+              <div className="grid grid-cols-1 gap-3">
               {/* Mesačný príjem: textbox + slider */}
               <div className="space-y-2">
                 <label
@@ -350,32 +361,33 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 </div>
               </div>
 
-              {/* Voľné prostriedky - výsledok */}
-              <div className="pt-2 border-t border-slate-700">
+              {/* Voľné prostriedky - kompaktný box */}
+              <div className="pt-2">
                 <div
-                  className={`px-4 py-3 rounded-lg text-center ${
+                  className={`px-3 py-2 rounded-lg ${
                     freeCash >= 0
                       ? "bg-emerald-900/30 text-emerald-300"
                       : "bg-red-900/30 text-red-300"
                   }`}
                 >
-                  <div className="text-xs text-slate-300 mb-1">
+                  <div className="text-xs text-slate-400 mb-0.5">
                     Voľné prostriedky
                   </div>
-                  <div className="text-xl tabular-nums font-bold">
-                    {freeCash.toFixed(0)} €
+                  <div className="text-lg tabular-nums font-bold">
+                    {freeCash.toFixed(0)} €/mes
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+            {/* Koniec ľavého stĺpca */}
+            </div>
 
-          {/* 3. Investičné nastavenia */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-300">
-              Investičné nastavenia
-            </h3>
-            <div className="grid grid-cols-1 gap-3">
+            {/* Pravý stĺpec: Investičné nastavenia */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-slate-300">
+                Investičné nastavenia
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
               {/* Jednorazová investícia - len textbox (nie často mení) */}
               <div className="space-y-2">
                 <label
@@ -421,7 +433,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   <input
                     type="range"
                     min={0}
-                    max={2000}
+                    max={5000}
                     step={50}
                     value={monthlyVklad}
                     onChange={(e) => {
@@ -504,8 +516,24 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
                 />
               </div>
+
+              {/* FV (Future Value) - konečná hodnota investície */}
+              <div className="pt-2">
+                <div className="px-3 py-2 rounded-lg bg-blue-900/30 text-blue-300 ring-1 ring-blue-500/20">
+                  <div className="text-xs text-slate-400 mb-0.5">
+                    Konečná hodnota (za {horizonYears}r)
+                  </div>
+                  <div className="text-lg tabular-nums font-bold">
+                    {fv.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} €
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Koniec pravého stĺpca */}
             </div>
           </div>
+          {/* Koniec 2-column grid */}
+
         </section>
       )}
     </>

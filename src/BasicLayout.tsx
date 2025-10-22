@@ -30,11 +30,36 @@ export default function BasicLayout() {
     return (v3.mix || []) as MixItem[];
   });
 
+  // Investment params sync (pre ProjectionMetricsPanel reaktivitu)
+  const [investParams, setInvestParams] = React.useState(() => {
+    const v3 = readV3();
+    return {
+      lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
+      monthlyVklad: (v3 as any).monthly || 0,
+      horizonYears: (v3.profile?.horizonYears as any) || 10,
+      goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
+    };
+  });
+
   React.useEffect(() => {
     const unsub = createMixListener((newMix) => {
       setMix(newMix as MixItem[]);
     });
     return unsub;
+  }, []);
+
+  // Sync invest params from persist (100ms polling)
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const v3 = readV3();
+      setInvestParams({
+        lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
+        monthlyVklad: (v3 as any).monthly || 0,
+        horizonYears: (v3.profile?.horizonYears as any) || 10,
+        goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
+      });
+    }, 100);
+    return () => clearInterval(interval);
   }, []);
 
   const handleModeToggle = () => {
@@ -46,10 +71,7 @@ export default function BasicLayout() {
 
   const left = (
     <div className="min-w-0 space-y-4" data-testid="left-col">
-      <BasicSettingsPanel
-        open={open0}
-        onToggle={() => setOpen0((v) => !v)}
-      />
+      <BasicSettingsPanel open={open0} onToggle={() => setOpen0((v) => !v)} />
 
       {/* Portfolio selector */}
       <button
@@ -93,11 +115,13 @@ export default function BasicLayout() {
     <div className="space-y-4">
       <ProjectionMetricsPanel
         mix={mix}
-        lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
-        monthlyVklad={(seed as any).monthly || 0}
-        horizonYears={(seed.profile?.horizonYears as any) || 10}
-        goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
-        riskPref={seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"}
+        lumpSumEur={investParams.lumpSumEur}
+        monthlyVklad={investParams.monthlyVklad}
+        horizonYears={investParams.horizonYears}
+        goalAssetsEur={investParams.goalAssetsEur}
+        riskPref={
+          seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+        }
       />
 
       {/* Share CTA */}
@@ -111,8 +135,18 @@ export default function BasicLayout() {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
           <div className="relative flex items-center justify-center gap-3">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              />
             </svg>
             <span>Odoslať advisorovi</span>
           </div>
@@ -133,13 +167,21 @@ export default function BasicLayout() {
       />
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <PageLayout left={left} right={right} />
-      
+
       {/* Share modal placeholder - implementujeme neskôr ak treba */}
       {shareOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShareOpen(false)}>
-          <div className="bg-slate-900 p-6 rounded-xl max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setShareOpen(false)}
+        >
+          <div
+            className="bg-slate-900 p-6 rounded-xl max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-xl font-bold mb-4">Zdieľať projekciu</h2>
-            <p className="text-sm text-slate-400 mb-4">TODO: Share modal (použiť z LegacyApp)</p>
+            <p className="text-sm text-slate-400 mb-4">
+              TODO: Share modal (použiť z LegacyApp)
+            </p>
             <button
               className="px-4 py-2 bg-emerald-600 rounded"
               onClick={() => setShareOpen(false)}
