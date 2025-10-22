@@ -330,7 +330,7 @@ export const MixPanel: React.FC<{
   if (goldPct >= 12) {
     statusChips.push({
       id: "gold-ok",
-      icon: "🟡",
+      icon: "🥇",
       label: "Zlato dorovnané",
       variant: "success",
       tooltip: "Zlato >= 12% pre stabilitu portfólia",
@@ -338,7 +338,7 @@ export const MixPanel: React.FC<{
   } else if (goldPct < 12 && goldPct > 0) {
     statusChips.push({
       id: "gold-low",
-      icon: "🟡",
+      icon: "🥇",
       label: `Zlato ${goldPct.toFixed(0)}% (< 12%)`,
       variant: "info",
       tooltip: "Odporúčame navýšiť zlato na 12% pre stabilitu",
@@ -516,82 +516,142 @@ export const MixPanel: React.FC<{
           />
         )}
       </div>
-      <div className="mt-4 flex flex-wrap gap-2 items-center">
-        <div
-          className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded ${
-            Math.abs(sum - 100) < 0.01
-              ? "bg-emerald-800/40 ring-1 ring-emerald-500/40 text-emerald-200"
-              : Math.abs(sum - 100) <= 1
-                ? "bg-amber-800/40 ring-1 ring-amber-500/40 text-amber-200"
-                : "bg-red-800/40 ring-1 ring-red-500/40 text-red-200"
-          }`}
-          data-testid="mix-sum-label"
-          aria-label="Súčet mixu"
-        >
-          <span>Súčet</span>
-          <span>&nbsp;mixu:</span>
-          <span className="tabular-nums">{Math.round(sum)}%</span>
+      {/* Actions Section - Reorganized for PRO mode clarity */}
+      <div className="mt-4 space-y-3">
+        {/* Sum indicator + Primary actions */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div
+            className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded ${
+              Math.abs(sum - 100) < 0.01
+                ? "bg-emerald-800/40 ring-1 ring-emerald-500/40 text-emerald-200"
+                : Math.abs(sum - 100) <= 1
+                  ? "bg-amber-800/40 ring-1 ring-amber-500/40 text-amber-200"
+                  : "bg-red-800/40 ring-1 ring-red-500/40 text-red-200"
+            }`}
+            data-testid="mix-sum-label"
+            aria-label="Súčet mixu"
+          >
+            <span>Súčet mixu:</span>
+            <span className="tabular-nums">{Math.round(sum)}%</span>
+          </div>
+          <button
+            onClick={normalizeAll}
+            disabled={Math.round(sum) === 100}
+            className="px-3 py-1.5 rounded bg-emerald-600/20 ring-1 ring-emerald-500/40 text-xs font-medium disabled:opacity-50 hover:bg-emerald-600/30 hover:scale-105 active:scale-95 transition-all duration-200 disabled:hover:scale-100"
+            title="Normalizuj mix na presne 100 %"
+          >
+            ✓ Dorovnať
+          </button>
+          <button
+            onClick={applyRecommended}
+            className="px-3 py-1.5 rounded bg-blue-600/20 ring-1 ring-blue-500/40 text-xs font-medium hover:bg-blue-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
+            title="Aplikuj odporúčaný mix podľa rizikovej preferencie"
+          >
+            ⭐ Aplikovať odporúčaný mix
+          </button>
         </div>
-        <button
-          onClick={normalizeAll}
-          disabled={Math.round(sum) === 100}
-          className="px-2 py-1 rounded bg-slate-700 text-xs disabled:opacity-50 hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200 disabled:hover:scale-100"
-          title="Normalizuj mix na presne 100 %"
-        >
-          Dorovnať
-        </button>
-        <button
-          onClick={optimizeRisk}
-          className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-          aria-label="Optimalizuj"
-          title="Optimalizuj mix pre maximálny výnos pri dodržaní risk cap"
-        >
-          Optimalizuj
-        </button>
+
+        {/* PRO Actions - organized into logical groups */}
         {mode === "PRO" && (
           <>
-            <button
-              onClick={optimizeRisk}
-              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-              title="Maximalizuj výnos pri dodržaní risk cap"
-            >
-              Max výnos (riziko ≤ {cap})
-            </button>
-            <button
-              onClick={applyRecommended}
-              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-              title="Aplikuj odporúčaný mix podľa rizikovej preferencie"
-            >
-              Aplikovať odporúčaný mix portfólia
-            </button>
-            <button
-              onClick={applyRules}
-              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-              title="Uprav mix aby dodržiaval limity (Dyn+Krypto ≤22%, Dyn ≤15%)"
-            >
-              Upraviť podľa pravidiel
-            </button>
-            <button
-              onClick={() => {
-                // reset to initial seed mix (no normalization beyond seed)
-                const seed: MixItem[] = [
-                  { key: "gold", pct: 5 },
-                  { key: "dyn", pct: 0 },
-                  { key: "etf", pct: 60 },
-                  { key: "bonds", pct: 20 },
-                  { key: "cash", pct: 5 },
-                  { key: "crypto", pct: 5 },
-                  { key: "real", pct: 5 },
-                ];
-                setMix(seed);
-                writeV3({ mix: seed });
-              }}
-              aria-label="Resetovať hodnoty"
-              className="px-2 py-1 rounded bg-slate-700 text-xs hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
-              title="Resetuj mix na počiatočné hodnoty (Gold 5%, ETF 60%, Bonds 20%, atď.)"
-            >
-              Resetovať hodnoty
-            </button>
+            {/* Optimization & Rules */}
+            <div className="flex flex-wrap gap-2">
+              <div className="text-xs text-slate-400 font-medium w-full mb-1">
+                Optimalizácia & pravidlá
+              </div>
+              <button
+                onClick={optimizeRisk}
+                className="px-3 py-1.5 rounded bg-violet-600/20 ring-1 ring-violet-500/40 text-xs font-medium hover:bg-violet-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
+                title="Maximalizuj výnos pri dodržaní risk cap"
+              >
+                🎯 Max výnos (riziko ≤ {cap})
+              </button>
+              <button
+                onClick={applyRules}
+                className="px-3 py-1.5 rounded bg-amber-600/20 ring-1 ring-amber-500/40 text-xs font-medium hover:bg-amber-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
+                title="Uprav mix aby dodržiaval limity (Dyn+Krypto ≤22%, Dyn ≤15%)"
+              >
+                🚦 Upraviť podľa pravidiel
+              </button>
+            </div>
+
+            {/* Import/Export & Reset */}
+            <div className="flex flex-wrap gap-2">
+              <div className="text-xs text-slate-400 font-medium w-full mb-1">
+                Správa mixu
+              </div>
+              <button
+                onClick={() => {
+                  const json = JSON.stringify(mix, null, 2);
+                  navigator.clipboard.writeText(json);
+                  setToast("✓ Mix skopírovaný do schránky");
+                  setTimeout(() => setToast(null), 2000);
+                }}
+                className="px-3 py-1.5 rounded bg-slate-700 text-xs font-medium hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+                title="Exportuj mix do schránky (JSON)"
+              >
+                📋 Export (copy)
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    const parsed = JSON.parse(text);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      // Validate structure
+                      const valid = parsed.every(
+                        (item: any) =>
+                          typeof item === "object" &&
+                          "key" in item &&
+                          "pct" in item
+                      );
+                      if (valid) {
+                        setMix(parsed as MixItem[]);
+                        writeV3({ mix: parsed });
+                        setToast("✓ Mix importovaný");
+                        setTimeout(() => setToast(null), 2000);
+                      } else {
+                        setToast("❌ Neplatný formát mixu");
+                        setTimeout(() => setToast(null), 2000);
+                      }
+                    } else {
+                      setToast("❌ Neplatný JSON");
+                      setTimeout(() => setToast(null), 2000);
+                    }
+                  } catch (err) {
+                    setToast("❌ Import zlyhal (neplatný JSON)");
+                    setTimeout(() => setToast(null), 2000);
+                  }
+                }}
+                className="px-3 py-1.5 rounded bg-slate-700 text-xs font-medium hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
+                title="Importuj mix zo schránky (JSON)"
+              >
+                📥 Import (paste)
+              </button>
+              <button
+                onClick={() => {
+                  // reset to initial seed mix (no normalization beyond seed)
+                  const seed: MixItem[] = [
+                    { key: "gold", pct: 5 },
+                    { key: "dyn", pct: 0 },
+                    { key: "etf", pct: 60 },
+                    { key: "bonds", pct: 20 },
+                    { key: "cash", pct: 5 },
+                    { key: "crypto", pct: 5 },
+                    { key: "real", pct: 5 },
+                  ];
+                  setMix(seed);
+                  writeV3({ mix: seed });
+                  setToast("✓ Mix resetovaný");
+                  setTimeout(() => setToast(null), 2000);
+                }}
+                aria-label="Resetovať hodnoty"
+                className="px-3 py-1.5 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
+                title="Resetuj mix na počiatočné hodnoty (Gold 5%, ETF 60%, Bonds 20%, atď.)"
+              >
+                🔄 Resetovať hodnoty
+              </button>
+            </div>
           </>
         )}
       </div>
