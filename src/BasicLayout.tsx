@@ -129,6 +129,7 @@ export default function BasicLayout() {
         riskPref={
           seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
         }
+        mode="BASIC"
       />
 
       {/* Share CTA */}

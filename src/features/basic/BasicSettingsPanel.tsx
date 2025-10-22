@@ -391,26 +391,6 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   </div>
                 </div>
 
-                {/* Pridať dlh button */}
-                <div className="pt-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const message =
-                        "Pre správu dlhov prepnite do PRO režimu.\n\n" +
-                        "V PRO režime môžete:\n" +
-                        "• Pridávať hypotéky a spotrebné úvery\n" +
-                        "• Sledovať zostatok a splátky\n" +
-                        "• Plánovať rýchlejšie splatenie";
-                      alert(message);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 transition-colors text-sm font-medium text-slate-200"
-                  >
-                    <span>💳</span>
-                    <span>Pridať dlh alebo hypotéku</span>
-                  </button>
-                </div>
-
                 {/* Voľné prostriedky - kompaktný box */}
                 <div className="pt-2">
                   <div
@@ -427,6 +407,26 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       {freeCash.toFixed(0)} €/mes
                     </div>
                   </div>
+                </div>
+
+                {/* Pridať dlh button - zarovnaný s Cieľ majetku */}
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const message =
+                        "Pre správu dlhov prepnite do PRO režimu.\n\n" +
+                        "V PRO režime môžete:\n" +
+                        "• Pridávať hypotéky a spotrebné úvery\n" +
+                        "• Sledovať zostatok a splátky\n" +
+                        "• Plánovať rýchlejšie splatenie";
+                      alert(message);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 transition-colors text-sm font-medium text-slate-200"
+                  >
+                    <span>💳</span>
+                    <span>Pridať dlh alebo hypotéku</span>
+                  </button>
                 </div>
               </div>
               {/* Koniec ľavého stĺpca */}

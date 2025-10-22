@@ -227,7 +227,9 @@ export default function LegacyApp() {
           setDebtsOpen((v) => !v);
           // Scroll k sekcii (smooth)
           setTimeout(() => {
-            document.getElementById('sec-debts')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document
+              .getElementById("sec-debts")
+              ?.scrollIntoView({ behavior: "smooth", block: "start" });
           }, 100);
         }}
         className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
@@ -543,7 +545,12 @@ export default function LegacyApp() {
                       const val = e.currentTarget.value;
                       setMonthlyIncome(val);
                       const cur = readV3();
-                      writeV3({ profile: { ...(cur.profile || {}), monthlyIncome: Number(val) } as any });
+                      writeV3({
+                        profile: {
+                          ...(cur.profile || {}),
+                          monthlyIncome: Number(val),
+                        } as any,
+                      });
                     }}
                     aria-label="Mesačný príjem slider"
                     className="flex-1"
@@ -586,7 +593,12 @@ export default function LegacyApp() {
                       const val = e.currentTarget.value;
                       setFixedExp(val);
                       const cur = readV3();
-                      writeV3({ profile: { ...(cur.profile || {}), fixedExp: Number(val) } as any });
+                      writeV3({
+                        profile: {
+                          ...(cur.profile || {}),
+                          fixedExp: Number(val),
+                        } as any,
+                      });
                     }}
                     aria-label="Fixné výdavky slider"
                     className="flex-1"
@@ -629,7 +641,12 @@ export default function LegacyApp() {
                       const val = e.currentTarget.value;
                       setVarExp(val);
                       const cur = readV3();
-                      writeV3({ profile: { ...(cur.profile || {}), varExp: Number(val) } as any });
+                      writeV3({
+                        profile: {
+                          ...(cur.profile || {}),
+                          varExp: Number(val),
+                        } as any,
+                      });
                     }}
                     aria-label="Variabilné výdavky slider"
                     className="flex-1"
@@ -731,7 +748,11 @@ export default function LegacyApp() {
                         setEmergencyMonths("6");
                         const cur = readV3();
                         writeV3({
-                          profile: { ...(cur.profile || {}), currentReserve: 1000, emergencyMonths: 6 } as any,
+                          profile: {
+                            ...(cur.profile || {}),
+                            currentReserve: 1000,
+                            emergencyMonths: 6,
+                          } as any,
                         });
                       }}
                       className="px-3 py-1.5 rounded bg-amber-600/40 hover:bg-amber-600/60 hover:scale-105 active:scale-95 transition-all duration-200 text-sm font-medium hover:shadow-lg hover:shadow-amber-500/20"

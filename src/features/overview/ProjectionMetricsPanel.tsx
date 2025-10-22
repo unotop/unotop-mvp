@@ -11,6 +11,7 @@ interface ProjectionMetricsPanelProps {
   horizonYears: number;
   goalAssetsEur: number;
   riskPref: "konservativny" | "vyvazeny" | "rastovy";
+  mode?: "BASIC" | "PRO"; // BASIC = skryť dlhy v grafe
 }
 
 /**
@@ -24,6 +25,7 @@ export const ProjectionMetricsPanel: React.FC<ProjectionMetricsPanelProps> = ({
   horizonYears,
   goalAssetsEur,
   riskPref,
+  mode = "PRO", // default PRO (zobraz všetko)
 }) => {
   // debts pre ProjectionChart
   const debts = (readV3().debts || []) as Debt[];
@@ -45,6 +47,7 @@ export const ProjectionMetricsPanel: React.FC<ProjectionMetricsPanelProps> = ({
           horizonYears={horizonYears}
           goalAssetsEur={goalAssetsEur}
           riskPref={riskPref}
+          hideDebts={mode === "BASIC"}
         />
       </div>
 

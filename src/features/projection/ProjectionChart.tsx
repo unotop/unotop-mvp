@@ -27,6 +27,7 @@ interface ProjectionChartProps {
   debts: Debt[];
   // Voliteľné
   goalAssetsEur?: number;
+  hideDebts?: boolean; // BASIC režim - nezobrazuj dlhovú krivku
 }
 
 /**
@@ -64,6 +65,7 @@ export function ProjectionChart({
   riskPref,
   debts,
   goalAssetsEur,
+  hideDebts = false, // default: zobraz všetko
 }: ProjectionChartProps) {
   const horizonMonths = Math.max(1, Math.round(horizonYears * 12));
 
@@ -122,6 +124,13 @@ export function ProjectionChart({
       dlhy: Math.round(p.totalDebtBalance),
     }));
 
+  // Debug: skontroluj chartData (dočasné)
+  React.useEffect(() => {
+    if (chartData.length > 0) {
+      console.log('ProjectionChart chartData:', chartData.slice(0, 3), '...', chartData[chartData.length - 1]);
+    }
+  }, [chartData]);
+
   // Crossover marker (ak existuje)
   const crossoverYear =
     result.crossoverMonth !== null
@@ -179,7 +188,7 @@ export function ProjectionChart({
       )}
 
       {/* Recharts graf */}
-      <div className="w-full" style={{ height: '320px' }}>
+      <div className="w-full" style={{ height: "320px" }}>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart
             data={chartData}
@@ -201,6 +210,8 @@ export function ProjectionChart({
             <YAxis
               stroke="#94a3b8"
               tick={{ fill: "#94a3b8", fontSize: 12 }}
+              domain={[0, 'auto']}
+              padding={{ top: 20, bottom: 0 }}
               tickFormatter={(val: number) =>
                 val >= 1000 ? `${(val / 1000).toFixed(0)}k` : `${val}`
               }
@@ -236,8 +247,8 @@ export function ProjectionChart({
               dot={false}
             />
 
-            {/* Dlhová krivka (červená) */}
-            {debtInputs.length > 0 && (
+            {/* Dlhová krivka (červená) - skryť v BASIC režime */}
+            {!hideDebts && debtInputs.length > 0 && (
               <Line
                 type="monotone"
                 dataKey="dlhy"
