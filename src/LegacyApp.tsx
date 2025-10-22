@@ -6,6 +6,7 @@ import { MixPanel } from "./features/mix/MixPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { ProfileSection } from "./features/profile/ProfileSection";
 import { InvestSection } from "./features/invest/InvestSection";
+import { ProjectionMetricsPanel } from "./features/overview/ProjectionMetricsPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import { calculateFutureValue } from "./engine/calculations";
@@ -748,7 +749,9 @@ export default function LegacyApp() {
                   writeV3({ monthly: newVal });
                 }}
               />
-              <span className="tabular-nums">{(seed as any).monthly || 0} €</span>
+              <span className="tabular-nums">
+                {(seed as any).monthly || 0} €
+              </span>
             </div>
           </div>
           {/* Starý debt UI odstránený - teraz používame standalone section */}
@@ -919,81 +922,17 @@ export default function LegacyApp() {
 
   const right = (
     <div className="space-y-4">
-      <button
-        type="button"
-        aria-controls="sec5"
-        aria-expanded={open5}
-        onClick={() => setOpen5((v) => !v)}
-        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
-      >
-        <span id="sec5-title">Metriky &amp; odporúčania</span>
-        <svg
-          className={`w-5 h-5 transition-transform duration-300 ${open5 ? "" : "rotate-180"}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-      {open5 && (
-        <MetricsSection
-          riskPref={
-            seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
-          }
-          lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
-          monthlyVklad={(seed as any).monthly || 0}
-          horizonYears={(seed.profile?.horizonYears as any) || 10}
-          goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
-        />
-      )}
-      <button
-        type="button"
-        aria-controls="sec4"
-        aria-expanded={open4}
-        onClick={() => setOpen4((v) => !v)}
-        className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
-      >
-        <span id="sec4-title">Projekcia</span>
-        <svg
-          className={`w-5 h-5 transition-transform duration-300 ${open4 ? "" : "rotate-180"}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </button>
-      {open4 && (
-        <section
-          id="sec4"
-          role="region"
-          aria-labelledby="sec4-title"
-          className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
-        >
-          <ProjectionChart
-            lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
-            monthlyVklad={(seed as any).monthly || 0}
-            horizonYears={(seed.profile?.horizonYears as any) || 10}
-            mix={mix}
-            riskPref={
-              seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
-            }
-            debts={debts}
-            goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
-          />
-        </section>
-      )}
+      {/* Spojený panel: Projekcia + Metriky (oba režimy) */}
+      <ProjectionMetricsPanel
+        mix={mix}
+        lumpSumEur={(seed.profile?.lumpSumEur as any) || 0}
+        monthlyVklad={(seed as any).monthly || 0}
+        horizonYears={(seed.profile?.horizonYears as any) || 10}
+        goalAssetsEur={(seed.profile?.goalAssetsEur as any) || 0}
+        riskPref={
+          seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+        }
+      />
 
       {/* Share CTA - výrazný zelený button */}
       <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-4 md:p-5">
@@ -1183,7 +1122,9 @@ export default function LegacyApp() {
               const monthly = (v3Data as any).monthly || 0;
               const years = (v3Data.profile?.horizonYears as any) || 10;
               const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
-              const riskPref = (v3Data.profile?.riskPref || (v3Data as any).riskPref || "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+              const riskPref = (v3Data.profile?.riskPref ||
+                (v3Data as any).riskPref ||
+                "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
               const approx = approxYieldAnnualFromMix(mix, riskPref);
               const fv = calculateFutureValue(lump, monthly, years, approx);
               const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
@@ -1286,7 +1227,9 @@ export default function LegacyApp() {
                   const monthly = (v3Data as any).monthly || 0;
                   const years = (v3Data.profile?.horizonYears as any) || 10;
                   const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
-                  const riskPref = (v3Data.profile?.riskPref || (v3Data as any).riskPref || "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+                  const riskPref = (v3Data.profile?.riskPref ||
+                    (v3Data as any).riskPref ||
+                    "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
                   const approx = approxYieldAnnualFromMix(mix, riskPref);
                   const fv = calculateFutureValue(lump, monthly, years, approx);
 

@@ -214,71 +214,157 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-slate-300">Cashflow</h3>
             <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center gap-3">
-                <label htmlFor="income-input" className="text-xs w-32 text-slate-400">
+              {/* Mesačný príjem: textbox + slider */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="income-input"
+                  className="text-xs text-slate-400 block"
+                >
                   Mesačný príjem
                 </label>
-                <input
-                  id="income-input"
-                  type="text"
-                  role="textbox"
-                  inputMode="decimal"
-                  aria-label="Mesačný príjem"
-                  ref={incomeCtl.ref}
-                  onChange={incomeCtl.onChange}
-                  onBlur={incomeCtl.onBlur}
-                  defaultValue={incomeCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="income-input"
+                    type="text"
+                    role="textbox"
+                    inputMode="decimal"
+                    aria-label="Mesačný príjem"
+                    ref={incomeCtl.ref}
+                    onChange={incomeCtl.onChange}
+                    onBlur={incomeCtl.onBlur}
+                    defaultValue={incomeCtl.defaultValue}
+                    className="w-24 px-2 py-1 rounded bg-slate-800 text-sm"
+                  />
+                  <input
+                    type="range"
+                    min={0}
+                    max={10000}
+                    step={100}
+                    value={monthlyIncome}
+                    onChange={(e) => {
+                      const val = Number(e.currentTarget.value);
+                      setMonthlyIncome(val);
+                      const cur = readV3();
+                      writeV3({
+                        profile: {
+                          ...(cur.profile || {}),
+                          monthlyIncome: val,
+                        } as any,
+                      });
+                    }}
+                    aria-label="Mesačný príjem slider"
+                    className="flex-1"
+                  />
+                  <span className="text-sm tabular-nums font-semibold w-20 text-right">
+                    {monthlyIncome} €
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <label htmlFor="fixed-exp-input" className="text-xs w-32 text-slate-400">
+              {/* Fixné výdavky: textbox + slider */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="fixed-exp-input"
+                  className="text-xs text-slate-400 block"
+                >
                   Fixné výdavky
                 </label>
-                <input
-                  id="fixed-exp-input"
-                  type="text"
-                  role="textbox"
-                  inputMode="decimal"
-                  aria-label="Fixné výdavky"
-                  ref={fixedExpCtl.ref}
-                  onChange={fixedExpCtl.onChange}
-                  onBlur={fixedExpCtl.onBlur}
-                  defaultValue={fixedExpCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="fixed-exp-input"
+                    type="text"
+                    role="textbox"
+                    inputMode="decimal"
+                    aria-label="Fixné výdavky"
+                    ref={fixedExpCtl.ref}
+                    onChange={fixedExpCtl.onChange}
+                    onBlur={fixedExpCtl.onBlur}
+                    defaultValue={fixedExpCtl.defaultValue}
+                    className="w-24 px-2 py-1 rounded bg-slate-800 text-sm"
+                  />
+                  <input
+                    type="range"
+                    min={0}
+                    max={5000}
+                    step={50}
+                    value={fixedExp}
+                    onChange={(e) => {
+                      const val = Number(e.currentTarget.value);
+                      setFixedExp(val);
+                      const cur = readV3();
+                      writeV3({
+                        profile: {
+                          ...(cur.profile || {}),
+                          fixedExp: val,
+                        } as any,
+                      });
+                    }}
+                    aria-label="Fixné výdavky slider"
+                    className="flex-1"
+                  />
+                  <span className="text-sm tabular-nums font-semibold w-20 text-right">
+                    {fixedExp} €
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <label htmlFor="var-exp-input" className="text-xs w-32 text-slate-400">
+              {/* Variabilné výdavky: textbox + slider */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="var-exp-input"
+                  className="text-xs text-slate-400 block"
+                >
                   Variabilné výdavky
                 </label>
-                <input
-                  id="var-exp-input"
-                  type="text"
-                  role="textbox"
-                  inputMode="decimal"
-                  aria-label="Variabilné výdavky"
-                  ref={varExpCtl.ref}
-                  onChange={varExpCtl.onChange}
-                  onBlur={varExpCtl.onBlur}
-                  defaultValue={varExpCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="var-exp-input"
+                    type="text"
+                    role="textbox"
+                    inputMode="decimal"
+                    aria-label="Variabilné výdavky"
+                    ref={varExpCtl.ref}
+                    onChange={varExpCtl.onChange}
+                    onBlur={varExpCtl.onBlur}
+                    defaultValue={varExpCtl.defaultValue}
+                    className="w-24 px-2 py-1 rounded bg-slate-800 text-sm"
+                  />
+                  <input
+                    type="range"
+                    min={0}
+                    max={3000}
+                    step={50}
+                    value={varExp}
+                    onChange={(e) => {
+                      const val = Number(e.currentTarget.value);
+                      setVarExp(val);
+                      const cur = readV3();
+                      writeV3({
+                        profile: { ...(cur.profile || {}), varExp: val } as any,
+                      });
+                    }}
+                    aria-label="Variabilné výdavky slider"
+                    className="flex-1"
+                  />
+                  <span className="text-sm tabular-nums font-semibold w-20 text-right">
+                    {varExp} €
+                  </span>
+                </div>
               </div>
 
               {/* Voľné prostriedky - výsledok */}
-              <div className="flex items-center gap-3 pt-2 border-t border-slate-700">
-                <span className="text-xs w-32 text-slate-400 font-semibold">
-                  Voľné prostriedky
-                </span>
+              <div className="pt-2 border-t border-slate-700">
                 <div
-                  className={`flex-1 px-3 py-2 rounded text-sm font-bold ${
+                  className={`px-4 py-3 rounded-lg text-center ${
                     freeCash >= 0
                       ? "bg-emerald-900/30 text-emerald-300"
                       : "bg-red-900/30 text-red-300"
                   }`}
                 >
-                  {freeCash.toFixed(0)} €
+                  <div className="text-xs text-slate-300 mb-1">
+                    Voľné prostriedky
+                  </div>
+                  <div className="text-xl tabular-nums font-bold">
+                    {freeCash.toFixed(0)} €
+                  </div>
                 </div>
               </div>
             </div>
@@ -290,8 +376,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
               Investičné nastavenia
             </h3>
             <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-center gap-3">
-                <label htmlFor="lump-sum-basic" className="text-xs w-40 text-slate-400">
+              {/* Jednorazová investícia - len textbox (nie často mení) */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="lump-sum-basic"
+                  className="text-xs text-slate-400 block"
+                >
                   Jednorazová investícia
                 </label>
                 <input
@@ -304,46 +394,101 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   onChange={lumpSumCtl.onChange}
                   onBlur={lumpSumCtl.onBlur}
                   defaultValue={lumpSumCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
+                  className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
                 />
               </div>
-              <div className="flex items-center gap-3">
-                <label htmlFor="monthly-vklad-basic" className="text-xs w-40 text-slate-400">
+              {/* Mesačný vklad - textbox + slider */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="monthly-vklad-basic"
+                  className="text-xs text-slate-400 block"
+                >
                   Mesačný vklad
                 </label>
-                <input
-                  id="monthly-vklad-basic"
-                  type="text"
-                  role="textbox"
-                  inputMode="decimal"
-                  aria-label="Mesačný vklad"
-                  ref={monthlyVkladCtl.ref}
-                  onChange={monthlyVkladCtl.onChange}
-                  onBlur={monthlyVkladCtl.onBlur}
-                  defaultValue={monthlyVkladCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="monthly-vklad-basic"
+                    type="text"
+                    role="textbox"
+                    inputMode="decimal"
+                    aria-label="Mesačný vklad"
+                    ref={monthlyVkladCtl.ref}
+                    onChange={monthlyVkladCtl.onChange}
+                    onBlur={monthlyVkladCtl.onBlur}
+                    defaultValue={monthlyVkladCtl.defaultValue}
+                    className="w-24 px-2 py-1 rounded bg-slate-800 text-sm"
+                  />
+                  <input
+                    type="range"
+                    min={0}
+                    max={2000}
+                    step={50}
+                    value={monthlyVklad}
+                    onChange={(e) => {
+                      const val = Number(e.currentTarget.value);
+                      setMonthlyVklad(val);
+                      writeV3({ monthly: val });
+                    }}
+                    aria-label="Mesačný vklad slider"
+                    className="flex-1"
+                  />
+                  <span className="text-sm tabular-nums font-semibold w-20 text-right">
+                    {monthlyVklad} €
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <label htmlFor="horizon-basic" className="text-xs w-40 text-slate-400">
-                  Horizont investovania
+              {/* Horizont - textbox + slider */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="horizon-basic"
+                  className="text-xs text-slate-400 block"
+                >
+                  Horizont investovania (roky)
                 </label>
-                <input
-                  id="horizon-basic"
-                  type="text"
-                  role="textbox"
-                  inputMode="decimal"
-                  aria-label="Horizont investovania (roky)"
-                  ref={horizonCtl.ref}
-                  onChange={horizonCtl.onChange}
-                  onBlur={horizonCtl.onBlur}
-                  defaultValue={horizonCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
-                  placeholder="roky"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="horizon-basic"
+                    type="text"
+                    role="textbox"
+                    inputMode="decimal"
+                    aria-label="Horizont investovania (roky)"
+                    ref={horizonCtl.ref}
+                    onChange={horizonCtl.onChange}
+                    onBlur={horizonCtl.onBlur}
+                    defaultValue={horizonCtl.defaultValue}
+                    className="w-24 px-2 py-1 rounded bg-slate-800 text-sm"
+                  />
+                  <input
+                    type="range"
+                    min={1}
+                    max={50}
+                    step={1}
+                    value={horizonYears}
+                    onChange={(e) => {
+                      const val = Number(e.currentTarget.value);
+                      setHorizonYears(val);
+                      const cur = readV3();
+                      writeV3({
+                        profile: {
+                          ...(cur.profile || {}),
+                          horizonYears: val,
+                        } as any,
+                      });
+                    }}
+                    aria-label="Horizont slider"
+                    className="flex-1"
+                  />
+                  <span className="text-sm tabular-nums font-semibold w-20 text-right">
+                    {horizonYears} r.
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <label htmlFor="goal-basic" className="text-xs w-40 text-slate-400">
+              {/* Cieľ majetku - len textbox (veľké čísla) */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="goal-basic"
+                  className="text-xs text-slate-400 block"
+                >
                   Cieľ majetku
                 </label>
                 <input
@@ -356,7 +501,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   onChange={goalCtl.onChange}
                   onBlur={goalCtl.onBlur}
                   defaultValue={goalCtl.defaultValue}
-                  className="flex-1 px-3 py-2 rounded bg-slate-800 text-sm"
+                  className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
                 />
               </div>
             </div>

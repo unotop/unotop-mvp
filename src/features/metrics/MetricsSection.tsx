@@ -80,6 +80,11 @@ export function MetricsSection({
       className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
     >
       <div className="space-y-4">
+        {/* Heading pre A11y */}
+        <h3 id="sec5-title" className="text-sm font-semibold text-slate-300">
+          💡 Odporúčania
+        </h3>
+
         {/* SVG Risk Gauge (prominentný, väčší) */}
         {Array.isArray(mix) && mix.length > 0 && (
           <div className="flex justify-center py-4">

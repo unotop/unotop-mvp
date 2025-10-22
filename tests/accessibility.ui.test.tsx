@@ -75,11 +75,11 @@ describe("Accessibility regression (core)", () => {
   it("Collapsy (1–4): aria-controls existuje, aria-expanded toggluje na click aj Enter/Space a panely sa mount/unmount", async () => {
     const user = userEvent.setup();
     render(<App />);
+    // Po merged paneli: Metriky už NIE sú collapsible (vždy visible v pravom stĺpci)
     const headers = [
       screen.getByRole("button", { name: /Cashflow.*rezerva/i }),
       screen.getByRole("button", { name: /Investi.*nastavenia/i }),
       screen.getByRole("button", { name: /Zloženie.*portfólia/i }),
-      screen.getByRole("button", { name: /Metriky.*odporúčania/i }),
     ];
     for (const headerBtn of headers) {
       const controlsId = headerBtn.getAttribute("aria-controls");

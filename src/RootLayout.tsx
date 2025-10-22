@@ -6,14 +6,38 @@ import BasicLayout from "./BasicLayout";
 /**
  * RootLayout - top-level wrapper
  * Rozhoduje medzi BASIC a PRO režimom
+ *
+ * Reactive: počúva storage events pre live prepínanie
  */
 export default function RootLayout() {
-  const seed = readV3();
-  const modeUi = (seed.profile?.modeUi as any) || "BASIC";
+  const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(() => {
+    const seed = readV3();
+    return (seed.profile?.modeUi as any) || "BASIC";
+  });
+
+  // Listen to storage changes (cross-tab & manual persist writes)
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      const seed = readV3();
+      const newMode = (seed.profile?.modeUi as any) || "BASIC";
+      setModeUi(newMode);
+    };
+
+    // Poll localStorage every 100ms (simple & reliable)
+    const interval = setInterval(handleStorageChange, 100);
+
+    // Also listen to storage events (cross-tab sync)
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   if (modeUi === "BASIC") {
     return <BasicLayout />;
   }
-  
+
   return <LegacyApp />;
 }
