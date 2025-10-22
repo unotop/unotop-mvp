@@ -307,10 +307,176 @@ export default function LegacyApp() {
                     €
                   </span>
                 </div>
+                {/* Total interest to be paid */}
+                <div className="px-3 py-1.5 rounded-lg bg-red-900/20 ring-1 ring-red-500/30">
+                  <span className="text-slate-400">Úroky spolu:</span>{" "}
+                  <span className="font-medium text-red-300 tabular-nums">
+                    {(() => {
+                      const totalInterest = debts.reduce((sum, d) => {
+                        const monthlyPayment = d.payment ?? d.monthly ?? 0;
+                        const months = d.monthsLeft ?? 0;
+                        const totalPaid = monthlyPayment * months;
+                        const interest = totalPaid - (d.principal || 0);
+                        return sum + Math.max(0, interest);
+                      }, 0);
+                      return totalInterest.toFixed(0);
+                    })()}{" "}
+                    €
+                  </span>
+                </div>
               </div>
 
-              {/* Debts table */}
-              <div className="overflow-x-auto">
+              {/* PRO: Visual debt cards */}
+              {modeUi === "PRO" ? (
+                <div className="space-y-3">
+                  {debts.map((d, idx) => {
+                    const monthlyPayment = d.payment ?? d.monthly ?? 0;
+                    const months = d.monthsLeft ?? 0;
+                    const totalPaid = monthlyPayment * months;
+                    const totalInterest = Math.max(0, totalPaid - (d.principal || 0));
+                    const interestPct = d.principal > 0 ? (totalInterest / d.principal) * 100 : 0;
+
+                    return (
+                      <div
+                        key={d.id}
+                        className="group relative p-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-800/40 ring-1 ring-white/5 hover:ring-red-500/30 transition-all duration-200"
+                      >
+                        {/* Header: Name + Delete */}
+                        <div className="flex items-start justify-between mb-3">
+                          <input
+                            aria-label={`Názov dlhu ${idx + 1}`}
+                            type="text"
+                            value={d.name}
+                            onChange={(e) =>
+                              updateDebt(d.id, { name: e.currentTarget.value })
+                            }
+                            className="flex-1 bg-slate-900/80 rounded-lg px-3 py-2 text-base font-semibold ring-1 ring-white/5 focus:ring-2 focus:ring-red-500/50 transition-all"
+                            placeholder="Názov dlhu"
+                          />
+                          <button
+                            type="button"
+                            aria-label={`Zmazať dlh ${idx + 1}`}
+                            onClick={() => deleteDebt(d.id)}
+                            className="ml-3 px-3 py-2 rounded-lg bg-red-600/20 ring-1 ring-red-500/40 text-sm hover:bg-red-600/30 hover:scale-105 active:scale-95 transition-all"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+
+                        {/* Grid: Key metrics */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400 block">
+                              Zostatok
+                            </label>
+                            <input
+                              aria-label={`Zostatok dlhu ${idx + 1}`}
+                              type="number"
+                              value={d.principal}
+                              onChange={(e) =>
+                                updateDebt(d.id, {
+                                  principal: Number(e.currentTarget.value),
+                                })
+                              }
+                              className="w-full bg-slate-900/80 rounded-lg px-3 py-2 text-sm tabular-nums ring-1 ring-white/5 focus:ring-2 focus:ring-red-500/50"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400 block">
+                              Úrok p.a.
+                            </label>
+                            <input
+                              aria-label={`Úrok p.a. dlhu ${idx + 1}`}
+                              type="number"
+                              step="0.1"
+                              value={d.ratePa}
+                              onChange={(e) =>
+                                updateDebt(d.id, {
+                                  ratePa: Number(e.currentTarget.value),
+                                })
+                              }
+                              className="w-full bg-slate-900/80 rounded-lg px-3 py-2 text-sm tabular-nums ring-1 ring-white/5 focus:ring-2 focus:ring-red-500/50"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400 block">
+                              Splátka/mes.
+                            </label>
+                            <input
+                              aria-label={`Splátka dlhu ${idx + 1}`}
+                              type="number"
+                              value={monthlyPayment}
+                              onChange={(e) =>
+                                updateDebt(d.id, {
+                                  payment: Number(e.currentTarget.value),
+                                })
+                              }
+                              className="w-full bg-slate-900/80 rounded-lg px-3 py-2 text-sm tabular-nums ring-1 ring-white/5 focus:ring-2 focus:ring-red-500/50"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400 block">
+                              Zostáva (roky)
+                            </label>
+                            <input
+                              aria-label={`Zostáva rokov dlhu ${idx + 1}`}
+                              type="number"
+                              min="0"
+                              max="50"
+                              step="1"
+                              value={months ? Math.round(months / 12) : ""}
+                              onChange={(e) => {
+                                const years = Number(e.currentTarget.value);
+                                const m = years * 12;
+                                updateDebt(d.id, { monthsLeft: m });
+                              }}
+                              className="w-full bg-slate-900/80 rounded-lg px-3 py-2 text-sm tabular-nums ring-1 ring-white/5 focus:ring-2 focus:ring-red-500/50"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Extra payment + Amortization insight */}
+                        <div className="flex flex-wrap gap-3 items-center text-xs">
+                          <div className="flex items-center gap-2">
+                            <label className="text-slate-400">
+                              Extra splátka/mes:
+                            </label>
+                            <input
+                              aria-label={`Extra mesačná splátka dlhu ${idx + 1}`}
+                              type="number"
+                              value={d.extraMonthly ?? 0}
+                              onChange={(e) =>
+                                updateDebt(d.id, {
+                                  extraMonthly: Number(e.currentTarget.value),
+                                })
+                              }
+                              className="w-20 bg-slate-900/80 rounded px-2 py-1 text-sm tabular-nums ring-1 ring-white/5 focus:ring-2 focus:ring-amber-500/50"
+                              placeholder="0"
+                              title="Mimoriadna splátka (ide na istinu)"
+                            />
+                          </div>
+                          {totalInterest > 0 && (
+                            <div className="px-2 py-1 rounded bg-red-900/20 ring-1 ring-red-500/30">
+                              <span className="text-red-300 font-medium">
+                                💸 Úroky spolu: {totalInterest.toFixed(0)} €
+                              </span>
+                              <span className="text-slate-400 ml-2">
+                                ({interestPct.toFixed(0)}% z istiny)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* BASIC: Simple table */
+                <div className="overflow-x-auto">
                 <table
                   className="w-full text-left text-sm border-collapse"
                   role="table"
@@ -470,13 +636,14 @@ export default function LegacyApp() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              )}
 
               {/* Add another debt button */}
               <button
                 type="button"
                 aria-label="Pridať ďalší dlh"
-                className="px-3 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-xs transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-emerald-600/20 ring-1 ring-emerald-500/40 text-sm font-medium hover:bg-emerald-600/30 hover:scale-105 active:scale-95 transition-all"
                 onClick={addDebtRow}
               >
                 ➕ Pridať ďalší dlh
@@ -727,7 +894,9 @@ export default function LegacyApp() {
                 // Read actual monthly vklad from persist (not seed which may be stale)
                 const currentVklad = (() => {
                   try {
-                    const raw = localStorage.getItem("unotop:v3") || localStorage.getItem("unotop_v3");
+                    const raw =
+                      localStorage.getItem("unotop:v3") ||
+                      localStorage.getItem("unotop_v3");
                     if (raw) {
                       const parsed = JSON.parse(raw);
                       return Number(parsed.monthly) || 0;
