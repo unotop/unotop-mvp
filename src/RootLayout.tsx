@@ -11,21 +11,30 @@ import BasicLayout from "./BasicLayout";
  */
 export default function RootLayout() {
   const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(() => {
-    const seed = readV3();
-    return (seed.profile?.modeUi as any) || "BASIC";
+    try {
+      const seed = readV3();
+      return (seed.profile?.modeUi as any) || "BASIC";
+    } catch (err) {
+      console.error("[RootLayout] Failed to read persist:", err);
+      return "BASIC";
+    }
   });
 
   // Listen to storage changes (cross-tab & manual persist writes)
   React.useEffect(() => {
     const handleStorageChange = () => {
-      const seed = readV3();
-      const newMode = (seed.profile?.modeUi as any) || "BASIC";
-      console.log("[RootLayout] Mode check:", {
-        current: modeUi,
-        detected: newMode,
-      });
-      // Len ak sa MODE skutočne zmenil (nie každá zmena v localStorage)
-      setModeUi((prevMode) => (prevMode !== newMode ? newMode : prevMode));
+      try {
+        const seed = readV3();
+        const newMode = (seed.profile?.modeUi as any) || "BASIC";
+        console.log("[RootLayout] Mode check:", {
+          current: modeUi,
+          detected: newMode,
+        });
+        // Len ak sa MODE skutočne zmenil (nie každá zmena v localStorage)
+        setModeUi((prevMode) => (prevMode !== newMode ? newMode : prevMode));
+      } catch (err) {
+        console.error("[RootLayout] handleStorageChange error:", err);
+      }
     };
 
     // Poll localStorage every 100ms (simple & reliable)
