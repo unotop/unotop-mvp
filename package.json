@@ -18,8 +18,9 @@
     "audit": "vite-node scripts/audit-current-vs-legacy.ts | Out-File -Encoding utf8 audit.json"
   },
   "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-is": "^19.2.0",
     "recharts": "^3.3.0"
   },
   "devDependencies": {
