@@ -20,6 +20,10 @@ export default function RootLayout() {
     const handleStorageChange = () => {
       const seed = readV3();
       const newMode = (seed.profile?.modeUi as any) || "BASIC";
+      console.log("[RootLayout] Mode check:", {
+        current: modeUi,
+        detected: newMode,
+      });
       // Len ak sa MODE skutočne zmenil (nie každá zmena v localStorage)
       setModeUi((prevMode) => (prevMode !== newMode ? newMode : prevMode));
     };

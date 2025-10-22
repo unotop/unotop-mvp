@@ -91,13 +91,14 @@ export default function PortfolioSelector() {
       expectedYield: (expectedYield * 100).toFixed(1) + "%",
     });
 
-    // Aplikuj mix do persist
+    // Aplikuj mix do persist - PRESERVE všetky existujúce profile hodnoty
+    const currentV3 = readV3(); // Fresh read pred zápisom
     writeV3({
       mix: adjustedMix,
       profile: {
-        ...profile,
+        ...(currentV3.profile || {}),
         riskPref: preset.id, // Uložím preferenčný profil
-      },
+      } as any,
     });
 
     // UI feedback
@@ -117,11 +118,11 @@ export default function PortfolioSelector() {
       <div className="mb-4">
         <h3
           id="portfolio-selector-title"
-          className="text-lg font-semibold text-gray-900 mb-1"
+          className="text-lg font-semibold text-slate-100 mb-1"
         >
           Investičný profil
         </h3>
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-slate-300">
           Vyberte profil podľa vašej tolerancie rizika. Mix aktív sa aplikuje
           automaticky.
         </p>

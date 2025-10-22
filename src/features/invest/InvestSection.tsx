@@ -247,7 +247,9 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
                   const cashflowButton = document.querySelector(
                     '[aria-controls="sec1"]'
                   ) as HTMLButtonElement;
-                  if (cashflowButton?.getAttribute("aria-expanded") === "false") {
+                  if (
+                    cashflowButton?.getAttribute("aria-expanded") === "false"
+                  ) {
                     cashflowButton.click();
                   }
                 }

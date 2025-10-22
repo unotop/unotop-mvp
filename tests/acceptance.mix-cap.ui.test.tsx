@@ -91,7 +91,7 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     const lump = screen.getByRole("textbox", {
       name: /Jednorazová investícia/i,
     }) as HTMLInputElement;
-    
+
     // Mesačný vklad je teraz slider v sec1 (Cashflow), nie textbox v sec2
     const monthly = screen.getByRole("slider", {
       name: /Mesačný vklad/i,

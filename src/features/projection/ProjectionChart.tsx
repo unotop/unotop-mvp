@@ -160,7 +160,9 @@ export function ProjectionChart({
       {/* Prehľad výsledkov */}
       <div className="grid grid-cols-3 gap-2 text-xs">
         <div className="p-2 rounded bg-slate-800/50 ring-1 ring-blue-500/20">
-          <div className="text-slate-400 mb-0.5">Investície ({horizonYears} r)</div>
+          <div className="text-slate-400 mb-0.5">
+            Investície ({horizonYears} r)
+          </div>
           <div className="font-bold text-blue-400 tabular-nums">
             {formatCurrency(result.finalInvestValue)}
           </div>

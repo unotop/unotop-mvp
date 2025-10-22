@@ -3,6 +3,7 @@ import React from "react";
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  mode?: "BASIC" | "PRO"; // Determines which nav items to show
 }
 
 interface NavItem {
@@ -10,19 +11,80 @@ interface NavItem {
   label: string;
   sectionId: string;
   icon: string;
+  showInBasic?: boolean; // If false, hide in BASIC mode
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "profil", label: "Profil & Rezerva", sectionId: "sec0", icon: "👤" },
-  { id: "cashflow", label: "Cashflow", sectionId: "sec1", icon: "💰" },
-  { id: "invest", label: "Investície", sectionId: "sec2", icon: "📈" },
-  { id: "mix", label: "Portfólio Mix", sectionId: "sec3", icon: "🎯" },
-  { id: "debts", label: "Dlhy & Hypotéky", sectionId: "sec4", icon: "🏦" },
-  { id: "metrics", label: "Metriky", sectionId: "sec5", icon: "📊" },
+const NAV_ITEMS_BASIC: NavItem[] = [
+  {
+    id: "settings",
+    label: "Nastavenia",
+    sectionId: "sec0",
+    icon: "⚙️",
+    showInBasic: true,
+  },
+  {
+    id: "portfolio",
+    label: "Portfólio",
+    sectionId: "sec3",
+    icon: "🎯",
+    showInBasic: true,
+  },
 ];
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+const NAV_ITEMS_PRO: NavItem[] = [
+  {
+    id: "profil",
+    label: "Profil & Rezerva",
+    sectionId: "sec0",
+    icon: "👤",
+    showInBasic: false,
+  },
+  {
+    id: "cashflow",
+    label: "Cashflow",
+    sectionId: "sec1",
+    icon: "💰",
+    showInBasic: false,
+  },
+  {
+    id: "invest",
+    label: "Investície",
+    sectionId: "sec2",
+    icon: "📈",
+    showInBasic: false,
+  },
+  {
+    id: "mix",
+    label: "Portfólio Mix",
+    sectionId: "sec3",
+    icon: "🎯",
+    showInBasic: false,
+  },
+  {
+    id: "debts",
+    label: "Dlhy & Hypotéky",
+    sectionId: "sec4",
+    icon: "🏦",
+    showInBasic: false,
+  },
+  {
+    id: "metrics",
+    label: "Metriky",
+    sectionId: "sec5",
+    icon: "📊",
+    showInBasic: false,
+  },
+];
+
+export default function Sidebar({
+  isOpen,
+  onClose,
+  mode = "BASIC",
+}: SidebarProps) {
   const [activeSection, setActiveSection] = React.useState<string>("sec0");
+
+  // Select nav items based on mode
+  const NAV_ITEMS = mode === "BASIC" ? NAV_ITEMS_BASIC : NAV_ITEMS_PRO;
 
   // IntersectionObserver pre tracking aktívnej sekcie
   React.useEffect(() => {

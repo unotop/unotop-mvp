@@ -24,7 +24,7 @@ export const ASSET_STYLES: Record<AssetKey, AssetStyle> = {
     color: "amber",
     bgGradient: "from-amber-500/20 to-yellow-500/10",
     ringColor: "ring-amber-500/40 hover:ring-amber-500/60",
-    icon: "🟡",
+    icon: "🥇",
     hoverShadow: "hover:shadow-amber-500/30",
   },
   dyn: {
