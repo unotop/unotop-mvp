@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../src/LegacyApp";
 
@@ -91,7 +91,9 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     const lump = screen.getByRole("textbox", {
       name: /Jednorazová investícia/i,
     }) as HTMLInputElement;
-    const monthly = screen.getByRole("textbox", {
+    
+    // Mesačný vklad je teraz slider v sec1 (Cashflow), nie textbox v sec2
+    const monthly = screen.getByRole("slider", {
       name: /Mesačný vklad/i,
     }) as HTMLInputElement;
 
@@ -113,9 +115,8 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     if (!ctaFound) {
       const trialMonthlyValues = [6000, 12000];
       for (const v of trialMonthlyValues) {
-        await user.clear(monthly);
-        await user.type(monthly, String(v));
-        monthly.blur();
+        // Slider používa fireEvent namiesto user.clear/type
+        fireEvent.change(monthly, { target: { value: String(v) } });
         await new Promise((r) => setTimeout(r, 60));
         if (screen.queryByText(/Prepnúť.*PRO/i)) {
           ctaFound = true;
