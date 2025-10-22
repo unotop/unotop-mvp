@@ -115,6 +115,19 @@ export default function BasicLayout() {
           </div>
         </section>
       )}
+
+      {/* Pridať dlh button */}
+      <button
+        type="button"
+        onClick={() => {
+          // TODO: Implementovať debt modal/form v BASIC režime
+          alert("Funkcia 'Pridať dlh' bude implementovaná v ďalšej verzii.\nPrepnite do PRO režimu pre plnú správu dlhov.");
+        }}
+        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors font-semibold text-sm"
+      >
+        <span>💳</span>
+        <span>Pridať dlh</span>
+      </button>
     </div>
   );
 

@@ -279,6 +279,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       onChange={(e) => {
                         const val = Number(e.currentTarget.value);
                         setMonthlyIncome(val);
+                        incomeCtl.syncToDom(val); // Sync textbox
                         const cur = readV3();
                         writeV3({
                           profile: {
@@ -325,6 +326,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       onChange={(e) => {
                         const val = Number(e.currentTarget.value);
                         setFixedExp(val);
+                        fixedExpCtl.syncToDom(val); // Sync textbox
                         const cur = readV3();
                         writeV3({
                           profile: {
@@ -371,6 +373,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       onChange={(e) => {
                         const val = Number(e.currentTarget.value);
                         setVarExp(val);
+                        varExpCtl.syncToDom(val); // Sync textbox
                         const cur = readV3();
                         writeV3({
                           profile: {
@@ -466,6 +469,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       onChange={(e) => {
                         const val = Number(e.currentTarget.value);
                         setMonthlyVklad(val);
+                        monthlyVkladCtl.syncToDom(val); // Sync textbox
                         writeV3({ monthly: val });
                       }}
                       aria-label="Mesačný vklad slider"
@@ -506,6 +510,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       onChange={(e) => {
                         const val = Number(e.currentTarget.value);
                         setHorizonYears(val);
+                        horizonCtl.syncToDom(val); // Sync textbox
                         const cur = readV3();
                         writeV3({
                           profile: {

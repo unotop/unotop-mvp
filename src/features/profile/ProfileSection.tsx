@@ -34,17 +34,20 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   // Persist helpers
   const persistClientType = (value: "individual" | "family" | "firm") => {
     setClientType(value);
-    writeV3({ profile: { clientType: value } });
+    const cur = readV3();
+    writeV3({ profile: { ...(cur.profile || {}), clientType: value } as any });
   };
 
   const persistRiskPref = (value: string) => {
     setRiskPref(value);
-    writeV3({ profile: { riskPref: value } });
+    const cur = readV3();
+    writeV3({ profile: { ...(cur.profile || {}), riskPref: value } as any });
   };
 
   const persistCrisisBias = (value: number) => {
     setCrisisBias(value);
-    writeV3({ profile: { crisisBias: value } });
+    const cur = readV3();
+    writeV3({ profile: { ...(cur.profile || {}), crisisBias: value } as any });
   };
 
   const handleDebtClick = () => {
