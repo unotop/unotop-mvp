@@ -564,7 +564,7 @@ export const MixPanel: React.FC<{
                 className="px-3 py-1.5 rounded bg-violet-600/20 ring-1 ring-violet-500/40 text-xs font-medium hover:bg-violet-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
                 title="Maximalizuj výnos pri dodržaní risk cap"
               >
-                🎯 Max výnos (riziko ≤ {cap})
+                🎯 Optimalizuj
               </button>
               <button
                 onClick={applyRules}
