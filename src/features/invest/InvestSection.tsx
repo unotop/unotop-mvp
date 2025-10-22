@@ -168,15 +168,27 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
           aria-labelledby="invest-title"
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
-          <div className="space-y-4">
-            {/* Note: Mesačný vklad nastavte v sekcii Cashflow */}
-            <p className="text-xs text-slate-400 italic mb-3">
-              💡 Mesačný vklad nastavte v sekcii <strong>Cashflow &amp; rezerva</strong>
-            </p>
+          {/* Note: Mesačný vklad nastavte v sekcii Cashflow */}
+          <p className="text-xs text-slate-400 italic mb-4">
+            💡 Mesačný vklad nastavte v sekcii{" "}
+            <strong>Cashflow &amp; rezerva</strong>
+          </p>
 
-            {/* Jednorazová investícia */}
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="lump-sum-input">Jednorazová investícia</label>
+          {/* 2×2 Grid of visual cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Card: Jednorazová investícia */}
+            <div className="group relative p-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-800/40 ring-1 ring-white/5 hover:ring-emerald-500/40 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/10 hover:scale-[1.02]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl" aria-hidden="true">
+                  💰
+                </span>
+                <label
+                  htmlFor="lump-sum-input"
+                  className="text-sm font-semibold text-slate-200"
+                >
+                  Jednorazová investícia
+                </label>
+              </div>
               <input
                 id="lump-sum-input"
                 type="text"
@@ -187,13 +199,24 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
                 onChange={lumpSumCtl.onChange}
                 onBlur={lumpSumCtl.onBlur}
                 defaultValue={lumpSumCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
+                className="w-full px-3 py-2 rounded-lg bg-slate-900/80 ring-1 ring-white/5 text-sm focus:ring-2 focus:ring-emerald-500/50 transition-all"
+                placeholder="0 €"
               />
             </div>
 
-            {/* Horizont (roky) */}
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="horizon-input">Horizont (roky)</label>
+            {/* Card: Horizont */}
+            <div className="group relative p-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-800/40 ring-1 ring-white/5 hover:ring-blue-500/40 transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 hover:scale-[1.02]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl" aria-hidden="true">
+                  📅
+                </span>
+                <label
+                  htmlFor="horizon-input"
+                  className="text-sm font-semibold text-slate-200"
+                >
+                  Horizont
+                </label>
+              </div>
               <input
                 id="horizon-input"
                 type="text"
@@ -204,13 +227,82 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
                 onChange={horizonCtl.onChange}
                 onBlur={horizonCtl.onBlur}
                 defaultValue={horizonCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
+                className="w-full px-3 py-2 rounded-lg bg-slate-900/80 ring-1 ring-white/5 text-sm focus:ring-2 focus:ring-blue-500/50 transition-all"
+                placeholder="10 rokov"
               />
             </div>
 
-            {/* Cieľ majetku */}
-            <div className="grid grid-cols-[auto_1fr] items-center gap-3 text-sm">
-              <label htmlFor="goal-input">Cieľ majetku</label>
+            {/* Card: Mesačný vklad (link to Cashflow) */}
+            <div
+              className="group relative p-4 rounded-xl bg-gradient-to-br from-amber-900/20 to-amber-800/10 ring-1 ring-amber-500/20 hover:ring-amber-500/40 transition-all duration-200 hover:shadow-lg hover:shadow-amber-500/10 cursor-pointer"
+              onClick={() => {
+                // Scroll to Cashflow section
+                const cashflowSection = document.getElementById("sec1");
+                if (cashflowSection) {
+                  cashflowSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                  // Open cashflow section if closed
+                  const cashflowButton = document.querySelector(
+                    '[aria-controls="sec1"]'
+                  ) as HTMLButtonElement;
+                  if (cashflowButton?.getAttribute("aria-expanded") === "false") {
+                    cashflowButton.click();
+                  }
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Prejsť na nastavenie mesačného vkladu v sekcii Cashflow"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.currentTarget.click();
+                }
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl" aria-hidden="true">
+                  💸
+                </span>
+                <span className="text-sm font-semibold text-amber-300">
+                  Mesačný vklad
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-amber-400/80">
+                  Nastavte v sekcii Cashflow
+                </span>
+                <svg
+                  className="w-4 h-4 text-amber-400 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Card: Cieľ majetku */}
+            <div className="group relative p-4 rounded-xl bg-gradient-to-br from-slate-800/60 to-slate-800/40 ring-1 ring-white/5 hover:ring-violet-500/40 transition-all duration-200 hover:shadow-lg hover:shadow-violet-500/10 hover:scale-[1.02]">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl" aria-hidden="true">
+                  🎯
+                </span>
+                <label
+                  htmlFor="goal-input"
+                  className="text-sm font-semibold text-slate-200"
+                >
+                  Cieľ majetku
+                </label>
+              </div>
               <input
                 id="goal-input"
                 type="text"
@@ -221,13 +313,14 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
                 onChange={goalCtl.onChange}
                 onBlur={goalCtl.onBlur}
                 defaultValue={goalCtl.defaultValue}
-                className="w-full px-3 py-2 rounded bg-slate-800 text-sm"
+                className="w-full px-3 py-2 rounded-lg bg-slate-900/80 ring-1 ring-white/5 text-sm focus:ring-2 focus:ring-violet-500/50 transition-all"
+                placeholder="50 000 €"
               />
             </div>
-
-            {/* Recommendation: Zvýš vklad */}
-            {renderRecommendation()}
           </div>
+
+          {/* Recommendation: Zvýš vklad */}
+          {renderRecommendation()}
         </section>
       )}
     </>
