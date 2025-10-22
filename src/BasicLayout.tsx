@@ -71,7 +71,14 @@ export default function BasicLayout() {
 
   const left = (
     <div className="min-w-0 space-y-4" data-testid="left-col">
-      <BasicSettingsPanel open={open0} onToggle={() => setOpen0((v) => !v)} />
+      <BasicSettingsPanel
+        open={open0}
+        onToggle={() => setOpen0((v) => !v)}
+        mix={mix}
+        riskPref={
+          seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+        }
+      />
 
       {/* Portfolio selector */}
       <button

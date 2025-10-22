@@ -1,6 +1,6 @@
 /**
  * PortfolioSelector.tsx
- * 
+ *
  * BASIC režim: 3 vizuálne atraktívne karty pre výber portfólia
  * Užívateľ klikne na profil → aplikuje sa optimalizovaný mix
  */
@@ -21,34 +21,39 @@ import {
 } from "../mix/assetModel";
 
 /**
- * Farebné Tailwind utility classy pre karty
+ * Farebné Tailwind utility classy pre karty (DARK THEME)
  */
 const COLOR_CLASSES = {
   blue: {
-    bg: "bg-blue-50",
-    border: "border-blue-200",
-    borderHover: "hover:border-blue-400",
+    bg: "bg-blue-900/30",
+    border: "border-blue-500/30",
+    borderHover: "hover:border-blue-400/60",
     ring: "focus:ring-blue-500",
-    text: "text-blue-700",
+    text: "text-blue-300",
+    icon: "text-blue-400",
   },
   amber: {
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    borderHover: "hover:border-amber-400",
+    bg: "bg-amber-900/30",
+    border: "border-amber-500/30",
+    borderHover: "hover:border-amber-400/60",
     ring: "focus:ring-amber-500",
-    text: "text-amber-700",
+    text: "text-amber-300",
+    icon: "text-amber-400",
   },
   green: {
-    bg: "bg-green-50",
-    border: "border-green-200",
-    borderHover: "hover:border-green-400",
+    bg: "bg-green-900/30",
+    border: "border-green-500/30",
+    borderHover: "hover:border-green-400/60",
     ring: "focus:ring-green-500",
-    text: "text-green-700",
+    text: "text-green-300",
+    icon: "text-green-400",
   },
 };
 
 export default function PortfolioSelector() {
-  const [selectedPreset, setSelectedPreset] = React.useState<RiskPref | null>(null);
+  const [selectedPreset, setSelectedPreset] = React.useState<RiskPref | null>(
+    null
+  );
 
   /**
    * Handler pre výber presetu
@@ -69,7 +74,9 @@ export default function PortfolioSelector() {
     const validation = validatePresetRisk(adjustedMix, preset.id, risk, cap);
 
     if (!validation.valid) {
-      console.error(`[PortfolioSelector] Validation failed: ${validation.message}`);
+      console.error(
+        `[PortfolioSelector] Validation failed: ${validation.message}`
+      );
       // V produkcii: zobraziť toast/alert pre užívateľa
       alert(`⚠️ ${validation.message}`);
       return;
@@ -78,14 +85,11 @@ export default function PortfolioSelector() {
     // Vypočítaj expected yield pre feedback
     const expectedYield = approxYieldAnnualFromMix(adjustedMix, preset.id);
 
-    console.log(
-      `[PortfolioSelector] Aplikujem ${preset.label} profil:`,
-      {
-        risk: risk.toFixed(2),
-        cap,
-        expectedYield: (expectedYield * 100).toFixed(1) + "%",
-      }
-    );
+    console.log(`[PortfolioSelector] Aplikujem ${preset.label} profil:`, {
+      risk: risk.toFixed(2),
+      cap,
+      expectedYield: (expectedYield * 100).toFixed(1) + "%",
+    });
 
     // Aplikuj mix do persist
     writeV3({
@@ -113,12 +117,13 @@ export default function PortfolioSelector() {
       <div className="mb-4">
         <h3
           id="portfolio-selector-title"
-          className="text-lg font-semibold text-gray-900 mb-1"
+          className="text-lg font-semibold text-slate-100 mb-1"
         >
           Investičný profil
         </h3>
-        <p className="text-sm text-gray-600">
-          Vyberte profil podľa vašej tolerancie rizika. Mix aktív sa aplikuje automaticky.
+        <p className="text-sm text-slate-300">
+          Vyberte profil podľa vašej tolerancie rizika. Mix aktív sa aplikuje
+          automaticky.
         </p>
       </div>
 
@@ -143,7 +148,7 @@ export default function PortfolioSelector() {
               aria-label={`${preset.label} profil: ${preset.description}`}
             >
               {/* Ikona */}
-              <div className="text-5xl mb-3 transition-transform group-hover:scale-110">
+              <div className={`text-5xl mb-3 transition-transform group-hover:scale-110 ${colors.icon}`}>
                 {preset.icon}
               </div>
 
@@ -153,16 +158,17 @@ export default function PortfolioSelector() {
               </h4>
 
               {/* Popis */}
-              <p className="text-sm text-gray-700 leading-relaxed">
+              <p className="text-sm text-slate-300 leading-relaxed">
                 {preset.description}
               </p>
 
               {/* Target risk badge */}
-              <div className="mt-4 pt-3 border-t border-gray-200">
+              <div className="mt-4 pt-3 border-t border-slate-700">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500">Cieľové riziko:</span>
-                  <span className="font-semibold text-gray-700">
-                    {preset.targetRisk.min.toFixed(1)} - {preset.targetRisk.max.toFixed(1)}
+                  <span className="text-slate-400">Cieľové riziko:</span>
+                  <span className="font-semibold text-slate-200">
+                    {preset.targetRisk.min.toFixed(1)} -{" "}
+                    {preset.targetRisk.max.toFixed(1)}
                   </span>
                 </div>
               </div>
@@ -190,10 +196,10 @@ export default function PortfolioSelector() {
       </div>
 
       {/* Help text */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <p className="text-xs text-gray-600">
-          💡 <strong>Tip:</strong> V PRO režime môžete upraviť jednotlivé aktíva manuálne.
-          Prepnite režim v hornom menu.
+      <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+        <p className="text-xs text-slate-300">
+          💡 <strong>Tip:</strong> V PRO režime môžete upraviť jednotlivé aktíva
+          manuálne. Prepnite režim v hornom menu.
         </p>
       </div>
     </div>

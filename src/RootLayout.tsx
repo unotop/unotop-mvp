@@ -20,7 +20,8 @@ export default function RootLayout() {
     const handleStorageChange = () => {
       const seed = readV3();
       const newMode = (seed.profile?.modeUi as any) || "BASIC";
-      setModeUi(newMode);
+      // Len ak sa MODE skutočne zmenil (nie každá zmena v localStorage)
+      setModeUi((prevMode) => (prevMode !== newMode ? newMode : prevMode));
     };
 
     // Poll localStorage every 100ms (simple & reliable)
