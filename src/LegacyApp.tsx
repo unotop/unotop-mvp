@@ -724,7 +724,19 @@ export default function LegacyApp() {
                 const fixed = Number(fixedExp) || 0;
                 const variable = Number(varExp) || 0;
                 const freeCash = income - fixed - variable;
-                const isPositive = freeCash >= 0;
+                // Read actual monthly vklad from persist (not seed which may be stale)
+                const currentVklad = (() => {
+                  try {
+                    const raw = localStorage.getItem("unotop:v3") || localStorage.getItem("unotop_v3");
+                    if (raw) {
+                      const parsed = JSON.parse(raw);
+                      return Number(parsed.monthly) || 0;
+                    }
+                  } catch {}
+                  return 0;
+                })();
+                const remaining = freeCash - currentVklad;
+                const isPositive = remaining >= 0;
 
                 return (
                   <div
@@ -740,8 +752,7 @@ export default function LegacyApp() {
                       Voľné prostriedky (po investíciách)
                     </div>
                     <div className="text-base tabular-nums">
-                      {(freeCash - ((seed as any).monthly || 0)).toFixed(0)} € /
-                      mes.
+                      {remaining.toFixed(0)} € / mes.
                     </div>
                   </div>
                 );
