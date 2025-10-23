@@ -15,8 +15,16 @@ import {
   getValidationMessage,
   type ValidationState,
 } from "./utils/validation";
-import { validateEmail, validatePhone, type ValidationErrors } from "./utils/validation-helpers";
-import { sendViaMailto, type ProjectionData } from "./services/email.service";
+import {
+  validateEmail,
+  validatePhone,
+  type ValidationErrors,
+} from "./utils/validation-helpers";
+import { 
+  sendProjectionEmail, 
+  sendViaMailto, 
+  type ProjectionData 
+} from "./services/email.service";
 
 /**
  * BasicLayout - jednoduchá verzia pre nováčikov
@@ -42,7 +50,8 @@ export default function BasicLayout() {
   const [submitStatus, setSubmitStatus] = React.useState<
     "idle" | "success" | "error"
   >("idle");
-  const [validationErrors, setValidationErrors] = React.useState<ValidationErrors>({});
+  const [validationErrors, setValidationErrors] =
+    React.useState<ValidationErrors>({});
 
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
@@ -437,19 +446,27 @@ export default function BasicLayout() {
                   onChange={(e) => {
                     setFormData({ ...formData, email: e.target.value });
                     if (validationErrors.email) {
-                      setValidationErrors({ ...validationErrors, email: undefined });
+                      setValidationErrors({
+                        ...validationErrors,
+                        email: undefined,
+                      });
                     }
                   }}
                   onBlur={() => {
                     if (formData.email && !validateEmail(formData.email)) {
-                      setValidationErrors({ ...validationErrors, email: 'Neplatný formát emailu' });
+                      setValidationErrors({
+                        ...validationErrors,
+                        email: "Neplatný formát emailu",
+                      });
                     }
                   }}
                   className="w-full bg-slate-800 rounded-lg px-3 py-2 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
                   placeholder="jan.novak@example.com"
                 />
                 {validationErrors.email && (
-                  <p className="text-xs text-red-400 mt-1">{validationErrors.email}</p>
+                  <p className="text-xs text-red-400 mt-1">
+                    {validationErrors.email}
+                  </p>
                 )}
               </label>
 
@@ -464,19 +481,27 @@ export default function BasicLayout() {
                   onChange={(e) => {
                     setFormData({ ...formData, phone: e.target.value });
                     if (validationErrors.phone) {
-                      setValidationErrors({ ...validationErrors, phone: undefined });
+                      setValidationErrors({
+                        ...validationErrors,
+                        phone: undefined,
+                      });
                     }
                   }}
                   onBlur={() => {
                     if (formData.phone && !validatePhone(formData.phone)) {
-                      setValidationErrors({ ...validationErrors, phone: 'Neplatný formát (napr. +421 900 123 456)' });
+                      setValidationErrors({
+                        ...validationErrors,
+                        phone: "Neplatný formát (napr. +421 900 123 456)",
+                      });
                     }
                   }}
                   className="w-full bg-slate-800 rounded-lg px-3 py-2 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
                   placeholder="+421 900 123 456"
                 />
                 {validationErrors.phone && (
-                  <p className="text-xs text-red-400 mt-1">{validationErrors.phone}</p>
+                  <p className="text-xs text-red-400 mt-1">
+                    {validationErrors.phone}
+                  </p>
                 )}
               </label>
 
@@ -529,10 +554,10 @@ export default function BasicLayout() {
                   // Validate form first
                   const errors: ValidationErrors = {};
                   if (!validateEmail(formData.email)) {
-                    errors.email = 'Neplatný formát emailu';
+                    errors.email = "Neplatný formát emailu";
                   }
                   if (!validatePhone(formData.phone)) {
-                    errors.phone = 'Neplatný formát (napr. +421 900 123 456)';
+                    errors.phone = "Neplatný formát (napr. +421 900 123 456)";
                   }
                   if (Object.keys(errors).length > 0) {
                     setValidationErrors(errors);
@@ -600,8 +625,14 @@ export default function BasicLayout() {
                       ],
                     };
 
-                    // Send via mailto (opens email client)
-                    sendViaMailto(projectionData);
+                    // Try EmailJS first, fallback to mailto
+                    try {
+                      await sendProjectionEmail(projectionData);
+                      console.log("✅ Email sent via EmailJS");
+                    } catch (emailError) {
+                      console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
+                      sendViaMailto(projectionData);
+                    }
 
                     setSubmitStatus("success");
                     setTimeout(() => {

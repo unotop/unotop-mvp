@@ -12,10 +12,10 @@ import emailjs from '@emailjs/browser';
  * 5. Set env variables or hardcode here
  */
 
-// EmailJS credentials (replace with your own or set in .env)
-const EMAILJS_SERVICE_ID = (import.meta as any).env?.VITE_EMAILJS_SERVICE_ID || 'service_unotop';
-const EMAILJS_TEMPLATE_ID = (import.meta as any).env?.VITE_EMAILJS_TEMPLATE_ID || 'template_projection';
-const EMAILJS_PUBLIC_KEY = (import.meta as any).env?.VITE_EMAILJS_PUBLIC_KEY || 'YOUR_PUBLIC_KEY_HERE';
+// EmailJS credentials - UNOTOP Production
+const EMAILJS_SERVICE_ID = 'service_r2eov4s';
+const EMAILJS_TEMPLATE_ID = 'template_bmcskm8';
+const EMAILJS_PUBLIC_KEY = '1hx6DPz-diYTb9Bzf';
 
 export interface ProjectionData {
   user: {
@@ -49,18 +49,18 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
 
   // Prepare template params for EmailJS
   const templateParams = {
-    to_email: data.recipients.join(', '),
-    from_name: `${data.user.firstName} ${data.user.lastName}`,
-    from_email: data.user.email,
-    from_phone: data.user.phone,
-    lump_sum: data.projection.lumpSumEur.toLocaleString(),
-    monthly_vklad: data.projection.monthlyVklad.toLocaleString(),
-    horizon_years: data.projection.horizonYears,
-    goal_assets: data.projection.goalAssetsEur.toLocaleString(),
-    future_value: data.projection.futureValue.toFixed(0),
-    progress_percent: data.projection.progressPercent,
-    yield_annual: (data.projection.yieldAnnual * 100).toFixed(1),
-    mix: mixFormatted,
+    user_name: `${data.user.firstName} ${data.user.lastName}`,
+    first_name: data.user.firstName,
+    last_name: data.user.lastName,
+    user_email: data.user.email,
+    user_phone: data.user.phone,
+    lump_sum: data.projection.lumpSumEur.toLocaleString('sk-SK'),
+    monthly: data.projection.monthlyVklad.toLocaleString('sk-SK'),
+    years: data.projection.horizonYears,
+    goal: data.projection.goalAssetsEur.toLocaleString('sk-SK'),
+    future_value: Math.round(data.projection.futureValue).toLocaleString('sk-SK'),
+    progress: data.projection.progressPercent,
+    yield: (data.projection.yieldAnnual * 100).toFixed(1),
     deeplink: data.projection.deeplink,
   };
 
