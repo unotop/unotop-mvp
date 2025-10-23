@@ -15,6 +15,8 @@ import {
   getValidationMessage,
   type ValidationState,
 } from "./utils/validation";
+import { validateEmail, validatePhone, type ValidationErrors } from "./utils/validation-helpers";
+import { sendViaMailto, type ProjectionData } from "./services/email.service";
 
 /**
  * BasicLayout - jednoduchá verzia pre nováčikov
@@ -40,6 +42,7 @@ export default function BasicLayout() {
   const [submitStatus, setSubmitStatus] = React.useState<
     "idle" | "success" | "error"
   >("idle");
+  const [validationErrors, setValidationErrors] = React.useState<ValidationErrors>({});
 
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
@@ -431,12 +434,23 @@ export default function BasicLayout() {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (validationErrors.email) {
+                      setValidationErrors({ ...validationErrors, email: undefined });
+                    }
+                  }}
+                  onBlur={() => {
+                    if (formData.email && !validateEmail(formData.email)) {
+                      setValidationErrors({ ...validationErrors, email: 'Neplatný formát emailu' });
+                    }
+                  }}
                   className="w-full bg-slate-800 rounded-lg px-3 py-2 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
                   placeholder="jan.novak@example.com"
                 />
+                {validationErrors.email && (
+                  <p className="text-xs text-red-400 mt-1">{validationErrors.email}</p>
+                )}
               </label>
 
               <label className="block space-y-1">
@@ -447,12 +461,23 @@ export default function BasicLayout() {
                   type="tel"
                   required
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setFormData({ ...formData, phone: e.target.value });
+                    if (validationErrors.phone) {
+                      setValidationErrors({ ...validationErrors, phone: undefined });
+                    }
+                  }}
+                  onBlur={() => {
+                    if (formData.phone && !validatePhone(formData.phone)) {
+                      setValidationErrors({ ...validationErrors, phone: 'Neplatný formát (napr. +421 900 123 456)' });
+                    }
+                  }}
                   className="w-full bg-slate-800 rounded-lg px-3 py-2 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
                   placeholder="+421 900 123 456"
                 />
+                {validationErrors.phone && (
+                  <p className="text-xs text-red-400 mt-1">{validationErrors.phone}</p>
+                )}
               </label>
 
               <label className="flex items-start gap-2 cursor-pointer">
@@ -495,10 +520,25 @@ export default function BasicLayout() {
                   !formData.lastName ||
                   !formData.email ||
                   !formData.phone ||
-                  !formData.gdprConsent
+                  !formData.gdprConsent ||
+                  !validateEmail(formData.email) ||
+                  !validatePhone(formData.phone)
                 }
                 className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={async () => {
+                  // Validate form first
+                  const errors: ValidationErrors = {};
+                  if (!validateEmail(formData.email)) {
+                    errors.email = 'Neplatný formát emailu';
+                  }
+                  if (!validatePhone(formData.phone)) {
+                    errors.phone = 'Neplatný formát (napr. +421 900 123 456)';
+                  }
+                  if (Object.keys(errors).length > 0) {
+                    setValidationErrors(errors);
+                    return;
+                  }
+
                   setIsSubmitting(true);
                   setSubmitStatus("idle");
 
@@ -534,8 +574,8 @@ export default function BasicLayout() {
                     const encoded = btoa(JSON.stringify(state));
                     const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
 
-                    // Prepare payload
-                    const payload = {
+                    // Prepare projection data
+                    const projectionData: ProjectionData = {
                       user: {
                         firstName: formData.firstName,
                         lastName: formData.lastName,
@@ -560,16 +600,8 @@ export default function BasicLayout() {
                       ],
                     };
 
-                    // Send to API endpoint
-                    const response = await fetch("/api/send-projection", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(payload),
-                    });
-
-                    if (!response.ok) {
-                      throw new Error("Failed to send projection");
-                    }
+                    // Send via mailto (opens email client)
+                    sendViaMailto(projectionData);
 
                     setSubmitStatus("success");
                     setTimeout(() => {
@@ -582,6 +614,7 @@ export default function BasicLayout() {
                         gdprConsent: false,
                       });
                       setSubmitStatus("idle");
+                      setValidationErrors({});
                       shareBtnRef.current?.focus();
                     }, 2000);
                   } catch (error) {

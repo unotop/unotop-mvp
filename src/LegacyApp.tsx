@@ -1268,10 +1268,7 @@ export default function LegacyApp() {
       />
 
       {/* PRO Beta Warning Banner */}
-      <div
-        role="alert"
-        className="mx-auto max-w-[1320px] px-4 mt-3 mb-3"
-      >
+      <div role="alert" className="mx-auto max-w-[1320px] px-4 mt-3 mb-3">
         <div className="rounded-xl bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/40 p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 text-2xl">⚠️</div>
@@ -1280,9 +1277,11 @@ export default function LegacyApp() {
                 PRO verzia je v skúšobnej fáze
               </h3>
               <p className="text-sm text-slate-300 leading-relaxed">
-                PRO režim je momentálne v aktívnom vývoji. Niektoré funkcie ešte nie sú dokončené 
-                a môžu obsahovať nedostatky. Pre odoslanie projekcie agentovi použite 
-                <strong className="text-emerald-400"> BASIC režim</strong>, ktorý je plne funkčný.
+                PRO režim je momentálne v aktívnom vývoji. Niektoré funkcie ešte
+                nie sú dokončené a môžu obsahovať nedostatky. Pre odoslanie
+                projekcie agentovi použite
+                <strong className="text-emerald-400"> BASIC režim</strong>,
+                ktorý je plne funkčný.
               </p>
             </div>
           </div>
