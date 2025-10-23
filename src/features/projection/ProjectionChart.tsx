@@ -223,14 +223,9 @@ export function ProjectionChart({
               domain={[0, "auto"]}
               padding={{ top: 20, bottom: 0 }}
               tickFormatter={(val: number) =>
-                val >= 1000 ? `${(val / 1000).toFixed(0)}k` : `${val}`
+                val >= 1000 ? `${(val / 1000).toFixed(0)}k €` : `${val} €`
               }
-              label={{
-                value: "€",
-                angle: -90,
-                position: "insideLeft",
-                fill: "#94a3b8",
-              }}
+              width={60}
             />
             <Tooltip
               contentStyle={{

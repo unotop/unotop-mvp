@@ -15,12 +15,12 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/95 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/95 backdrop-blur-sm p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="welcome-title"
     >
-      <div className="relative max-w-2xl mx-4 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
+      <div className="relative w-full max-w-xl my-8 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
         {/* Header with gradient accent */}
         <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 px-8 pt-8 pb-6">
           <h1
@@ -67,10 +67,20 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
               <span>💡</span> Rýchly štart
             </h3>
             <ul className="text-sm text-slate-300 space-y-1 ml-6 list-disc">
-              <li>Vyberte si <strong>rizikový profil</strong> (Konzervatívny / Vyvážený / Dynamický)</li>
-              <li>Zadajte <strong>mesačný príjem</strong> a <strong>investičný vklad</strong></li>
-              <li>Kliknite na <strong>predpripravené portfólio</strong></li>
-              <li>Sledujte <strong>projekciu rastu</strong> v grafe vpravo</li>
+              <li>
+                Zadajte <strong>mesačný príjem</strong> a{" "}
+                <strong>investičný vklad</strong>
+              </li>
+              <li>
+                Vyberte si <strong>rizikový profil</strong> (Konzervatívny /
+                Vyvážený / Dynamický)
+              </li>
+              <li>
+                Kliknite na <strong>predpripravené portfólio</strong>
+              </li>
+              <li>
+                Sledujte <strong>projekciu rastu</strong> v grafe vpravo
+              </li>
             </ul>
           </div>
 
