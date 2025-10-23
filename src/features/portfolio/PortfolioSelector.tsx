@@ -55,6 +55,52 @@ export default function PortfolioSelector() {
     null
   );
 
+  // Detect when component becomes visible/invisible (via parent unmount/remount)
+  // Reset selection when user invalidates settings
+  React.useEffect(() => {
+    const v3 = readV3();
+    const storedRiskPref = v3.profile?.riskPref as RiskPref | undefined;
+    
+    // Sync local state with persist
+    if (storedRiskPref && storedRiskPref !== selectedPreset) {
+      setSelectedPreset(storedRiskPref);
+    }
+  }, []); // Run only on mount
+
+  // Watch for validation changes - reset selection if settings become invalid
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      const v3 = readV3();
+      const income = v3.profile?.monthlyIncome || 0;
+      
+      // If income drops to 0 or invalid, clear selection
+      if (income <= 0 && selectedPreset) {
+        console.log("[PortfolioSelector] Settings invalidated, clearing selection");
+        setSelectedPreset(null);
+        
+        // Clear from persist too
+        writeV3({
+          mix: [],
+          profile: {
+            ...(v3.profile || {}),
+            riskPref: undefined,
+          } as any,
+        });
+      }
+    };
+
+    // Listen to storage events
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Poll for changes (fallback)
+    const interval = setInterval(handleStorageChange, 200);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [selectedPreset]);
+
   /**
    * Handler pre výber presetu
    */
