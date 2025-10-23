@@ -2,6 +2,9 @@ import React from "react";
 import { readV3 } from "./persist/v3";
 import LegacyApp from "./LegacyApp";
 import BasicLayout from "./BasicLayout";
+import WelcomeModal from "./components/WelcomeModal";
+
+const WELCOME_STORAGE_KEY = "unotop:welcome-seen";
 
 /**
  * RootLayout - top-level wrapper
@@ -19,6 +22,24 @@ export default function RootLayout() {
       return "BASIC";
     }
   });
+
+  // Welcome modal state (show only on first visit)
+  const [showWelcome, setShowWelcome] = React.useState<boolean>(() => {
+    try {
+      return !localStorage.getItem(WELCOME_STORAGE_KEY);
+    } catch {
+      return false; // If localStorage fails, don't show modal
+    }
+  });
+
+  const handleCloseWelcome = () => {
+    try {
+      localStorage.setItem(WELCOME_STORAGE_KEY, "true");
+    } catch (err) {
+      console.error("[RootLayout] Failed to save welcome flag:", err);
+    }
+    setShowWelcome(false);
+  };
 
   // Listen to storage changes (cross-tab & manual persist writes)
   React.useEffect(() => {
@@ -49,9 +70,10 @@ export default function RootLayout() {
     };
   }, []);
 
-  if (modeUi === "BASIC") {
-    return <BasicLayout />;
-  }
-
-  return <LegacyApp />;
+  return (
+    <>
+      {showWelcome && <WelcomeModal onClose={handleCloseWelcome} />}
+      {modeUi === "BASIC" ? <BasicLayout /> : <LegacyApp />}
+    </>
+  );
 }
