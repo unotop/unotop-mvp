@@ -41,10 +41,7 @@ export default function SubmissionWarningModal({
             <span className="text-2xl">⚠️</span>
           </div>
           <div className="flex-1">
-            <h2
-              id="warning-title"
-              className="text-lg font-semibold text-white"
-            >
+            <h2 id="warning-title" className="text-lg font-semibold text-white">
               Ste si istý?
             </h2>
             <p className="text-sm text-slate-400 mt-1">
@@ -57,9 +54,7 @@ export default function SubmissionWarningModal({
         <div className="bg-slate-800/50 rounded-lg p-4 space-y-2 ring-1 ring-white/5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">Zostávajúce pokusy:</span>
-            <span className="font-semibold text-white">
-              {remaining} / 2
-            </span>
+            <span className="font-semibold text-white">{remaining} / 2</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">Reset limitu:</span>

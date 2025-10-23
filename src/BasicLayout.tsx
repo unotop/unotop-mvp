@@ -212,13 +212,13 @@ export default function BasicLayout() {
       try {
         await sendProjectionEmail(projectionData);
         console.log("✅ Email sent via EmailJS");
-        
+
         // Record successful submission
         recordSubmission();
       } catch (emailError) {
         console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
         sendViaMailto(projectionData);
-        
+
         // Still record submission (mailto was used)
         recordSubmission();
       }
@@ -666,7 +666,9 @@ export default function BasicLayout() {
 
                   // Check rate limit
                   if (!canSubmit()) {
-                    alert(`Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`);
+                    alert(
+                      `Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`
+                    );
                     return;
                   }
 

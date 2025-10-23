@@ -35,8 +35,9 @@ export default function RootLayout() {
   // Allow manual reopening of welcome modal
   React.useEffect(() => {
     const handleOpenWelcome = () => setShowWelcome(true);
-    window.addEventListener('openWelcomeModal', handleOpenWelcome);
-    return () => window.removeEventListener('openWelcomeModal', handleOpenWelcome);
+    window.addEventListener("openWelcomeModal", handleOpenWelcome);
+    return () =>
+      window.removeEventListener("openWelcomeModal", handleOpenWelcome);
   }, []);
 
   const handleCloseWelcome = () => {
