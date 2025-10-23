@@ -79,8 +79,32 @@ export default function Toolbar({
           </div>
         </div>
 
-        {/* Right: Share Button + Reset + Mode Toggle */}
+        {/* Right: Info + Share Button + Reset + Mode Toggle */}
         <div className="flex items-center gap-2">
+          {/* Info Button - Opens Welcome Modal */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event('openWelcomeModal'))}
+            className="p-2 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all"
+            aria-label="Zobraziť návod"
+            title="Zobraziť návod na použitie"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </button>
+
           {/* Share Button (Odoslať projekciu) */}
           {onShare && (
             <button

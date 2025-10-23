@@ -20,11 +20,18 @@ import {
   validatePhone,
   type ValidationErrors,
 } from "./utils/validation-helpers";
-import { 
-  sendProjectionEmail, 
-  sendViaMailto, 
-  type ProjectionData 
+import {
+  sendProjectionEmail,
+  sendViaMailto,
+  type ProjectionData,
 } from "./services/email.service";
+import {
+  canSubmit,
+  getRemainingSubmissions,
+  getResetDate,
+  recordSubmission,
+} from "./utils/rate-limiter";
+import SubmissionWarningModal from "./components/SubmissionWarningModal";
 
 /**
  * BasicLayout - jednoduchá verzia pre nováčikov
@@ -52,6 +59,7 @@ export default function BasicLayout() {
   >("idle");
   const [validationErrors, setValidationErrors] =
     React.useState<ValidationErrors>({});
+  const [showWarningModal, setShowWarningModal] = React.useState(false);
 
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
@@ -143,6 +151,98 @@ export default function BasicLayout() {
 
     // Reload page to reset state
     window.location.reload();
+  };
+
+  // Handle confirmed submission (after warning modal)
+  const handleConfirmSubmit = async () => {
+    setShowWarningModal(false);
+    setIsSubmitting(true);
+    setSubmitStatus("idle");
+
+    try {
+      // Generate projection data
+      const v3Data = readV3();
+      const mix: MixItem[] = (v3Data.mix as any) || [];
+      const lump = (v3Data.profile?.lumpSumEur as any) || 0;
+      const monthly = (v3Data as any).monthly || 0;
+      const years = (v3Data.profile?.horizonYears as any) || 10;
+      const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
+      const riskPref = (v3Data.profile?.riskPref ||
+        (v3Data as any).riskPref ||
+        "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+      const approx = approxYieldAnnualFromMix(mix, riskPref);
+      const fv = calculateFutureValue(lump, monthly, years, approx);
+
+      // Generate deeplink
+      const state = {
+        profile: {
+          lumpSumEur: lump,
+          horizonYears: years,
+          goalAssetsEur: goal,
+        },
+        monthly,
+        mix,
+      };
+      const encoded = btoa(JSON.stringify(state));
+      const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
+
+      // Prepare projection data
+      const projectionData: ProjectionData = {
+        user: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+        },
+        projection: {
+          lumpSumEur: lump,
+          monthlyVklad: monthly,
+          horizonYears: years,
+          goalAssetsEur: goal,
+          futureValue: fv,
+          progressPercent: goal > 0 ? Math.round((fv / goal) * 100) : 0,
+          yieldAnnual: approx,
+          mix: mix.filter((i) => i.pct > 0),
+          deeplink,
+        },
+        recipients: ["info.unotop@gmail.com", "adam.belohorec@universal.sk"],
+      };
+
+      // Try EmailJS first, fallback to mailto
+      try {
+        await sendProjectionEmail(projectionData);
+        console.log("✅ Email sent via EmailJS");
+        
+        // Record successful submission
+        recordSubmission();
+      } catch (emailError) {
+        console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
+        sendViaMailto(projectionData);
+        
+        // Still record submission (mailto was used)
+        recordSubmission();
+      }
+
+      setSubmitStatus("success");
+      setTimeout(() => {
+        setShareOpen(false);
+        setFormData({
+          firstName: "",
+          lastName: "",
+          phone: "",
+          email: "",
+          gdprConsent: false,
+        });
+        setSubmitStatus("idle");
+        setValidationErrors({});
+        shareBtnRef.current?.focus();
+      }, 2000);
+    } catch (error) {
+      console.error("Error sending projection:", error);
+      setSubmitStatus("error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const left = (
@@ -550,7 +650,7 @@ export default function BasicLayout() {
                   !validatePhone(formData.phone)
                 }
                 className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={async () => {
+                onClick={() => {
                   // Validate form first
                   const errors: ValidationErrors = {};
                   if (!validateEmail(formData.email)) {
@@ -564,96 +664,14 @@ export default function BasicLayout() {
                     return;
                   }
 
-                  setIsSubmitting(true);
-                  setSubmitStatus("idle");
-
-                  try {
-                    // Generate projection data
-                    const v3Data = readV3();
-                    const mix: MixItem[] = (v3Data.mix as any) || [];
-                    const lump = (v3Data.profile?.lumpSumEur as any) || 0;
-                    const monthly = (v3Data as any).monthly || 0;
-                    const years = (v3Data.profile?.horizonYears as any) || 10;
-                    const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
-                    const riskPref = (v3Data.profile?.riskPref ||
-                      (v3Data as any).riskPref ||
-                      "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-                    const approx = approxYieldAnnualFromMix(mix, riskPref);
-                    const fv = calculateFutureValue(
-                      lump,
-                      monthly,
-                      years,
-                      approx
-                    );
-
-                    // Generate deeplink
-                    const state = {
-                      profile: {
-                        lumpSumEur: lump,
-                        horizonYears: years,
-                        goalAssetsEur: goal,
-                      },
-                      monthly,
-                      mix,
-                    };
-                    const encoded = btoa(JSON.stringify(state));
-                    const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
-
-                    // Prepare projection data
-                    const projectionData: ProjectionData = {
-                      user: {
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        email: formData.email,
-                        phone: formData.phone,
-                      },
-                      projection: {
-                        lumpSumEur: lump,
-                        monthlyVklad: monthly,
-                        horizonYears: years,
-                        goalAssetsEur: goal,
-                        futureValue: fv,
-                        progressPercent:
-                          goal > 0 ? Math.round((fv / goal) * 100) : 0,
-                        yieldAnnual: approx,
-                        mix: mix.filter((i) => i.pct > 0),
-                        deeplink,
-                      },
-                      recipients: [
-                        "info.unotop@gmail.com",
-                        "adam.belohorec@universal.sk",
-                      ],
-                    };
-
-                    // Try EmailJS first, fallback to mailto
-                    try {
-                      await sendProjectionEmail(projectionData);
-                      console.log("✅ Email sent via EmailJS");
-                    } catch (emailError) {
-                      console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
-                      sendViaMailto(projectionData);
-                    }
-
-                    setSubmitStatus("success");
-                    setTimeout(() => {
-                      setShareOpen(false);
-                      setFormData({
-                        firstName: "",
-                        lastName: "",
-                        phone: "",
-                        email: "",
-                        gdprConsent: false,
-                      });
-                      setSubmitStatus("idle");
-                      setValidationErrors({});
-                      shareBtnRef.current?.focus();
-                    }, 2000);
-                  } catch (error) {
-                    console.error("Error sending projection:", error);
-                    setSubmitStatus("error");
-                  } finally {
-                    setIsSubmitting(false);
+                  // Check rate limit
+                  if (!canSubmit()) {
+                    alert(`Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`);
+                    return;
                   }
+
+                  // Show warning modal
+                  setShowWarningModal(true);
                 }}
               >
                 {isSubmitting ? "⏳ Odosiela sa..." : "📨 Odoslať projekciu"}
@@ -680,6 +698,15 @@ export default function BasicLayout() {
           </div>
         </div>
       )}
+
+      {/* Submission Warning Modal */}
+      <SubmissionWarningModal
+        isOpen={showWarningModal}
+        onClose={() => setShowWarningModal(false)}
+        onConfirm={handleConfirmSubmit}
+        remaining={getRemainingSubmissions()}
+        resetDate={getResetDate()}
+      />
     </div>
   );
 }
