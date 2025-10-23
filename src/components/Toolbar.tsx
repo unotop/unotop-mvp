@@ -64,7 +64,7 @@ export default function Toolbar({
           </button>
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <img
-              src="/unotop_logo4.png"
+              src="/unotop_logo.png"
               alt="UNOTOP logo"
               className="h-7 sm:h-8 w-auto flex-shrink-0"
             />

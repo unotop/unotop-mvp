@@ -15,28 +15,28 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/95 backdrop-blur-sm p-4 overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-start justify-center bg-slate-950/95 backdrop-blur-sm p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="welcome-title"
     >
-      <div className="relative w-full max-w-xl my-8 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
+      <div className="relative w-full max-w-xl my-4 sm:my-8 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
         {/* Header with gradient accent */}
-        <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 px-8 pt-8 pb-6">
+        <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 px-4 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6">
           <h1
             id="welcome-title"
-            className="text-3xl font-bold text-white mb-2 flex items-center gap-3"
+            className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center gap-2 sm:gap-3"
           >
-            <span className="text-4xl">🎯</span>
+            <span className="text-3xl sm:text-4xl">🎯</span>
             Vitajte v UNOTOP plánovači
           </h1>
-          <p className="text-slate-300 text-lg">
+          <p className="text-slate-300 text-base sm:text-lg">
             Váš osobný nástroj na investičné modelovanie
           </p>
         </div>
 
         {/* Content */}
-        <div className="px-8 py-6 space-y-6">
+        <div className="px-4 sm:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {/* Feature list */}
           <div className="space-y-4">
             <Feature
@@ -85,10 +85,10 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
           </div>
 
           {/* CTA Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-2 sm:pt-4">
             <button
               onClick={onClose}
-              className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 hover:scale-105 active:scale-95"
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 hover:scale-105 active:scale-95 text-sm sm:text-base"
               autoFocus
             >
               🚀 Začať plánovať
@@ -96,7 +96,7 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
           </div>
 
           {/* Footer note */}
-          <p className="text-xs text-slate-500 text-center pt-2">
+          <p className="text-[10px] sm:text-xs text-slate-500 text-center pt-2">
             Toto okno sa zobrazuje iba pri prvom otvorení stránky.
           </p>
         </div>
