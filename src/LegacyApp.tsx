@@ -1202,38 +1202,51 @@ export default function LegacyApp() {
         }
       />
 
-      {/* Share CTA - výrazný zelený button */}
-      <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-4 md:p-5">
-        <button
-          ref={shareBtnRef}
-          type="button"
-          onClick={() => setShareOpen(true)}
-          className="group relative w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-lg shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 overflow-hidden"
-          aria-label="Zdieľať s advisorom"
-        >
-          {/* Shine effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-
-          <div className="relative flex items-center justify-center gap-3">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-              />
-            </svg>
-            <span>Odoslať advisorovi</span>
-          </div>
-        </button>
-        <p className="mt-3 text-xs text-center text-slate-400">
-          Zdieľajte vašu projekciu emailom
-        </p>
+      {/* Share CTA - DISABLED v PRO režime (beta) */}
+      <section className="w-full min-w-0 rounded-2xl ring-1 ring-slate-700/50 bg-gradient-to-br from-slate-800/40 to-slate-900/20 p-4 md:p-5">
+        <div className="relative">
+          <button
+            ref={shareBtnRef}
+            type="button"
+            disabled={true}
+            className="group relative w-full px-6 py-4 rounded-xl bg-slate-700/50 text-slate-400 font-semibold text-lg cursor-not-allowed opacity-60"
+            aria-label="Odoslanie je dočasne vypnuté v PRO režime"
+            title="Odoslanie projekcie je momentálne dostupné iba v BASIC režime"
+          >
+            <div className="relative flex items-center justify-center gap-3">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+              <span>Odoslať agentovi</span>
+              <svg
+                className="w-5 h-5 text-amber-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+          </button>
+          <p className="mt-3 text-xs text-center text-slate-500">
+            💡 Odoslanie projekcie je dočasne dostupné iba v BASIC režime
+          </p>
+        </div>
       </section>
     </div>
   );
@@ -1253,6 +1266,28 @@ export default function LegacyApp() {
         onClose={() => setSidebarOpen(false)}
         mode="PRO"
       />
+
+      {/* PRO Beta Warning Banner */}
+      <div
+        role="alert"
+        className="mx-auto max-w-[1320px] px-4 mt-3 mb-3"
+      >
+        <div className="rounded-xl bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/40 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 text-2xl">⚠️</div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-400 mb-1">
+                PRO verzia je v skúšobnej fáze
+              </h3>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                PRO režim je momentálne v aktívnom vývoji. Niektoré funkcie ešte nie sú dokončené 
+                a môžu obsahovať nedostatky. Pre odoslanie projekcie agentovi použite 
+                <strong className="text-emerald-400"> BASIC režim</strong>, ktorý je plne funkčný.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Deeplink Banner (pod toolbarom) */}
       {showLinkBanner && (

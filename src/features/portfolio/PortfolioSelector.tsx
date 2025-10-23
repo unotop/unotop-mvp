@@ -60,7 +60,7 @@ export default function PortfolioSelector() {
   React.useEffect(() => {
     const v3 = readV3();
     const storedRiskPref = v3.profile?.riskPref as RiskPref | undefined;
-    
+
     // Sync local state with persist
     if (storedRiskPref && storedRiskPref !== selectedPreset) {
       setSelectedPreset(storedRiskPref);
@@ -72,12 +72,14 @@ export default function PortfolioSelector() {
     const handleStorageChange = () => {
       const v3 = readV3();
       const income = v3.profile?.monthlyIncome || 0;
-      
+
       // If income drops to 0 or invalid, clear selection
       if (income <= 0 && selectedPreset) {
-        console.log("[PortfolioSelector] Settings invalidated, clearing selection");
+        console.log(
+          "[PortfolioSelector] Settings invalidated, clearing selection"
+        );
         setSelectedPreset(null);
-        
+
         // Clear from persist too
         writeV3({
           mix: [],
@@ -91,7 +93,7 @@ export default function PortfolioSelector() {
 
     // Listen to storage events
     window.addEventListener("storage", handleStorageChange);
-    
+
     // Poll for changes (fallback)
     const interval = setInterval(handleStorageChange, 200);
 
