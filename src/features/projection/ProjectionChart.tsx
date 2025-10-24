@@ -116,26 +116,29 @@ export function ProjectionChart({
   }, [horizonMonths, lumpSumEur, monthlyVklad, mixKey, debtsKey, riskPref]);
 
   // Príprava dát pre Recharts (konvertuj mesiace → roky, zaokrúhli hodnoty)
-  const chartData = result.series
-    .filter((_, idx) => idx % 12 === 0 || idx === result.series.length - 1) // sample každý 12. mesiac (ročne) + posledný bod
-    .map((p) => ({
-      year: monthsToYears(p.month),
-      investície: Math.round(p.investValue),
-      dlhy: Math.round(p.totalDebtBalance),
-      čistý: Math.round(p.investValue - p.totalDebtBalance), // Net Worth = investície - dlhy
-    }));
+  // WRAPPNUTÉ v useMemo aby sa chartData nevytvárala pri každom renderi
+  const chartData = React.useMemo(() => {
+    return result.series
+      .filter((_, idx) => idx % 12 === 0 || idx === result.series.length - 1) // sample každý 12. mesiac (ročne) + posledný bod
+      .map((p) => ({
+        year: monthsToYears(p.month),
+        investície: Math.round(p.investValue),
+        dlhy: Math.round(p.totalDebtBalance),
+        čistý: Math.round(p.investValue - p.totalDebtBalance), // Net Worth = investície - dlhy
+      }));
+  }, [result.series]);
 
-  // Debug: skontroluj chartData (dočasné)
-  React.useEffect(() => {
-    if (chartData.length > 0) {
-      console.log(
-        "ProjectionChart chartData:",
-        chartData.slice(0, 3),
-        "...",
-        chartData[chartData.length - 1]
-      );
-    }
-  }, [chartData]);
+  // Debug: skontroluj chartData (dočasné) - ODSTRÁNENÉ aby nevypisovalo do konzoly
+  // React.useEffect(() => {
+  //   if (chartData.length > 0) {
+  //     console.log(
+  //       "ProjectionChart chartData:",
+  //       chartData.slice(0, 3),
+  //       "...",
+  //       chartData[chartData.length - 1]
+  //     );
+  //   }
+  // }, [chartData]);
 
   // Crossover marker (ak existuje)
   const crossoverYear =
