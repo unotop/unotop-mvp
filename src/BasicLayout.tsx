@@ -2,9 +2,16 @@ import React from "react";
 import PageLayout from "./app/PageLayout";
 import Toolbar from "./components/Toolbar";
 import Sidebar from "./components/Sidebar";
+import { OnboardingTour } from "./components/OnboardingTour";
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
-import { ProjectionMetricsPanel } from "./features/overview/ProjectionMetricsPanel";
+import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
+import {
+  getAdjustedPreset,
+  type ProfileForAdjustments,
+  type AdjustmentWarning,
+  PORTFOLIO_PRESETS,
+} from "./features/portfolio/presets";
 import { readV3, writeV3 } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import type { MixItem } from "./features/mix/mix.service";
@@ -45,6 +52,96 @@ export default function BasicLayout() {
   const [shareOpen, setShareOpen] = React.useState(false);
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
+  // Onboarding tour state - progresívny systém
+  const [tourOpen, setTourOpen] = React.useState(false);
+  const [currentTourStep, setCurrentTourStep] = React.useState(1);
+  const [completedSteps, setCompletedSteps] = React.useState<number[]>(() => {
+    const saved = localStorage.getItem("unotop:tour_steps");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // Helper: Ulož dokončené kroky
+  const saveCompletedSteps = (steps: number[]) => {
+    localStorage.setItem("unotop:tour_steps", JSON.stringify(steps));
+    setCompletedSteps(steps);
+  };
+
+  // Helper: Označ krok ako dokončený a zobraz ďalší HNEĎ
+  const markStepComplete = (stepId: number) => {
+    if (!completedSteps.includes(stepId)) {
+      const updated = [...completedSteps, stepId];
+      saveCompletedSteps(updated);
+
+      // Zatvor aktuálny tooltip
+      setTourOpen(false);
+
+      // Zobraz ďalší krok okamžite (ak existuje)
+      const nextStep = stepId + 1;
+      if (nextStep <= 5 && !updated.includes(nextStep)) {
+        setTimeout(() => {
+          setCurrentTourStep(nextStep);
+          setTourOpen(true);
+        }, 400); // Krátka pauza pre plynulejší prechod
+      }
+    }
+  };
+
+  // Počúvaj na zatvorenie welcome modalu a spusti tour
+  React.useEffect(() => {
+    let hasStarted = false; // Flag aby sa nespustil viac krát
+
+    const checkWelcome = () => {
+      const welcomeSeen = localStorage.getItem("unotop:welcome-seen");
+      const tourCompleted = completedSteps.length === 5;
+
+      if (welcomeSeen && !tourCompleted && !tourOpen && !hasStarted) {
+        hasStarted = true; // Označ že tour bol spustený
+        console.log("[Tour] Welcome modal closed, auto-starting tour...");
+        setTimeout(() => {
+          setCurrentTourStep(1);
+          setTourOpen(true);
+        }, 2500);
+      }
+    };
+
+    // Poll pre welcome flag každých 500ms (fallback ak custom event nefunguje)
+    const pollInterval = setInterval(checkWelcome, 500);
+
+    // Listen na custom event z WelcomeModal
+    window.addEventListener("storage", checkWelcome);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener("storage", checkWelcome);
+    };
+  }, []); // Len raz pri mount
+
+  const handleTourComplete = () => {
+    setTourOpen(false);
+    // Označiť aktuálny krok ako dokončený
+    markStepComplete(currentTourStep);
+  };
+
+  const handleTourClose = () => {
+    setTourOpen(false);
+  };
+
+  // Funkcia na reštart tour (volaná z Toolbar)
+  const restartTour = () => {
+    // Vyčisti completed steps aby detektory mohli fungovať znovu
+    localStorage.removeItem("unotop:tour_steps");
+    setCompletedSteps([]);
+    setCurrentTourStep(1);
+    setTourOpen(true);
+  };
+
+  // Reset tour (pre testovanie)
+  const resetTour = () => {
+    localStorage.removeItem("unotop:tour_steps");
+    setCompletedSteps([]);
+    setCurrentTourStep(1);
+  };
+
   // Form state for share modal
   const [formData, setFormData] = React.useState({
     firstName: "",
@@ -61,8 +158,28 @@ export default function BasicLayout() {
     React.useState<ValidationErrors>({});
   const [showWarningModal, setShowWarningModal] = React.useState(false);
 
+  // Portfolio adjustment warnings
+  const [adjustmentWarnings, setAdjustmentWarnings] = React.useState<
+    AdjustmentWarning[]
+  >([]);
+  const [adjustmentInfo, setAdjustmentInfo] = React.useState<any>(null);
+
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
+
+  // Client type (individual/family/firm)
+  const clientType = (seed.profile?.clientType as any) || "individual";
+  const isPortfolioLocked = clientType === "family" || clientType === "firm";
+
+  // Cashflow state (pre tour step 1 detector)
+  const [cashflowData, setCashflowData] = React.useState(() => {
+    const v3 = readV3();
+    return {
+      monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+      fixedExp: (v3.profile?.fixedExp as any) || 0,
+      varExp: (v3.profile?.varExp as any) || 0,
+    };
+  });
 
   // Mix sync from localStorage
   const [mix, setMix] = React.useState<MixItem[]>(() => {
@@ -86,6 +203,19 @@ export default function BasicLayout() {
       setMix(newMix as MixItem[]);
     });
     return unsub;
+  }, []);
+
+  // Sync cashflow data from persist (100ms polling)
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const v3 = readV3();
+      setCashflowData({
+        monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+        fixedExp: (v3.profile?.fixedExp as any) || 0,
+        varExp: (v3.profile?.varExp as any) || 0,
+      });
+    }, 100);
+    return () => clearInterval(interval);
   }, []);
 
   // Sync invest params from persist (100ms polling)
@@ -119,23 +249,96 @@ export default function BasicLayout() {
 
   const validationMessage = getValidationMessage(validationState);
 
+  // Portfolio adjustments - aplikuj pri zmene profilu/investičných parametrov
+  React.useEffect(() => {
+    const v3 = readV3();
+    const currentRiskPref = (v3.profile?.riskPref as any) || "vyvazeny";
+
+    // Vytvor profile object pre adjustments
+    const profile: ProfileForAdjustments = {
+      lumpSumEur: investParams.lumpSumEur,
+      monthlyEur: investParams.monthlyVklad,
+      horizonYears: investParams.horizonYears,
+      monthlyIncome: cashflowData.monthlyIncome,
+      fixedExpenses: cashflowData.fixedExp,
+      variableExpenses: cashflowData.varExp,
+      reserveEur: (v3.profile?.reserveEur as any) || 0,
+      reserveMonths: (v3.profile?.reserveMonths as any) || 0,
+    };
+
+    // Nájdi aktuálny preset
+    const currentPreset = PORTFOLIO_PRESETS.find(
+      (p) => p.id === currentRiskPref
+    );
+    if (!currentPreset) return;
+
+    // Aplikuj adjustments
+    const { preset, warnings, info } = getAdjustedPreset(
+      currentPreset,
+      profile
+    );
+
+    // Update warnings a info state
+    setAdjustmentWarnings(warnings);
+    setAdjustmentInfo(info);
+
+    // NEROB automatickú aktualizáciu mixu - používateľ musí vybrať profil manuálne
+    // (aby sme neprepisovali jeho ručné zmeny)
+  }, [investParams, cashflowData]);
+
+  // Uncheck preset pri zmene vstupov (aby používateľ musel znovu vybrať)
+  React.useEffect(() => {
+    const v3 = readV3();
+    const currentRiskPref = v3.profile?.riskPref;
+
+    // Ak má vybratý profil, vymaž ho pri zmene vstupov
+    if (currentRiskPref) {
+      console.log(
+        "[BasicLayout] Vstupy sa zmenili, unchecking profil + clearing mix"
+      );
+      writeV3({
+        mix: [], // Vymaž aj mix, aby používateľ vedel, že musí znovu vybrať
+        profile: {
+          ...(v3.profile || {}),
+          riskPref: undefined, // Uncheck
+        } as any,
+      });
+    }
+  }, [
+    investParams.lumpSumEur,
+    investParams.monthlyVklad,
+    investParams.horizonYears,
+    cashflowData.monthlyIncome,
+    cashflowData.fixedExp,
+    cashflowData.varExp,
+  ]);
+
   // Auto-open and scroll to Portfolio when investment is complete
+  // 3-sekundový delay aby užívateľ stihol dokončiť písanie
   React.useEffect(() => {
     if (
       validationState.investmentComplete &&
       !validationState.hasPortfolioProfile
     ) {
-      // Open portfolio section
-      setOpen3(true);
-      // Scroll to portfolio section after a short delay
-      setTimeout(() => {
-        const portfolioEl = document.getElementById("sec3");
-        if (portfolioEl) {
-          portfolioEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 300);
+      // Čakaj 3 sekundy pred prepnutím
+      const timer = setTimeout(() => {
+        // Open portfolio section
+        setOpen3(true);
+        // Scroll to portfolio section after a short delay
+        setTimeout(() => {
+          const portfolioEl = document.getElementById("sec3");
+          if (portfolioEl) {
+            portfolioEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 300);
+      }, 3000); // 3 sekundy delay
+
+      return () => clearTimeout(timer);
     }
   }, [validationState.investmentComplete, validationState.hasPortfolioProfile]);
+
+  // ========== TOUR – Tooltips idú automaticky za sebou ==========
+  // Detektory nie sú potrebné, používateľ kliká "Rozumiem" na každom kroku
 
   const handleModeToggle = () => {
     const cur = readV3();
@@ -259,8 +462,9 @@ export default function BasicLayout() {
 
       {/* Portfolio selector - disabled button, content is always closed until unlocked */}
       <button
+        id="sec3"
         type="button"
-        aria-controls="sec3"
+        aria-controls="sec3-content"
         aria-expanded={open3}
         disabled={!validationState.investmentComplete}
         onClick={() => {
@@ -298,7 +502,7 @@ export default function BasicLayout() {
       </button>
       {open3 && validationState.investmentComplete && (
         <section
-          id="sec3"
+          id="sec3-content"
           role="region"
           aria-labelledby="portfolio-title"
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
@@ -306,6 +510,22 @@ export default function BasicLayout() {
           <div className="mb-4" data-testid="mixpanel-slot">
             <PortfolioSelector />
           </div>
+
+          {/* Lump Sum Scaling Info - vysvetľuje auto-adjustments */}
+          {adjustmentWarnings.includes("lump-sum-scaling") &&
+            adjustmentInfo?.lumpSumTier && (
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 text-sm mt-3">
+                <p className="text-purple-200">
+                  <span className="font-semibold">
+                    💎 Optimalizácia pre vysokú investíciu:
+                  </span>
+                  <br />
+                  <span className="text-slate-300 text-xs mt-1 block">
+                    {adjustmentInfo.lumpSumTier.message}
+                  </span>
+                </p>
+              </div>
+            )}
         </section>
       )}
     </div>
@@ -313,24 +533,29 @@ export default function BasicLayout() {
 
   const right = (
     <div className="space-y-4">
-      <ProjectionMetricsPanel
-        mix={mix}
-        lumpSumEur={investParams.lumpSumEur}
-        monthlyVklad={
-          validationState.isLosingMoney
-            ? validationState.freeCash
-            : investParams.monthlyVklad
-        }
-        horizonYears={investParams.horizonYears}
-        goalAssetsEur={investParams.goalAssetsEur}
-        riskPref={
-          seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
-        }
-        mode="BASIC"
-      />
+      {/* Projekcia - zobrazuje sa vždy (aj pre rodinu/firmu) */}
+      <div id="projection-panel">
+        <BasicProjectionPanel
+          mix={mix}
+          lumpSumEur={investParams.lumpSumEur}
+          monthlyVklad={
+            validationState.isLosingMoney
+              ? validationState.freeCash
+              : investParams.monthlyVklad
+          }
+          horizonYears={investParams.horizonYears}
+          goalAssetsEur={investParams.goalAssetsEur}
+          riskPref={
+            seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+          }
+        />
+      </div>
 
       {/* Share CTA */}
-      <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-4 md:p-5">
+      <section
+        id="share-section"
+        className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-4 md:p-5"
+      >
         <button
           ref={shareBtnRef}
           type="button"
@@ -384,6 +609,7 @@ export default function BasicLayout() {
         modeUi={modeUi}
         onModeToggle={handleModeToggle}
         onReset={handleReset}
+        onTourRestart={restartTour}
         onShare={() => {
           if (validationState.canShare && shareBtnRef.current) {
             // Scroll to big green Share button
@@ -440,7 +666,7 @@ export default function BasicLayout() {
                         Hodnota po {years} rokoch:
                       </span>
                       <div className="font-bold text-emerald-400 tabular-nums">
-                        {fv.toFixed(0)} €
+                        {Math.round(fv).toLocaleString("sk-SK")} €
                       </div>
                     </div>
                     <div>
@@ -452,13 +678,13 @@ export default function BasicLayout() {
                     <div>
                       <span className="text-slate-400">Jednorazový vklad:</span>
                       <div className="font-medium tabular-nums">
-                        {lump.toFixed(0)} €
+                        {Math.round(lump).toLocaleString("sk-SK")} €
                       </div>
                     </div>
                     <div>
                       <span className="text-slate-400">Mesačný vklad:</span>
                       <div className="font-medium tabular-nums">
-                        {monthly.toFixed(0)} €
+                        {Math.round(monthly).toLocaleString("sk-SK")} €
                       </div>
                     </div>
                   </div>
@@ -473,7 +699,8 @@ export default function BasicLayout() {
                               gold: "🥇 Zlato",
                               dyn: "📊 Dyn. riadenie",
                               etf: "🌍 ETF svet",
-                              bonds: "📜 Dlhopisy",
+                              bonds: "📜 Dlhopis 7,5% (5r)",
+                              bond3y9: "💰 Dlhopis 9% (3r)",
                               cash: "💵 Hotovosť",
                               crypto: "₿ Krypto",
                               real: "🏘️ Reality",
@@ -494,6 +721,26 @@ export default function BasicLayout() {
                             );
                           })}
                       </div>
+                      {/* Info o dlhopisoch ak sú oba prítomné */}
+                      {mix.some((m) => m.key === "bonds" && m.pct > 0) &&
+                        mix.some((m) => m.key === "bond3y9" && m.pct > 0) && (
+                          <div className="mt-2 pt-2 border-t border-white/10 text-xs text-slate-400 space-y-1">
+                            <div className="flex items-start gap-1">
+                              <span className="shrink-0">📜</span>
+                              <span>
+                                Dlhopis 7,5%: korporátny, krytý biznisom firmy,
+                                5-ročná splatnosť
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-1">
+                              <span className="shrink-0">💰</span>
+                              <span>
+                                Dlhopis 9%: mesačné výplaty po dobu 36 mesiacov,
+                                lepšia likvidita
+                              </span>
+                            </div>
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>
@@ -708,6 +955,14 @@ export default function BasicLayout() {
         onConfirm={handleConfirmSubmit}
         remaining={getRemainingSubmissions()}
         resetDate={getResetDate()}
+      />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        isOpen={tourOpen}
+        currentStep={currentTourStep}
+        onClose={handleTourClose}
+        onComplete={handleTourComplete}
       />
     </div>
   );

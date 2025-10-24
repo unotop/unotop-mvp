@@ -1480,7 +1480,8 @@ export default function LegacyApp() {
                               gold: "🥇 Zlato",
                               dyn: "📊 Dyn. riadenie",
                               etf: "🌍 ETF svet",
-                              bonds: "📜 Dlhopisy",
+                              bonds: "📜 Dlhopis 7,5% (5r)",
+                              bond3y9: "💰 Dlhopis 9% (3r)",
                               cash: "💵 Hotovosť",
                               crypto: "₿ Krypto",
                               real: "🏘️ Reality",
@@ -1501,6 +1502,26 @@ export default function LegacyApp() {
                             );
                           })}
                       </div>
+                      {/* Info o dlhopisoch ak sú oba prítomné */}
+                      {mix.some((m) => m.key === "bonds" && m.pct > 0) &&
+                        mix.some((m) => m.key === "bond3y9" && m.pct > 0) && (
+                          <div className="mt-2 pt-2 border-t border-white/10 text-xs text-slate-400 space-y-1">
+                            <div className="flex items-start gap-1">
+                              <span className="shrink-0">📜</span>
+                              <span>
+                                Dlhopis 7,5%: korporátny, krytý biznisom firmy,
+                                5-ročná splatnosť
+                              </span>
+                            </div>
+                            <div className="flex items-start gap-1">
+                              <span className="shrink-0">💰</span>
+                              <span>
+                                Dlhopis 9%: mesačné výplaty po dobu 36 mesiacov,
+                                lepšia likvidita
+                              </span>
+                            </div>
+                          </div>
+                        )}
                     </div>
                   )}
                 </div>

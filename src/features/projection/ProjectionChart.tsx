@@ -157,30 +157,6 @@ export function ProjectionChart({
 
   return (
     <div className="space-y-3">
-      {/* Prehľad výsledkov */}
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-blue-500/20">
-          <div className="text-slate-400 mb-0.5">
-            Investície ({horizonYears} r)
-          </div>
-          <div className="font-bold text-blue-400 tabular-nums">
-            {formatCurrency(result.finalInvestValue)}
-          </div>
-        </div>
-        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-red-500/20">
-          <div className="text-slate-400 mb-0.5">Zostatok dlhov</div>
-          <div className="font-bold text-red-400 tabular-nums">
-            {formatCurrency(result.finalDebtBalance)}
-          </div>
-        </div>
-        <div className="p-2 rounded bg-slate-800/50 ring-1 ring-emerald-500/20">
-          <div className="text-slate-400 mb-0.5">Čistý majetok</div>
-          <div className="font-bold text-emerald-400 tabular-nums">
-            {formatCurrency(result.finalInvestValue - result.finalDebtBalance)}
-          </div>
-        </div>
-      </div>
-
       {/* Crossover info */}
       {crossoverYear !== null && (
         <div className="p-3 rounded-lg bg-emerald-900/20 ring-1 ring-emerald-500/30 text-sm">
@@ -228,21 +204,52 @@ export function ProjectionChart({
               width={60}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "#1e293b",
-                border: "1px solid #475569",
-                borderRadius: "8px",
-                fontSize: "12px",
+              content={(props) => {
+                const { active, payload, label } = props;
+                if (!active || !payload || !payload.length) return null;
+
+                const data = payload[0].payload;
+                const rok = data.year;
+                const očakávanýMajetok = data.čistý;
+
+                // Vypočítaj celkový vklad (lump sum + mesačné vklady * roky * 12)
+                const celkovýVklad = lumpSumEur + monthlyVklad * rok * 12;
+                const zisk = očakávanýMajetok - celkovýVklad;
+
+                return (
+                  <div
+                    style={{
+                      backgroundColor: "#1e293b",
+                      border: "1px solid #475569",
+                      borderRadius: "8px",
+                      padding: "8px 10px",
+                      fontSize: "12px",
+                    }}
+                  >
+                    <div style={{ fontWeight: "bold", marginBottom: "4px" }}>
+                      Rok {rok.toFixed(1)}
+                    </div>
+                    <div style={{ color: "#10b981", marginBottom: "2px" }}>
+                      Zisk: {formatCurrency(zisk)}
+                    </div>
+                    <div style={{ color: "#34d399" }}>
+                      Očakávaný majetok: {formatCurrency(očakávanýMajetok)}
+                    </div>
+                    {!hideDebts && data.dlhy > 0 && (
+                      <div style={{ color: "#ef4444", marginTop: "2px" }}>
+                        Dlhy: {formatCurrency(data.dlhy)}
+                      </div>
+                    )}
+                  </div>
+                );
               }}
-              formatter={(val: number) => formatCurrency(val)}
-              labelFormatter={(year: number) => `Rok ${year.toFixed(1)}`}
             />
             <Legend
               wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
               verticalAlign="bottom"
             />
 
-            {/* Investičná krivka (modrá - zmenené z zelenej pre lepšiu vizuálnu hierarchiu) */}
+            {/* Investičná krivka (modrá - úplne skrytá aj z legendy) */}
             <Line
               type="monotone"
               dataKey="investície"
@@ -251,6 +258,8 @@ export function ProjectionChart({
               name="Investície (rast)"
               dot={false}
               isAnimationActive={false}
+              hide={true}
+              legendType="none"
             />
 
             {/* Dlhová krivka (červená) - skryť v BASIC režime */}
@@ -266,13 +275,13 @@ export function ProjectionChart({
               />
             )}
 
-            {/* Čistý majetok (zelená - Net Worth) */}
+            {/* Očakávaný majetok (zelená) */}
             <Line
               type="monotone"
               dataKey="čistý"
               stroke="#10b981"
               strokeWidth={2.5}
-              name="Čistý majetok"
+              name="Očakávaný majetok"
               dot={false}
               isAnimationActive={false}
               strokeDasharray="0"
@@ -317,14 +326,14 @@ export function ProjectionChart({
       <div
         className="sr-only"
         role="img"
-        aria-label={`Graf projekcie investícií, dlhov a čistého majetku. ${
+        aria-label={`Graf projekcie investícií, dlhov a očakávaného majetku. ${
           crossoverYear !== null
             ? `Bod prelomu nastáva po ${crossoverYear.toFixed(1)} rokoch.`
             : "Investície neprekročia dlhy v tomto horizonte."
         }`}
       >
         Graf zobrazuje rast investícií (modrá čiara), klesajúci zostatok dlhov
-        (červená čiara) a čistý majetok (zelená čiara) počas {horizonYears}{" "}
+        (červená čiara) a očakávaný majetok (zelená čiara) počas {horizonYears}{" "}
         rokov.
         {crossoverYear !== null &&
           ` Investície prekročia dlhy v roku ${crossoverCalendarYear}.`}

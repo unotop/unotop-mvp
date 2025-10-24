@@ -57,7 +57,7 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
   const goalCtl = useUncontrolledValueInput({
     initial: goalAssetsEur,
     parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
+    clamp: (n) => Math.max(0, Math.min(n, 100_000_000_000)), // Max 100 miliárd
     commit: (n) => {
       setGoalAssetsEur(n);
       const cur = readV3();

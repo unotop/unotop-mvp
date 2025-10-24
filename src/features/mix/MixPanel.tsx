@@ -23,11 +23,11 @@ const ASSETS: AssetDef[] = [
   { key: "gold", label: "Zlato (fyzické)" },
   { key: "dyn", label: "Dynamické riadenie" },
   { key: "etf", label: "ETF (svet – aktívne)" },
-  { key: "bonds", label: "Garantovaný dlhopis 7,5% p.a." },
+  { key: "bonds", label: "Garantovaný dlhopis 7,5% p.a. (5r)" },
+  { key: "bond3y9", label: "Dlhopis 9% p.a. (3r, mesačný CF)" },
   { key: "cash", label: "Hotovosť/rezerva" },
   { key: "crypto", label: "Krypto (BTC/ETH)" },
   { key: "real", label: "Reality (komerčné)" },
-  { key: "other", label: "Ostatné" },
 ];
 
 export const MixPanel: React.FC<{
@@ -48,11 +48,11 @@ export const MixPanel: React.FC<{
             gold: 5,
             dyn: 0,
             etf: 60,
-            bonds: 20,
+            bonds: 15,
+            bond3y9: 5,
             cash: 5,
             crypto: 5,
             real: 5,
-            other: 0,
           };
           const merged: MixItem[] = [];
           const keys: AssetKey[] = [
@@ -60,10 +60,10 @@ export const MixPanel: React.FC<{
             "dyn",
             "etf",
             "bonds",
+            "bond3y9",
             "cash",
             "crypto",
             "real",
-            "other",
           ];
           for (const k of keys) {
             const found = stored.find((m: any) => m.key === k);
@@ -79,11 +79,11 @@ export const MixPanel: React.FC<{
       { key: "gold", pct: 5 },
       { key: "dyn", pct: 0 },
       { key: "etf", pct: 60 },
-      { key: "bonds", pct: 20 },
+      { key: "bonds", pct: 15 },
+      { key: "bond3y9", pct: 5 },
       { key: "cash", pct: 5 },
       { key: "crypto", pct: 5 },
       { key: "real", pct: 5 },
-      { key: "other", pct: 0 },
     ];
   });
 
@@ -141,11 +141,11 @@ export const MixPanel: React.FC<{
                 gold: 5,
                 dyn: 0,
                 etf: 60,
-                bonds: 20,
+                bonds: 15,
+                bond3y9: 5,
                 cash: 5,
                 crypto: 5,
                 real: 5,
-                other: 0,
               };
               const merged: MixItem[] = [];
               const keys: AssetKey[] = [
@@ -153,10 +153,10 @@ export const MixPanel: React.FC<{
                 "dyn",
                 "etf",
                 "bonds",
+                "bond3y9",
                 "cash",
                 "crypto",
                 "real",
-                "other",
               ];
               for (const k of keys) {
                 const found = stored.find((m: any) => m.key === k);
@@ -178,10 +178,10 @@ export const MixPanel: React.FC<{
   const dynPct = mix.find((m) => m.key === "dyn")?.pct || 0;
   const etfPct = mix.find((m) => m.key === "etf")?.pct || 0;
   const bondsPct = mix.find((m) => m.key === "bonds")?.pct || 0;
+  const bond3y9Pct = mix.find((m) => m.key === "bond3y9")?.pct || 0;
   const cashPct = mix.find((m) => m.key === "cash")?.pct || 0;
   const cryptoPct = mix.find((m) => m.key === "crypto")?.pct || 0;
   const realPct = mix.find((m) => m.key === "real")?.pct || 0;
-  const otherPct = mix.find((m) => m.key === "other")?.pct || 0;
 
   const goldCtl = useUncontrolledValueInput({
     initial: goldPct,
@@ -225,11 +225,11 @@ export const MixPanel: React.FC<{
     clamp: (n) => Math.max(0, Math.min(100, n)),
     commit: (n) => commitAsset("real", n),
   });
-  const otherCtl = useUncontrolledValueInput({
-    initial: otherPct,
+  const bond3y9Ctl = useUncontrolledValueInput({
+    initial: bond3y9Pct,
     parse: (r) => Number(r.replace(",", ".")) || 0,
     clamp: (n) => Math.max(0, Math.min(100, n)),
-    commit: (n) => commitAsset("other", n),
+    commit: (n) => commitAsset("bond3y9", n),
   });
 
   const sum = mix.reduce((a, b) => a + b.pct, 0);
@@ -505,14 +505,14 @@ export const MixPanel: React.FC<{
           controller={realCtl}
           onCommit={(pct) => commitAsset("real", pct)}
         />
-        {/* Other (PRO only) */}
+        {/* Dlhopis 3r/9% (PRO only) */}
         {mode === "PRO" && (
           <AssetSlider
-            assetKey="other"
-            pct={otherPct}
+            assetKey="bond3y9"
+            pct={bond3y9Pct}
             sum={sum}
-            controller={otherCtl}
-            onCommit={(pct) => commitAsset("other", pct)}
+            controller={bond3y9Ctl}
+            onCommit={(pct) => commitAsset("bond3y9", pct)}
           />
         )}
       </div>

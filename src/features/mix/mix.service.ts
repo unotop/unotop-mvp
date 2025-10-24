@@ -1,4 +1,4 @@
-export type MixItem = { key: 'gold'|'dyn'|'etf'|'bonds'|'cash'|'crypto'|'real'|'other'; pct: number };
+export type MixItem = { key: 'gold'|'dyn'|'etf'|'bonds'|'cash'|'crypto'|'real'|'bond3y9'; pct: number };
 
 export function sum(list: MixItem[]) { return +list.reduce((a,b)=>a+b.pct,0).toFixed(2); }
 

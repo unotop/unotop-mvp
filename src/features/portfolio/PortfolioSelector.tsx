@@ -10,7 +10,9 @@ import {
   PORTFOLIO_PRESETS,
   adjustPresetForProfile,
   validatePresetRisk,
+  getAdjustedPreset,
   type PortfolioPreset,
+  type ProfileForAdjustments,
 } from "./presets";
 import { writeV3, readV3 } from "../../persist/v3";
 import {
@@ -104,28 +106,70 @@ export default function PortfolioSelector() {
   }, [selectedPreset]);
 
   /**
-   * Handler pre výber presetu
+   * Check či je preset dostupný (blokované pri nízkych vkladoch)
+   */
+  const isPresetAvailable = (presetId: RiskPref): boolean => {
+    const v3 = readV3();
+    const profile = v3.profile || {};
+    const lumpSumEur = profile.lumpSumEur || 0;
+    const monthlyEur = (v3 as any).monthly || 0;
+    const totalFirstYear = lumpSumEur + monthlyEur * 12;
+
+    // Blokuj konzervativny/vyvazeny pri < 2000 EUR/rok
+    if (
+      totalFirstYear < 2000 &&
+      (presetId === "konzervativny" || presetId === "vyvazeny")
+    ) {
+      return false;
+    }
+
+    return true;
+  };
+
+  /**
+   * Handler pre výber presetu - aplikuje VŠETKY adjustments (lump/monthly/cash/bonds)
    */
   const handleSelectPreset = (preset: PortfolioPreset) => {
     const v3 = readV3();
     const profile = v3.profile || {};
 
-    // Aplikuj reality filter
-    const adjustedMix = adjustPresetForProfile(preset, {
-      monthlyIncome: profile.monthlyIncome || 0,
+    // Vytvor profile object pre getAdjustedPreset
+    const profileForAdj: ProfileForAdjustments = {
       lumpSumEur: profile.lumpSumEur || 0,
-    });
+      monthlyEur: (v3 as any).monthly || 0,
+      horizonYears: profile.horizonYears || 10,
+      monthlyIncome: profile.monthlyIncome || 0,
+      fixedExpenses: profile.fixedExp || 0,
+      variableExpenses: profile.varExp || 0,
+      reserveEur: profile.reserveEur || 0,
+      reserveMonths: profile.reserveMonths || 0,
+    };
 
-    // Validácia: over risk cap
+    // Aplikuj všetky adjustments (lump sum scaling, monthly capping, cash reserve, bond minimum)
+    const {
+      preset: adjustedPreset,
+      warnings,
+      info,
+    } = getAdjustedPreset(preset, profileForAdj);
+
+    const adjustedMix = adjustedPreset.mix;
+
+    // Validácia: over risk cap + low investment warning
     const risk = riskScore0to10(adjustedMix, preset.id);
     const cap = getRiskCap(preset.id);
-    const validation = validatePresetRisk(adjustedMix, preset.id, risk, cap);
+    const validation = validatePresetRisk(
+      adjustedMix,
+      preset.id,
+      risk,
+      cap,
+      profileForAdj.lumpSumEur,
+      profileForAdj.monthlyEur
+    );
 
     if (!validation.valid) {
       console.error(
         `[PortfolioSelector] Validation failed: ${validation.message}`
       );
-      // V produkcii: zobraziť toast/alert pre užívateľa
       alert(`⚠️ ${validation.message}`);
       return;
     }
@@ -133,27 +177,28 @@ export default function PortfolioSelector() {
     // Vypočítaj expected yield pre feedback
     const expectedYield = approxYieldAnnualFromMix(adjustedMix, preset.id);
 
-    console.log(`[PortfolioSelector] Aplikujem ${preset.label} profil:`, {
-      risk: risk.toFixed(2),
-      cap,
-      expectedYield: (expectedYield * 100).toFixed(1) + "%",
-    });
+    console.log(
+      `[PortfolioSelector] Aplikujem ${preset.label} profil s adjustments:`,
+      {
+        risk: risk.toFixed(2),
+        cap,
+        expectedYield: (expectedYield * 100).toFixed(1) + "%",
+        warnings,
+      }
+    );
 
-    // Aplikuj mix do persist - PRESERVE všetky existujúce profile hodnoty
-    const currentV3 = readV3(); // Fresh read pred zápisom
+    // Aplikuj adjusted mix do persist
+    const currentV3 = readV3();
     writeV3({
       mix: adjustedMix,
       profile: {
         ...(currentV3.profile || {}),
-        riskPref: preset.id, // Uložím preferenčný profil
+        riskPref: preset.id,
       } as any,
     });
 
     // UI feedback
     setSelectedPreset(preset.id);
-
-    // Optional: toast notification
-    // toast.success(`✅ Aplikovaný ${preset.label} profil!`);
   };
 
   return (
@@ -181,20 +226,27 @@ export default function PortfolioSelector() {
         {PORTFOLIO_PRESETS.map((preset) => {
           const colors = COLOR_CLASSES[preset.color];
           const isSelected = selectedPreset === preset.id;
+          const isAvailable = isPresetAvailable(preset.id);
 
           return (
             <button
               key={preset.id}
               onClick={() => handleSelectPreset(preset)}
+              disabled={!isAvailable}
               className={`
                 group relative p-6 rounded-2xl border-2 transition-all duration-200
                 ${colors.bg} ${colors.border} ${colors.borderHover}
-                hover:shadow-lg hover:-translate-y-1
+                ${
+                  isAvailable
+                    ? "hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+                    : "opacity-40 cursor-not-allowed"
+                }
                 focus:outline-none focus:ring-2 ${colors.ring} focus:ring-offset-2
                 ${isSelected ? "ring-2 " + colors.ring : ""}
               `}
               aria-pressed={isSelected}
-              aria-label={`${preset.label} profil: ${preset.description}`}
+              aria-disabled={!isAvailable}
+              aria-label={`${preset.label} profil: ${preset.description}${!isAvailable ? " (nedostupný pri nízkych vkladoch)" : ""}`}
             >
               {/* Ikona */}
               <div
@@ -223,6 +275,19 @@ export default function PortfolioSelector() {
                   </span>
                 </div>
               </div>
+
+              {/* Nedostupné badge */}
+              {!isAvailable && (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 rounded-2xl">
+                  <div className="text-center px-4">
+                    <div className="text-2xl mb-2">🔒</div>
+                    <p className="text-sm font-semibold text-white mb-1">
+                      Nedostupné
+                    </p>
+                    <p className="text-xs text-slate-300">Min. 2 000 EUR/rok</p>
+                  </div>
+                </div>
+              )}
 
               {/* Selected indicator */}
               {isSelected && (

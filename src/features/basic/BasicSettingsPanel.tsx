@@ -32,6 +32,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     "individual" | "family" | "firm"
   >(() => (seed.profile?.clientType as any) || "individual");
 
+  // Warning modal pre zmenu profilu
+  const [showProfileWarning, setShowProfileWarning] = React.useState(false);
+  const [pendingClientType, setPendingClientType] = React.useState<
+    "individual" | "family" | "firm" | null
+  >(null);
+
   // Cashflow
   const [monthlyIncome, setMonthlyIncome] = React.useState(
     () => (seed.profile?.monthlyIncome as any) || 0
@@ -59,8 +65,57 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
 
   // Persist helpers
   const persistClientType = (value: "individual" | "family" | "firm") => {
+    // Ak už má nastavené hodnoty, zobraz warning
+    const hasSettings =
+      monthlyIncome > 0 ||
+      lumpSumEur > 0 ||
+      monthlyVklad > 0 ||
+      goalAssetsEur > 0 ||
+      horizonYears !== 10;
+
+    if (hasSettings && value !== clientType) {
+      setPendingClientType(value);
+      setShowProfileWarning(true);
+      return;
+    }
+
+    // Priamy presun bez warningu
     setClientType(value);
     writeV3({ profile: { clientType: value } });
+  };
+
+  const confirmProfileChange = () => {
+    if (!pendingClientType) return;
+
+    // Reset všetkých hodnôt
+    setMonthlyIncome(0);
+    setFixedExp(0);
+    setVarExp(0);
+    setLumpSumEur(0);
+    setMonthlyVklad(0);
+    setHorizonYears(10);
+    setGoalAssetsEur(0);
+
+    // Aktualizuj clientType
+    setClientType(pendingClientType);
+
+    // Persist reset
+    writeV3({
+      profile: {
+        clientType: pendingClientType,
+        monthlyIncome: 0,
+        fixedExp: 0,
+        varExp: 0,
+        lumpSumEur: 0,
+        horizonYears: 10,
+        goalAssetsEur: 0,
+      } as any,
+      monthly: 0,
+    });
+
+    // Zatvor modal
+    setShowProfileWarning(false);
+    setPendingClientType(null);
   };
 
   // Uncontrolled hooks pre numerické inputy
@@ -135,7 +190,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const goalCtl = useUncontrolledValueInput({
     initial: goalAssetsEur,
     parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
+    clamp: (n) => Math.max(0, Math.min(n, 100_000_000_000)), // Max 100 miliárd
     commit: (n) => {
       setGoalAssetsEur(n);
       const cur = readV3();
@@ -252,7 +307,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
           {/* 2. Cashflow + Investície (2-column grid na desktop) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Ľavý stĺpec: Cashflow */}
-            <div className="space-y-3">
+            <div id="sec1" className="space-y-3">
               <h3 className="text-sm font-semibold text-slate-300">Cashflow</h3>
               <div className="grid grid-cols-1 gap-3">
                 {/* Mesačný príjem: textbox + slider */}
@@ -298,7 +353,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       className="flex-1"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
-                      {monthlyIncome} €
+                      {monthlyIncome.toLocaleString("sk-SK")} €
                     </span>
                   </div>
                 </div>
@@ -352,7 +407,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
-                      {fixedExp} €
+                      {fixedExp.toLocaleString("sk-SK")} €
                     </span>
                   </div>
                 </div>
@@ -406,7 +461,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
-                      {varExp} €
+                      {varExp.toLocaleString("sk-SK")} €
                     </span>
                   </div>
                 </div>
@@ -449,7 +504,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       Voľné prostriedky
                     </div>
                     <div className="text-lg tabular-nums font-bold">
-                      {freeCash.toFixed(0)} €/mes
+                      {Math.round(freeCash).toLocaleString("sk-SK")} €/mes
                     </div>
                   </div>
                 </div>
@@ -458,7 +513,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
             </div>
 
             {/* Pravý stĺpec: Investičné nastavenia */}
-            <div className="space-y-3">
+            <div id="sec2" className="space-y-3">
               <h3 className="text-sm font-semibold text-slate-300">
                 Investičné nastavenia
                 {!validationState?.cashflowComplete && (
@@ -550,7 +605,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
-                      {monthlyVklad} €
+                      {monthlyVklad.toLocaleString("sk-SK")} €
                     </span>
                   </div>
                   {validationState?.isLosingMoney && (
@@ -626,6 +681,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                     Cieľ majetku
+                    {validationState?.cashflowComplete &&
+                      goalAssetsEur === 0 && (
+                        <span className="ml-2 text-xs font-normal text-amber-300">
+                          (potrebné vyplniť)
+                        </span>
+                      )}
                   </label>
                   <input
                     id="goal-basic"
@@ -650,7 +711,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       Konečná hodnota (za {horizonYears}r)
                     </div>
                     <div className="text-lg tabular-nums font-bold">
-                      {fv.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ")} €
+                      {Math.round(fv).toLocaleString("sk-SK")} €
                     </div>
                   </div>
                 </div>
@@ -660,6 +721,62 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
           </div>
           {/* Koniec 2-column grid */}
         </section>
+      )}
+
+      {/* Warning modal pri zmene profilu */}
+      {showProfileWarning && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          onClick={() => {
+            setShowProfileWarning(false);
+            setPendingClientType(null);
+          }}
+        >
+          <div
+            className="bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-warning-title"
+          >
+            <div className="flex items-start gap-3">
+              <span className="text-3xl">⚠️</span>
+              <div className="flex-1">
+                <h3
+                  id="profile-warning-title"
+                  className="text-lg font-bold text-white mb-2"
+                >
+                  Zmena profilu klienta
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  Vaše doterajšie nastavenie bude pri zmene profilu{" "}
+                  <strong>resetované</strong>. Všetky vyplnené hodnoty (príjem,
+                  výdavky, investície) sa vymažú. Naozaj si želáte pokračovať?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProfileWarning(false);
+                  setPendingClientType(null);
+                }}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-slate-700 text-white font-medium hover:bg-slate-600 transition-colors"
+              >
+                Zrušiť
+              </button>
+              <button
+                type="button"
+                onClick={confirmProfileChange}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-500 transition-colors"
+              >
+                Áno, resetovať
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -81,14 +81,14 @@ export const ASSET_STYLES: Record<AssetKey, AssetStyle> = {
     icon: "🏢",
     hoverShadow: "hover:shadow-orange-500/30",
   },
-  other: {
-    key: "other",
-    label: "Ostatné",
-    color: "zinc",
-    bgGradient: "from-zinc-500/20 to-zinc-600/10",
-    ringColor: "ring-zinc-500/40 hover:ring-zinc-500/60",
-    icon: "📦",
-    hoverShadow: "hover:shadow-zinc-500/30",
+  bond3y9: {
+    key: "bond3y9",
+    label: "Dlhopis 9% p.a. (3r, mesačný CF)",
+    color: "teal",
+    bgGradient: "from-teal-500/20 to-cyan-600/10",
+    ringColor: "ring-teal-500/40 hover:ring-teal-500/60",
+    icon: "�",
+    hoverShadow: "hover:shadow-teal-500/30",
   },
 };
 

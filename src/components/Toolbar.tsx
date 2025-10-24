@@ -7,6 +7,7 @@ interface ToolbarProps {
   onReset?: () => void;
   onShare?: () => void;
   canShare?: boolean;
+  onTourRestart?: () => void;
 }
 
 export default function Toolbar({
@@ -16,6 +17,7 @@ export default function Toolbar({
   onReset,
   onShare,
   canShare,
+  onTourRestart,
 }: ToolbarProps) {
   const [showResetConfirm, setShowResetConfirm] = React.useState(false);
 
@@ -104,6 +106,22 @@ export default function Toolbar({
               />
             </svg>
           </button>
+
+          {/* Onboarding Tour Button */}
+          {onTourRestart && (
+            <button
+              type="button"
+              onClick={onTourRestart}
+              className="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0"
+              aria-label="Spustiť sprievodcu"
+              title="Zobraziť návod na použitie"
+            >
+              <span className="text-xs sm:text-sm" aria-hidden="true">
+                🎓
+              </span>
+              <span className="hidden sm:inline">Sprievodca</span>
+            </button>
+          )}
 
           {/* Share Button (Odoslať projekciu) */}
           {onShare && (

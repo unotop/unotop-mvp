@@ -22,10 +22,10 @@ const ASSET_YIELDS: Record<AssetKey, { konzervativny: number; vyvazeny: number; 
     vyvazeny: Math.pow(1 + 0.03, 12) - 1,      // ~42.58 %
     rastovy: Math.pow(1 + 0.04, 12) - 1,       // ~60.10 %
   },
-  bonds: { konzervativny: 0.075, vyvazeny: 0.075, rastovy: 0.075 }, // Garantovaný 7.5 %
+  bonds: { konzervativny: 0.075, vyvazeny: 0.075, rastovy: 0.075 }, // Garantovaný 7.5 % (5r)
+  bond3y9: { konzervativny: 0.09, vyvazeny: 0.09, rastovy: 0.09 }, // Dlhopis 3r/9% (mesačný cashflow)
   cash: { konzervativny: 0.0, vyvazeny: 0.0, rastovy: 0.0 },
   real: { konzervativny: 0.075, vyvazeny: 0.087, rastovy: 0.095 },
-  other: { konzervativny: 0.04, vyvazeny: 0.05, rastovy: 0.06 }, // Default conservative estimate
 };
 
 /**
@@ -38,9 +38,9 @@ const ASSET_RISKS: Record<AssetKey, { konzervativny: number; vyvazeny: number; r
   crypto: { konzervativny: 9, vyvazeny: 9, rastovy: 9 },
   dyn: { konzervativny: 8, vyvazeny: 9, rastovy: 9 },
   bonds: { konzervativny: 2, vyvazeny: 2, rastovy: 2 },
+  bond3y9: { konzervativny: 2, vyvazeny: 2, rastovy: 2 }, // Rovnaké riziko ako bonds
   cash: { konzervativny: 2, vyvazeny: 2, rastovy: 2 },
   real: { konzervativny: 4, vyvazeny: 4, rastovy: 5 },
-  other: { konzervativny: 3, vyvazeny: 4, rastovy: 5 },
 };
 
 /**

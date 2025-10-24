@@ -35,14 +35,14 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "blue",
     description: "Nízke riziko, stabilný rast. Vhodné pre začiatočníkov a konzervatívnych investorov.",
     mix: [
-      { key: "gold", pct: 21 },    // +1% z other (stabilita)
-      { key: "etf", pct: 21 },     // +1% z other
-      { key: "bonds", pct: 33 },   // +1% z other (hlavná ochrana)
-      { key: "dyn", pct: 8 },      // Bez zmeny
-      { key: "cash", pct: 12 },    // Bez zmeny
-      { key: "crypto", pct: 0 },   // Zero volatilita
-      { key: "real", pct: 5 },     // Bez zmeny
-      { key: "other", pct: 0 },    // VYPNUTÉ (nedefinované)
+      { key: "gold", pct: 20 },
+      { key: "etf", pct: 20 },
+      { key: "bonds", pct: 17 },      // 50% z pôvodných 34%
+      { key: "bond3y9", pct: 17 },    // 50% z pôvodných 34% (mesačný CF)
+      { key: "dyn", pct: 8 },
+      { key: "cash", pct: 12 },
+      { key: "crypto", pct: 0 },
+      { key: "real", pct: 6 },
     ],
     targetRisk: { min: 3.0, max: 4.0 },
   },
@@ -53,14 +53,14 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "amber",
     description: "Vyvážený pomer rizika a výnosu. Vhodné pre väčšinu investorov s dlhodobým horizontom.",
     mix: [
-      { key: "gold", pct: 14 },    // +2% z other (stabilizátor)
-      { key: "etf", pct: 30 },     // +2% z other
-      { key: "bonds", pct: 20 },   // +2% z other (ochrana)
-      { key: "dyn", pct: 18 },     // Bez zmeny (11-21%)
-      { key: "cash", pct: 9 },     // Bez zmeny
-      { key: "crypto", pct: 4 },   // Bez zmeny
-      { key: "real", pct: 5 },     // Bez zmeny
-      { key: "other", pct: 0 },    // VYPNUTÉ (nedefinované)
+      { key: "gold", pct: 14 },    
+      { key: "etf", pct: 32 },     
+      { key: "bonds", pct: 10 },    // 50% z pôvodných 20%
+      { key: "bond3y9", pct: 10 },  // 50% z pôvodných 20% (mesačný CF)
+      { key: "dyn", pct: 18 },     
+      { key: "cash", pct: 9 },     
+      { key: "crypto", pct: 4 },   
+      { key: "real", pct: 5 },     
     ],
     targetRisk: { min: 4.5, max: 6.0 },
   },
@@ -71,14 +71,14 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "green",
     description: "Vyššie riziko, maximálny potenciálny výnos. Vhodné pre skúsených investorov s vysokou toleranciou rizika.",
     mix: [
-      { key: "gold", pct: 13 },    // +1% z other (stabilita)
-      { key: "etf", pct: 32 },     // +2% z other
-      { key: "bonds", pct: 13 },   // +1% z other (ochrana)
-      { key: "dyn", pct: 21 },     // +1% z other (21-31%)
-      { key: "cash", pct: 6 },     // Bez zmeny
-      { key: "crypto", pct: 7 },   // Bez zmeny
-      { key: "real", pct: 8 },     // Bez zmeny
-      { key: "other", pct: 0 },    // VYPNUTÉ (nedefinované)
+      { key: "gold", pct: 13 },    
+      { key: "etf", pct: 35 },     
+      { key: "bonds", pct: 6.5 },   // 50% z pôvodných 13%
+      { key: "bond3y9", pct: 6.5 }, // 50% z pôvodných 13% (mesačný CF)
+      { key: "dyn", pct: 21 },     
+      { key: "cash", pct: 6 },     
+      { key: "crypto", pct: 7 },   
+      { key: "real", pct: 8 },     
     ],
     targetRisk: { min: 6.5, max: 7.5 },
   },
@@ -135,16 +135,29 @@ export function adjustPresetForProfile(
  * @param riskPref - Preferencia rizika
  * @param riskScore - Vypočítané riziko
  * @param riskCap - Risk cap pre profil
+ * @param lumpSumEur - Jednorazová investícia (optional, pre low-investment check)
+ * @param monthlyEur - Mesačný vklad (optional, pre low-investment check)
  * @returns true ak je valid, inak false
  */
 export function validatePresetRisk(
   mix: MixItem[],
   riskPref: RiskPref,
   riskScore: number,
-  riskCap: number
-): { valid: boolean; message?: string } {
-  // Over diverzifikáciu NAJPRV (pred risk cap)
-  // Žiadne aktívum > 40% okrem bonds v konzervatívnom
+  riskCap: number,
+  lumpSumEur = 0,
+  monthlyEur = 0
+): { valid: boolean; message?: string; isWarning?: boolean } {
+  // === CHECK 1: Nízke vklady (hard block pre konzervativny/vyvazeny) ===
+  const totalFirstYear = lumpSumEur + monthlyEur * 12;
+  
+  if (totalFirstYear < 2000 && (riskPref === "konzervativny" || riskPref === "vyvazeny")) {
+    return {
+      valid: false,  // Hard block
+      message: `Pri investícii ${totalFirstYear.toLocaleString("sk-SK")} EUR/rok nie je možné efektívne diverzifikovať portfólio. Vyberte rastový profil alebo zvýšte vklady na min. 2 000 EUR/rok.`,
+    };
+  }
+
+  // === CHECK 2: Diverzifikácia (žiadne aktívum > 40%) ===
   for (const item of mix) {
     if (item.key === "bonds" && riskPref === "konzervativny") {
       // Výnimka: bonds môže byť až 30% v konzervatívnom
@@ -182,3 +195,10 @@ export function validatePresetRisk(
 
   return { valid: true };
 }
+
+// ============================================================================
+// DYNAMIC ADJUSTMENTS (Lump sum / Monthly / Cash / Bonds scaling)
+// ============================================================================
+
+export type { ProfileForAdjustments, AdjustmentWarning, AdjustmentResult } from "./mixAdjustments";
+export { getAdjustedPreset, getAdjustedMix } from "./mixAdjustments";

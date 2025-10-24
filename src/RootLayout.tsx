@@ -55,19 +55,18 @@ export default function RootLayout() {
       try {
         const seed = readV3();
         const newMode = (seed.profile?.modeUi as any) || "BASIC";
-        console.log("[RootLayout] Mode check:", {
-          current: modeUi,
-          detected: newMode,
-        });
         // Len ak sa MODE skutočne zmenil (nie každá zmena v localStorage)
-        setModeUi((prevMode) => (prevMode !== newMode ? newMode : prevMode));
+        if (modeUi !== newMode) {
+          console.log("[RootLayout] Mode changed:", modeUi, "→", newMode);
+          setModeUi(newMode);
+        }
       } catch (err) {
         console.error("[RootLayout] handleStorageChange error:", err);
       }
     };
 
-    // Poll localStorage every 100ms (simple & reliable)
-    const interval = setInterval(handleStorageChange, 100);
+    // Poll localStorage every 500ms (menej agresívne)
+    const interval = setInterval(handleStorageChange, 500);
 
     // Also listen to storage events (cross-tab sync)
     window.addEventListener("storage", handleStorageChange);
@@ -76,7 +75,7 @@ export default function RootLayout() {
       clearInterval(interval);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [modeUi]);
 
   return (
     <>
