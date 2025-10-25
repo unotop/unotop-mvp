@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.6.3 (2025-10-25)
+
+**PR-9: Warning System – Non-blocking alerts with chips & toasts**
+
+- **Removed window.alert()**: All 3 blocking modal alerts replaced with WarningCenter system
+- **WarningCenter infrastructure**:
+  - Singleton pattern with push/dismiss/subscribe API
+  - Auto-dismiss after 6s for all warnings
+  - Dedupe mechanism (5s window) to prevent spam
+  - Periodic cleanup (30s) to prevent memory leaks
+- **UI components**:
+  - `WarningChips`: Inline display under MixPanel for mix/risk scope warnings
+  - `ToastStack`: Top-right fixed toasts for global scope messages
+  - Color-coded: blue (info), amber (warning), red (error)
+  - Icons: ℹ️ / ⚠️ / ⛔
+- **Accessibility**:
+  - `aria-live`: polite for chips, assertive for error toasts
+  - `role="status"` for status updates
+  - Keyboard navigation: Esc dismisses latest toast
+- **Integration**:
+  - Risk validation errors (PortfolioSelector) → red error chips
+  - PRO mode info (BasicSettingsPanel) → blue info toasts
+  - Rate limit warnings (BasicLayout) → amber warning toasts with dedupe
+- **Tests**: 2 unit tests (WarningCenter), 4 integration tests (warnings), 17 critical tests PASS
+- **Resolves**: Blocking alert modals removed, improved UX with non-intrusive notifications
+
 ## v0.6.2 (2025-10-25)
 
 **PR-8: Adaptive Policy – stage-aware caps & adaptive risk limits**

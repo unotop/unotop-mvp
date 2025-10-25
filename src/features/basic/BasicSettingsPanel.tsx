@@ -5,6 +5,7 @@ import { calculateFutureValue } from "../../engine/calculations";
 import { approxYieldAnnualFromMix, type RiskPref } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
 import type { ValidationState } from "../../utils/validation";
+import { WarningCenter } from "../ui/warnings/WarningCenter";
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -494,7 +495,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         "• Pridávať hypotéky a spotrebné úvery\n" +
                         "• Sledovať zostatok a splátky\n" +
                         "• Plánovať rýchlejšie splatenie";
-                      alert(message);
+                      WarningCenter.push({
+                        type: "info",
+                        message,
+                        scope: "global",
+                        dedupeKey: "pro-mode-info",
+                      });
                     }}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 transition-colors text-sm font-medium text-slate-200"
                   >

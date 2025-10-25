@@ -22,6 +22,7 @@ import {
 } from "../mix/assetModel";
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
+import { WarningCenter } from "../ui/warnings/WarningCenter";
 
 /**
  * Farebné Tailwind utility classy pre karty (LIGHT THEME - HIGH CONTRAST)
@@ -181,7 +182,12 @@ export default function PortfolioSelector() {
       console.error(
         `[PortfolioSelector] Validation failed: ${validation.message}`
       );
-      alert(`⚠️ ${validation.message}`);
+      WarningCenter.push({
+        type: "error",
+        message: validation.message || "Validácia zlyhala",
+        scope: "risk",
+        dedupeKey: "preset-validation",
+      });
       return;
     }
 

@@ -13,6 +13,7 @@ import { riskScore0to10, getRiskCap, type RiskPref } from "./assetModel";
 import { AssetSlider } from "./AssetSlider";
 import { ASSET_STYLES } from "./assetStyles";
 import { StatusChips, type StatusChip } from "./StatusChips";
+import { WarningChips } from "../ui/warnings/WarningChips";
 
 type AssetKey = MixItem["key"];
 interface AssetDef {
@@ -550,6 +551,9 @@ export const MixPanel: React.FC<{
             ⭐ Aplikovať odporúčaný mix portfólia
           </button>
         </div>
+
+        {/* Warning chips - inline display of mix/risk warnings */}
+        <WarningChips className="mt-3" />
 
         {/* PRO Actions - organized into logical groups */}
         {mode === "PRO" && (

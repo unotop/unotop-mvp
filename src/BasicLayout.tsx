@@ -40,6 +40,8 @@ import {
   getRemainingCooldown,
 } from "./utils/rate-limiter";
 import SubmissionWarningModal from "./components/SubmissionWarningModal";
+import { WarningCenter } from "./features/ui/warnings/WarningCenter";
+import { ToastStack } from "./features/ui/warnings/ToastStack";
 
 /**
  * BasicLayout - jednoduchá verzia pre nováčikov
@@ -644,6 +646,7 @@ export default function BasicLayout() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      <ToastStack />
       <Toolbar
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         modeUi={modeUi}
@@ -985,13 +988,19 @@ export default function BasicLayout() {
                     const cooldown = getRemainingCooldown();
 
                     if (cooldown > 0) {
-                      alert(
-                        `⏱️ Počkajte prosím ${cooldown}s pred ďalším odoslaním (ochrana proti spamu).`
-                      );
+                      WarningCenter.push({
+                        type: "warning",
+                        message: `⏱️ Počkajte prosím ${cooldown}s pred ďalším odoslaním (ochrana proti spamu).`,
+                        scope: "global",
+                        dedupeKey: "rate-limit-cooldown",
+                      });
                     } else {
-                      alert(
-                        `Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`
-                      );
+                      WarningCenter.push({
+                        type: "warning",
+                        message: `Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`,
+                        scope: "global",
+                        dedupeKey: "rate-limit-monthly",
+                      });
                     }
                     return;
                   }
