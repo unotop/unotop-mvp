@@ -95,7 +95,10 @@ export function MetricsSection({
         {/* 3 Scorecards (horizontal layout) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Scorecard: Riziko */}
-          <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+          <div
+            className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5 transition-all duration-300"
+            data-kpi-card
+          >
             <div className="text-xs text-slate-400 mb-1">Riziko (0–10)</div>
             <div className="text-lg font-bold tabular-nums">
               {!Array.isArray(mix) || mix.length === 0 ? (
@@ -112,8 +115,21 @@ export function MetricsSection({
           </div>
 
           {/* Scorecard: Výnos/rok */}
-          <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-            <div className="text-xs text-slate-400 mb-1">Výnos/rok (odhad)</div>
+          <div
+            className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5 transition-all duration-300"
+            data-kpi-card
+          >
+            <div className="text-xs text-slate-400 mb-1">
+              Modelový ročný výnos portfólia
+              <button
+                type="button"
+                className="ml-1 text-slate-500 hover:text-slate-300 transition-colors"
+                title="Výnos je modelový odhad zloženia aktív a profilu rizika; projekcia používa konzervatívne scenáre."
+                aria-label="Info o výnose"
+              >
+                ℹ️
+              </button>
+            </div>
             <div className="text-lg font-bold tabular-nums">
               {!Array.isArray(mix) || mix.length === 0
                 ? "– (mix nezadaný)"
@@ -122,7 +138,10 @@ export function MetricsSection({
           </div>
 
           {/* Scorecard: Progres k cieľu */}
-          <div className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+          <div
+            className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5 transition-all duration-300"
+            data-kpi-card
+          >
             <div className="text-xs text-slate-400 mb-1">Progres k cieľu</div>
             <div className="text-lg font-bold tabular-nums">
               {goalAssetsEur <= 0 ? (

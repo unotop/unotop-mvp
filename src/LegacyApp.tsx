@@ -1202,16 +1202,16 @@ export default function LegacyApp() {
         }
       />
 
-      {/* Share CTA - DISABLED v PRO režime (beta) */}
-      <section className="w-full min-w-0 rounded-2xl ring-1 ring-slate-700/50 bg-gradient-to-br from-slate-800/40 to-slate-900/20 p-4 md:p-5">
+      {/* Share CTA - aktivované v PRO režime (PR-7) */}
+      <section className="w-full min-w-0 rounded-2xl ring-1 ring-emerald-500/30 bg-gradient-to-br from-emerald-900/40 to-emerald-950/20 p-4 md:p-5">
         <div className="relative">
           <button
             ref={shareBtnRef}
             type="button"
-            disabled={true}
-            className="group relative w-full px-6 py-4 rounded-xl bg-slate-700/50 text-slate-400 font-semibold text-lg cursor-not-allowed opacity-60"
-            aria-label="Odoslanie je dočasne vypnuté v PRO režime"
-            title="Odoslanie projekcie je momentálne dostupné iba v BASIC režime"
+            disabled={false}
+            onClick={() => setShareOpen(true)}
+            className="group relative w-full px-6 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-lg shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+            aria-label="Odoslať projekciu"
           >
             <div className="relative flex items-center justify-center gap-3">
               <svg
@@ -1227,7 +1227,7 @@ export default function LegacyApp() {
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              <span>Odoslať agentovi</span>
+              <span>Odoslať projekciu</span>
               <svg
                 className="w-5 h-5 text-amber-400"
                 fill="none"
@@ -1244,7 +1244,7 @@ export default function LegacyApp() {
             </div>
           </button>
           <p className="mt-3 text-xs text-center text-slate-500">
-            💡 Odoslanie projekcie je dočasne dostupné iba v BASIC režime
+            💡 Po výbere investičného profilu budete môcť odoslať projekciu
           </p>
         </div>
       </section>
@@ -1419,7 +1419,7 @@ export default function LegacyApp() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
         >
           <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold">📧 Odoslať advisorovi</h2>
+            <h2 className="text-lg font-semibold">📧 Odoslať projekciu</h2>
 
             {/* Preview FV + Mix */}
             {(() => {

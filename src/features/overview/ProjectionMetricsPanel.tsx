@@ -31,7 +31,7 @@ export const ProjectionMetricsPanel: React.FC<ProjectionMetricsPanelProps> = ({
   const debts = (readV3().debts || []) as Debt[];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="metrics-root">
       {/* Hlavička */}
       <h2 className="text-lg font-bold text-slate-100 px-2">
         📈 Projekcia & Metriky

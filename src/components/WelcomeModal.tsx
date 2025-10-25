@@ -1,10 +1,13 @@
 import React from "react";
+import { readV3, writeV3 } from "../persist/v3";
 
 interface WelcomeModalProps {
   onClose: () => void;
 }
 
 export default function WelcomeModal({ onClose }: WelcomeModalProps) {
+  const [hideNext, setHideNext] = React.useState(false);
+
   React.useEffect(() => {
     // Lock scroll when modal is open
     document.body.style.overflow = "hidden";
@@ -12,6 +15,15 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
       document.body.style.overflow = "";
     };
   }, []);
+
+  const handleClose = () => {
+    if (hideNext) {
+      // Save preference to persist
+      const cur = readV3();
+      writeV3({ profile: { ...(cur.profile || {}), hideTour: true } as any });
+    }
+    onClose();
+  };
 
   return (
     <div
@@ -57,8 +69,35 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
             <Feature
               icon="🔒"
               title="Súkromie zaručené"
-              description="Všetky dáta sa ukladajú len vo vašom prehliadači. Žiadne servery, žiadne sledovanie."
+              description="Dáta ostávajú len v tvojom prehliadači. Iba pri odoslaní projekcie odošleme kontaktné údaje bezpečne cez EmailJS na účel spätného kontaktu."
             />
+            <div className="mt-2 pl-12">
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-400 hover:text-blue-300 underline"
+              >
+                Zásady ochrany súkromia
+              </a>
+            </div>
+          </div>
+
+          {/* Checkbox: Nezobrazovať nabudúce */}
+          <div className="flex items-center gap-2 px-4 py-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+            <input
+              type="checkbox"
+              id="hide-tour"
+              checked={hideNext}
+              onChange={(e) => setHideNext(e.target.checked)}
+              className="accent-emerald-500"
+            />
+            <label
+              htmlFor="hide-tour"
+              className="text-sm text-slate-300 cursor-pointer"
+            >
+              Nezobrazovať nabudúce
+            </label>
           </div>
 
           {/* Quick tips */}
@@ -87,7 +126,7 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
           {/* CTA Button */}
           <div className="flex justify-center pt-2 sm:pt-4">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-semibold rounded-xl shadow-lg hover:shadow-emerald-500/25 transition-all duration-200 hover:scale-105 active:scale-95 text-sm sm:text-base"
               autoFocus
             >
@@ -97,7 +136,9 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
 
           {/* Footer note */}
           <p className="text-[10px] sm:text-xs text-slate-500 text-center pt-2">
-            Toto okno sa zobrazuje iba pri prvom otvorení stránky.
+            {hideNext
+              ? "Sprievodca môžete znova spustiť v hornom menu"
+              : "Toto okno sa zobrazuje iba pri prvom otvorení stránky"}
           </p>
         </div>
       </div>

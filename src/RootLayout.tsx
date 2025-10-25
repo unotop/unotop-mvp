@@ -23,9 +23,14 @@ export default function RootLayout() {
     }
   });
 
-  // Welcome modal state (show only on first visit)
+  // Welcome modal state (show only on first visit OR if hideTour is not set)
   const [showWelcome, setShowWelcome] = React.useState<boolean>(() => {
     try {
+      // Check persist v3 first (hideTour flag)
+      const v3 = readV3();
+      if (v3.profile?.hideTour) return false;
+
+      // Fallback to old localStorage key
       return !localStorage.getItem(WELCOME_STORAGE_KEY);
     } catch {
       return false; // If localStorage fails, don't show modal

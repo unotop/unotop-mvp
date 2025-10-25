@@ -35,6 +35,15 @@ export interface ProjectionData {
     mix: Array<{ key: string; pct: number }>;
     deeplink: string;
   };
+  metadata?: {
+    riskPref?: string;
+    clientType?: string;
+    version?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    referenceCode?: string;
+  };
   recipients: string[];
 }
 
@@ -62,6 +71,15 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
     progress: data.projection.progressPercent,
     yield: (data.projection.yieldAnnual * 100).toFixed(1),
     deeplink: data.projection.deeplink,
+    // Metadata (PR-7 Task 10)
+    risk_pref: data.metadata?.riskPref || 'N/A',
+    client_type: data.metadata?.clientType || 'N/A',
+    version: data.metadata?.version || 'N/A',
+    utm_source: data.metadata?.utm_source || '',
+    utm_medium: data.metadata?.utm_medium || '',
+    utm_campaign: data.metadata?.utm_campaign || '',
+    reference_code: data.metadata?.referenceCode || '',
+    mix_formatted: mixFormatted,
   };
 
   try {

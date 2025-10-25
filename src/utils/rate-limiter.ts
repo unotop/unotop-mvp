@@ -1,10 +1,13 @@
 /**
  * Rate limiter for projection submissions
  * Tracks submissions in localStorage and enforces limits
+ * 
+ * UPDATED (PR-7): 60-second cooldown between submissions (anti-spam)
  */
 
 const STORAGE_KEY = 'unotop:submission-tracker';
 const MAX_SUBMISSIONS_PER_MONTH = 2;
+const COOLDOWN_SECONDS = 60; // 60s between submissions
 
 interface SubmissionTracker {
   count: number;
@@ -69,11 +72,46 @@ function saveTracker(tracker: SubmissionTracker): void {
 }
 
 /**
- * Check if user can submit (has attempts left)
+ * Check if user can submit (60s cooldown + monthly limit)
  */
 export function canSubmit(): boolean {
   const tracker = getTracker();
-  return tracker.count < MAX_SUBMISSIONS_PER_MONTH;
+  
+  // Check monthly limit
+  if (tracker.count >= MAX_SUBMISSIONS_PER_MONTH) {
+    return false;
+  }
+  
+  // Check 60s cooldown
+  if (tracker.lastSubmission) {
+    const lastSubmitTime = new Date(tracker.lastSubmission).getTime();
+    const now = Date.now();
+    const elapsedSeconds = (now - lastSubmitTime) / 1000;
+    
+    if (elapsedSeconds < COOLDOWN_SECONDS) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+/**
+ * Get remaining time until next submission allowed (in seconds)
+ */
+export function getRemainingCooldown(): number {
+  const tracker = getTracker();
+  
+  if (!tracker.lastSubmission) {
+    return 0;
+  }
+  
+  const lastSubmitTime = new Date(tracker.lastSubmission).getTime();
+  const now = Date.now();
+  const elapsedSeconds = (now - lastSubmitTime) / 1000;
+  const remaining = Math.max(0, Math.ceil(COOLDOWN_SECONDS - elapsedSeconds));
+  
+  return remaining;
 }
 
 /**

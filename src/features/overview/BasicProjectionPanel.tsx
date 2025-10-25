@@ -418,7 +418,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                   <ul className="mt-1 ml-4 text-xs space-y-0.5 text-slate-400">
                     {monthlyVklad > 0 && horizonYears > 0 && (
                       <li>
-                        • Zvýšte mesačný vklad na{" "}
+                        ✅ Zvýšte mesačný vklad na{" "}
                         <strong className="text-blue-400">
                           {Math.ceil(
                             monthlyVklad + remaining / (horizonYears * 12)
@@ -427,9 +427,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                         </strong>
                       </li>
                     )}
-                    <li>• Optimalizujte výdavky (fixné/variabilné)</li>
+                    <li>✅ Optimalizujte výdavky (fixné/variabilné)</li>
                     {horizonYears < 15 && (
-                      <li>• Predĺžte horizont na {horizonYears + 5} rokov</li>
+                      <li>✅ Predĺžte horizont na {horizonYears + 5} rokov</li>
                     )}
                   </ul>
                 </div>

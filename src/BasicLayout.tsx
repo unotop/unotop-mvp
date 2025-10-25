@@ -37,6 +37,7 @@ import {
   getRemainingSubmissions,
   getResetDate,
   recordSubmission,
+  getRemainingCooldown,
 } from "./utils/rate-limiter";
 import SubmissionWarningModal from "./components/SubmissionWarningModal";
 
@@ -149,6 +150,7 @@ export default function BasicLayout() {
     phone: "",
     email: "",
     gdprConsent: false,
+    honeypot: "", // Bot trap - must stay empty
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitStatus, setSubmitStatus] = React.useState<
@@ -157,6 +159,7 @@ export default function BasicLayout() {
   const [validationErrors, setValidationErrors] =
     React.useState<ValidationErrors>({});
   const [showWarningModal, setShowWarningModal] = React.useState(false);
+  const [confirmationCode, setConfirmationCode] = React.useState<string>("");
 
   // Portfolio adjustment warnings
   const [adjustmentWarnings, setAdjustmentWarnings] = React.useState<
@@ -363,6 +366,24 @@ export default function BasicLayout() {
     setSubmitStatus("idle");
 
     try {
+      // ⚡ Honeypot check - bot detection
+      if (formData.honeypot !== "") {
+        console.warn("[Security] Honeypot triggered - blocking submission");
+        setSubmitStatus("error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 📅 Generate confirmation code: UNOTOP-YYMMDD-HHMM-NN
+      const now = new Date();
+      const yy = String(now.getFullYear()).slice(-2);
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const hh = String(now.getHours()).padStart(2, "0");
+      const min = String(now.getMinutes()).padStart(2, "0");
+      const nn = String(Math.floor(Math.random() * 100)).padStart(2, "0");
+      const referenceCode = `UNOTOP-${yy}${mm}${dd}-${hh}${min}-${nn}`;
+
       // Generate projection data
       const v3Data = readV3();
       const mix: MixItem[] = (v3Data.mix as any) || [];
@@ -389,6 +410,12 @@ export default function BasicLayout() {
       const encoded = btoa(JSON.stringify(state));
       const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
 
+      // 📊 Extract UTM params from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const utmSource = urlParams.get("utm_source") || "";
+      const utmMedium = urlParams.get("utm_medium") || "";
+      const utmCampaign = urlParams.get("utm_campaign") || "";
+
       // Prepare projection data
       const projectionData: ProjectionData = {
         user: {
@@ -408,6 +435,15 @@ export default function BasicLayout() {
           mix: mix.filter((i) => i.pct > 0),
           deeplink,
         },
+        metadata: {
+          riskPref,
+          clientType: (v3Data.profile as any)?.clientType || "personal",
+          version: "v3",
+          utm_source: utmSource,
+          utm_medium: utmMedium,
+          utm_campaign: utmCampaign,
+          referenceCode,
+        },
         recipients: ["info.unotop@gmail.com", "adam.belohorec@universal.sk"],
       };
 
@@ -418,6 +454,9 @@ export default function BasicLayout() {
 
         // Record successful submission
         recordSubmission();
+
+        // Store confirmation code
+        setConfirmationCode(referenceCode);
       } catch (emailError) {
         console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
         sendViaMailto(projectionData);
@@ -435,6 +474,7 @@ export default function BasicLayout() {
           phone: "",
           email: "",
           gdprConsent: false,
+          honeypot: "",
         });
         setSubmitStatus("idle");
         setValidationErrors({});
@@ -566,7 +606,7 @@ export default function BasicLayout() {
               ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98]"
               : "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60"
           }`}
-          aria-label="Zdieľať s agentom"
+          aria-label="Odoslať projekciu"
           title={
             validationState.canShare
               ? ""
@@ -590,7 +630,7 @@ export default function BasicLayout() {
                 d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
               />
             </svg>
-            <span>Zdieľať agentovi</span>
+            <span>Odoslať projekciu</span>
           </div>
         </button>
         <p className="mt-3 text-xs text-center text-slate-400">
@@ -852,6 +892,26 @@ export default function BasicLayout() {
                 )}
               </label>
 
+              {/* Honeypot field - hidden, must stay empty (bot trap) */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={formData.honeypot}
+                onChange={(e) =>
+                  setFormData({ ...formData, honeypot: e.target.value })
+                }
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  width: "1px",
+                  height: "1px",
+                  opacity: 0,
+                }}
+                aria-hidden="true"
+              />
+
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -872,8 +932,16 @@ export default function BasicLayout() {
 
             {/* Status messages */}
             {submitStatus === "success" && (
-              <div className="p-3 rounded-lg bg-emerald-900/30 ring-1 ring-emerald-500/30 text-sm text-emerald-300">
-                ✅ Projekcia bola úspešne odoslaná!
+              <div className="p-3 rounded-lg bg-emerald-900/30 ring-1 ring-emerald-500/30 text-sm text-emerald-300 space-y-2">
+                <div>✅ Projekcia bola úspešne odoslaná!</div>
+                {confirmationCode && (
+                  <div className="text-xs text-slate-400 font-mono bg-slate-900/60 px-2 py-1 rounded">
+                    Referenčný kód:{" "}
+                    <strong className="text-emerald-400">
+                      {confirmationCode}
+                    </strong>
+                  </div>
+                )}
               </div>
             )}
             {submitStatus === "error" && (
@@ -911,11 +979,20 @@ export default function BasicLayout() {
                     return;
                   }
 
-                  // Check rate limit
+                  // Check rate limit (60s cooldown + monthly limit)
                   if (!canSubmit()) {
-                    alert(
-                      `Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`
-                    );
+                    const remaining = getRemainingSubmissions();
+                    const cooldown = getRemainingCooldown();
+
+                    if (cooldown > 0) {
+                      alert(
+                        `⏱️ Počkajte prosím ${cooldown}s pred ďalším odoslaním (ochrana proti spamu).`
+                      );
+                    } else {
+                      alert(
+                        `Vyčerpali ste mesačný limit projekcií (2/mesiac). Ďalšie odoslanie bude možné od ${getResetDate()}.`
+                      );
+                    }
                     return;
                   }
 
@@ -936,8 +1013,10 @@ export default function BasicLayout() {
                     phone: "",
                     email: "",
                     gdprConsent: false,
+                    honeypot: "",
                   });
                   setSubmitStatus("idle");
+                  setConfirmationCode("");
                   setTimeout(() => shareBtnRef.current?.focus(), 0);
                 }}
               >

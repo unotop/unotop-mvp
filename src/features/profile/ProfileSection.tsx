@@ -208,6 +208,10 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
                     }
                     className="flex-1"
                     aria-label="Krízový bias (0 až 3)"
+                    aria-valuemin={0}
+                    aria-valuemax={3}
+                    aria-valuenow={crisisBias}
+                    aria-valuetext={`${crisisBias}`}
                   />
                   <span className="text-sm font-semibold tabular-nums w-8 text-center">
                     {crisisBias}

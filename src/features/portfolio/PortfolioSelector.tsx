@@ -199,6 +199,23 @@ export default function PortfolioSelector() {
 
     // UI feedback
     setSelectedPreset(preset.id);
+
+    // Auto-scroll to metrics + pulse animation
+    setTimeout(() => {
+      const metricsRoot = document.getElementById("metrics-root");
+      if (metricsRoot) {
+        metricsRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Pulse animation on KPI cards (find scorecards in MetricsSection)
+        setTimeout(() => {
+          const scorecards = metricsRoot.querySelectorAll("[data-kpi-card]");
+          scorecards.forEach((card) => {
+            card.classList.add("animate-pulse");
+            setTimeout(() => card.classList.remove("animate-pulse"), 600);
+          });
+        }, 400); // Wait for scroll to complete
+      }
+    }, 100);
   };
 
   return (

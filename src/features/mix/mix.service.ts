@@ -1,3 +1,5 @@
+import { riskScore0to10, getRiskCap, type RiskPref } from './assetModel';
+
 export type MixItem = { key: 'gold'|'dyn'|'etf'|'bonds'|'cash'|'crypto'|'real'|'bond3y9'; pct: number };
 
 export function sum(list: MixItem[]) { return +list.reduce((a,b)=>a+b.pct,0).toFixed(2); }
@@ -28,22 +30,23 @@ export function chipsFromState(list: MixItem[]): string[] {
   if (gold >= 12) chips.push('Zlato dorovnané');
   if (dyn + crypto > 22) chips.push('Dyn+Krypto obmedzené');
   if (Math.abs(s - 100) < 0.01) chips.push('Súčet dorovnaný');
-  // Risk cap chip
+  // Risk cap chip - UNIFIED with assetModel (riskScore0to10)
   try {
     const raw = localStorage.getItem('unotop:v3') || localStorage.getItem('unotop_v3');
     if (raw) {
       const parsed = JSON.parse(raw);
       const pref: string | undefined = parsed?.profile?.riskPref || parsed?.riskPref;
-      const capMap: Record<string, number> = { konzervativny:4.0, vyvazeny:6.0, rastovy:7.5 };
-      const cap = capMap[pref || 'vyvazeny'];
-      const score = riskScore(list);
+      const validPref: RiskPref = (pref === 'konzervativny' || pref === 'rastovy') ? pref as RiskPref : 'vyvazeny';
+      const cap = getRiskCap(validPref);
+      const score = riskScore0to10(list, validPref, 0);
       if (score > cap) chips.push('⚠️ Nad limit rizika');
     }
   } catch {}
   return Array.from(new Set(chips));
 }
 
-// Simple risk scoring: weight dynamic + crypto + etf as higher risk
+// DEPRECATED: Use riskScore0to10 from assetModel instead
+// Kept for backwards compatibility in applyRiskConstrainedMix
 export function riskScore(list: MixItem[]): number {
   const dyn = list.find(i=>i.key==='dyn')?.pct || 0;
   const crypto = list.find(i=>i.key==='crypto')?.pct || 0;

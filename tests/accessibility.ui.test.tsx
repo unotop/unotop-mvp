@@ -245,7 +245,7 @@ describe("Accessibility regression (core)", () => {
   it("Share modal focuses 'Email agenta' input when opened", async () => {
     const user = userEvent.setup();
     render(<App />);
-    const shareBtn = screen.getByRole("button", { name: /Zdieľať/i });
+    const shareBtn = screen.getByRole("button", { name: /Odoslať projekciu/i });
     await user.click(shareBtn);
     const dialog = await screen.findByRole("dialog", {
       name: /Zdieľať nastavenie/i,
@@ -261,7 +261,7 @@ describe("Accessibility regression (core)", () => {
   it("Share modal closes on Escape", async () => {
     const user = userEvent.setup();
     render(<App />);
-    const shareBtn = screen.getByRole("button", { name: /Zdieľať/i });
+    const shareBtn = screen.getByRole("button", { name: /Odoslať projekciu/i });
     await user.click(shareBtn);
     const dialog = await screen.findByRole("dialog", {
       name: /Zdieľať nastavenie/i,

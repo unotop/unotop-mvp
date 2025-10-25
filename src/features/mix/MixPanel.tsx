@@ -531,7 +531,7 @@ export const MixPanel: React.FC<{
             data-testid="mix-sum-label"
             aria-label="Súčet mixu"
           >
-            <span>Súčet mixu:</span>
+            <span>Súčet</span>
             <span className="tabular-nums">{Math.round(sum)}%</span>
           </div>
           <button
@@ -547,7 +547,7 @@ export const MixPanel: React.FC<{
             className="px-3 py-1.5 rounded bg-blue-600/20 ring-1 ring-blue-500/40 text-xs font-medium hover:bg-blue-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
             title="Aplikuj odporúčaný mix podľa rizikovej preferencie"
           >
-            ⭐ Aplikovať odporúčaný mix
+            ⭐ Aplikovať odporúčaný mix portfólia
           </button>
         </div>
 

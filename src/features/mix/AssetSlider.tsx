@@ -119,6 +119,10 @@ export const AssetSlider: React.FC<AssetSliderProps> = ({
             }}
             data-testid={testIdSlider}
             aria-label={style.label}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(pct)}
+            aria-valuetext={`${Math.round(pct)} percent`}
             style={sliderTrackStyle}
             className={`
               w-full h-2 rounded-full

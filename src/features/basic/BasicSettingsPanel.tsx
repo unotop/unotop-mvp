@@ -350,6 +350,10 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         });
                       }}
                       aria-label="Mesačný príjem slider"
+                      aria-valuemin={0}
+                      aria-valuemax={clientType === "firm" ? 50000 : 10000}
+                      aria-valuenow={monthlyIncome}
+                      aria-valuetext={`${monthlyIncome.toLocaleString("sk-SK")} eur`}
                       className="flex-1"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
@@ -366,7 +370,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     Fixné výdavky
                     {!validationState?.hasIncome && (
                       <span className="ml-1 text-amber-400 text-xs">
-                        (najprv nastavte príjem)
+                        (Najprv nastavte príjem)
                       </span>
                     )}
                   </label>
@@ -404,6 +408,10 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         });
                       }}
                       aria-label="Fixné výdavky slider"
+                      aria-valuemin={0}
+                      aria-valuemax={clientType === "firm" ? 50000 : 5000}
+                      aria-valuenow={fixedExp}
+                      aria-valuetext={`${fixedExp.toLocaleString("sk-SK")} eur`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
@@ -420,7 +428,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     Variabilné výdavky
                     {!validationState?.hasIncome && (
                       <span className="ml-1 text-amber-400 text-xs">
-                        (najprv nastavte príjem)
+                        (Najprv nastavte príjem)
                       </span>
                     )}
                   </label>
@@ -458,6 +466,10 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         });
                       }}
                       aria-label="Variabilné výdavky slider"
+                      aria-valuemin={0}
+                      aria-valuemax={clientType === "firm" ? 50000 : 3000}
+                      aria-valuenow={varExp}
+                      aria-valuetext={`${varExp.toLocaleString("sk-SK")} eur`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
@@ -602,6 +614,13 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         writeV3({ monthly: val });
                       }}
                       aria-label="Mesačný vklad slider"
+                      aria-valuemin={0}
+                      aria-valuemax={Math.min(
+                        5000,
+                        validationState?.monthlyVkladMax || 5000
+                      )}
+                      aria-valuenow={monthlyVklad}
+                      aria-valuetext={`${monthlyVklad.toLocaleString("sk-SK")} eur`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">
@@ -660,6 +679,10 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         });
                       }}
                       aria-label="Horizont slider"
+                      aria-valuemin={1}
+                      aria-valuemax={50}
+                      aria-valuenow={horizonYears}
+                      aria-valuetext={`${horizonYears} rokov`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-20 text-right">

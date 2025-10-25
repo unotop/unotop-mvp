@@ -28,6 +28,7 @@ export type Profile = {
   varExp?: number;
   currentReserve?: number;
   emergencyMonths?: number;
+  hideTour?: boolean; // Nezobrazovať welcome modal
 };
 
 export type V3 = Partial<{
