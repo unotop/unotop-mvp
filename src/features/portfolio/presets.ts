@@ -10,6 +10,8 @@ import type { RiskPref } from "../mix/assetModel";
 import { normalize } from "../mix/mix.service";
 import { getAssetCaps, getDynCryptoComboCap, type Caps } from "../policy/caps";
 import type { Stage } from "../policy/stage";
+import { trackPolicyAdjustment } from "../../services/telemetry";
+import { getRiskCapCopy } from "../ui/warnings/copy";
 
 export interface PortfolioPreset {
   id: RiskPref;
@@ -111,6 +113,9 @@ export function enforceStageCaps(
   const caps = getAssetCaps(riskPref, stage);
   const comboCap = getDynCryptoComboCap(stage);
   
+  // Snapshot pre telemetria (pre/po porovnanie)
+  const sumBefore = mix.reduce((acc, m) => acc + m.pct, 0);
+  
   // Helper: získaj index aktíva
   const getIdx = (key: MixItem["key"]) => mix.findIndex((m) => m.key === key);
   
@@ -124,13 +129,27 @@ export function enforceStageCaps(
   };
   
   let overflow = 0;
+  let adjustmentsMade = false;
   
   // 1. Uplatni individuálne asset capy
   for (const item of mix) {
     const cap = caps[item.key];
     if (cap !== undefined && item.pct > cap) {
+      const pctBefore = item.pct;
       overflow += item.pct - cap;
       item.pct = cap;
+      adjustmentsMade = true;
+      
+      // Track individual asset cap enforcement
+      trackPolicyAdjustment({
+        stage,
+        riskPref,
+        reason: `${item.key}_cap` as any,
+        asset: item.key,
+        pct_before: pctBefore,
+        pct_after: cap,
+        cap,
+      });
     }
   }
   
@@ -150,6 +169,17 @@ export function enforceStageCaps(
     setPct("crypto", cryptoPct - cryptoReduction);
     
     overflow += dynReduction + cryptoReduction;
+    adjustmentsMade = true;
+    
+    // Track combo cap enforcement
+    trackPolicyAdjustment({
+      stage,
+      riskPref,
+      reason: "dyn_crypto_combo",
+      pct_before: comboSum,
+      pct_after: comboCap,
+      combo_cap: comboCap,
+    });
   }
   
   // 3. Redistribuuj overflow podľa bucket poradia
@@ -175,7 +205,21 @@ export function enforceStageCaps(
   }
   
   // 4. Normalize na presne 100%
-  return normalize(mix);
+  const normalized = normalize(mix);
+  const sumAfter = normalized.reduce((acc, m) => acc + m.pct, 0);
+  
+  // Track sum drift correction if normalization was significant
+  if (adjustmentsMade && Math.abs(sumBefore - 100) > 0.05) {
+    trackPolicyAdjustment({
+      stage,
+      riskPref,
+      reason: "sum_drift",
+      sum_before: sumBefore,
+      sum_after: sumAfter,
+    });
+  }
+  
+  return normalized;
 }
 
 /**

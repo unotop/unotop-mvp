@@ -428,17 +428,38 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                   <strong>Ako dosiahnuť cieľ?</strong> Chýba vám{" "}
                   {formatLargeNumber(remaining)} €. Možnosti:
                   <ul className="mt-1 ml-4 text-xs space-y-0.5 text-slate-400">
-                    {monthlyVklad > 0 && horizonYears > 0 && (
-                      <li>
-                        ✅ Zvýšte mesačný vklad na{" "}
-                        <strong className="text-blue-400">
-                          {Math.ceil(
-                            monthlyVklad + remaining / (horizonYears * 12)
-                          )}{" "}
-                          €
-                        </strong>
-                      </li>
-                    )}
+                    {/* Smart odporúčanie vkladu - len ak je realistické */}
+                    {monthlyVklad > 0 &&
+                      horizonYears > 0 &&
+                      (() => {
+                        const requiredMonthly = Math.ceil(
+                          monthlyVklad + remaining / (horizonYears * 12)
+                        );
+                        const currentIncome =
+                          (v3.profile?.monthlyIncome as any) || 0;
+                        const increaseRatio =
+                          requiredMonthly / Math.max(monthlyVklad, 1);
+                        const incomeRatio =
+                          currentIncome > 0
+                            ? requiredMonthly / currentIncome
+                            : 999;
+
+                        // Zobraz len ak je realistické (<2× súčasný vklad ALEBO <40% príjmu)
+                        const isRealistic =
+                          increaseRatio < 2 && incomeRatio < 0.4;
+
+                        if (isRealistic) {
+                          return (
+                            <li>
+                              ✅ Zvýšte mesačný vklad na{" "}
+                              <strong className="text-blue-400">
+                                {requiredMonthly} €
+                              </strong>
+                            </li>
+                          );
+                        }
+                        return null;
+                      })()}
                     <li>✅ Optimalizujte výdavky (fixné/variabilné)</li>
                     {horizonYears < 15 && (
                       <li>✅ Predĺžte horizont na {horizonYears + 5} rokov</li>

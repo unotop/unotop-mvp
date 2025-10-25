@@ -35,7 +35,9 @@ describe("Warnings Integration", () => {
 
     // Should appear in chips
     await waitFor(() => {
-      expect(screen.getByText(/Alokáciu gold sme znížili/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Alokáciu gold sme znížili/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -45,14 +47,17 @@ describe("Warnings Integration", () => {
     // Push a risk error
     WarningCenter.push({
       type: "error",
-      message: "Riziko portfólia (7.8) presahuje adaptívny cap (7.5) pre LATE fázu.",
+      message:
+        "Riziko portfólia (7.8) presahuje adaptívny cap (7.5) pre LATE fázu.",
       scope: "risk",
       dedupeKey: "risk-cap",
     });
 
     // Should appear in chips with error styling
     await waitFor(() => {
-      expect(screen.getByText(/Riziko portfólia.*presahuje/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Riziko portfólia.*presahuje/i)
+      ).toBeInTheDocument();
     });
   });
 
@@ -93,7 +98,9 @@ describe("Warnings Integration", () => {
       // Wait for auto-dismiss (6s + buffer)
       await waitFor(
         () => {
-          expect(screen.queryByText("Test auto-dismiss")).not.toBeInTheDocument();
+          expect(
+            screen.queryByText("Test auto-dismiss")
+          ).not.toBeInTheDocument();
         },
         { timeout: 7500 }
       );

@@ -8,6 +8,8 @@
  * - Scope: 'mix', 'risk', 'global'
  */
 
+import { trackWarningShown } from '../../../services/telemetry';
+
 export type WarningType = 'info' | 'warning' | 'error';
 export type WarningScope = 'mix' | 'risk' | 'global';
 
@@ -68,6 +70,14 @@ class WarningCenterClass {
 
     this.warnings.push(warning);
     this.notifyListeners();
+
+    // Track telemetry
+    trackWarningShown({
+      type: options.type,
+      scope,
+      dedupeKey,
+      message: options.message,
+    });
 
     // Auto-dismiss po 6s
     setTimeout(() => {

@@ -117,6 +117,19 @@ export default function PortfolioSelector() {
     const monthlyEur = (v3 as any).monthly || 0;
     const totalFirstYear = lumpSumEur + monthlyEur * 12;
 
+    // Debug log
+    if (monthlyEur > 0) {
+      console.log(`[isPresetAvailable] ${presetId}:`, {
+        lumpSumEur,
+        monthlyEur,
+        totalFirstYear,
+        threshold: 2000,
+        blocked:
+          totalFirstYear < 2000 &&
+          (presetId === "konzervativny" || presetId === "vyvazeny"),
+      });
+    }
+
     // Blokuj konzervativny/vyvazeny pri < 2000 EUR/rok
     if (
       totalFirstYear < 2000 &&
@@ -132,8 +145,18 @@ export default function PortfolioSelector() {
    * Handler pre výber presetu - aplikuje VŠETKY adjustments (lump/monthly/cash/bonds)
    */
   const handleSelectPreset = (preset: PortfolioPreset) => {
+    // CRITICAL: Fresh read aby sme dostali latest monthly value (debounce delay fix)
     const v3 = readV3();
     const profile = v3.profile || {};
+
+    // Log pre debug
+    console.log("[PortfolioSelector] Selecting preset:", {
+      presetId: preset.id,
+      lumpSumEur: profile.lumpSumEur || 0,
+      monthly: (v3 as any).monthly || 0,
+      totalFirstYear:
+        (profile.lumpSumEur || 0) + ((v3 as any).monthly || 0) * 12,
+    });
 
     // Vytvor profile object pre getAdjustedPreset
     const profileForAdj: ProfileForAdjustments = {

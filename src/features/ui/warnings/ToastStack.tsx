@@ -1,13 +1,13 @@
 /**
  * ToastStack - Zobrazuje global warnings vpravo hore
- * 
+ *
  * Umiestnenie: Top-right corner (fixed position)
  * A11y: aria-live="assertive" pre errors, "polite" pre info/warning
  * Esc zatvorí najnovší toast
  */
 
-import React from 'react';
-import { WarningCenter, type Warning } from './WarningCenter';
+import React from "react";
+import { WarningCenter, type Warning } from "./WarningCenter";
 
 export const ToastStack: React.FC = () => {
   const [toasts, setToasts] = React.useState<Warning[]>([]);
@@ -15,7 +15,7 @@ export const ToastStack: React.FC = () => {
   React.useEffect(() => {
     const updateToasts = (allWarnings: Warning[]) => {
       // Zobraz len global scope warnings
-      setToasts(allWarnings.filter((w) => w.scope === 'global'));
+      setToasts(allWarnings.filter((w) => w.scope === "global"));
     };
 
     // Initial load
@@ -28,46 +28,46 @@ export const ToastStack: React.FC = () => {
   React.useEffect(() => {
     // Esc zavrie najnovší toast
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && toasts.length > 0) {
+      if (e.key === "Escape" && toasts.length > 0) {
         const latest = toasts[toasts.length - 1];
         WarningCenter.dismiss(latest.id);
       }
     };
 
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
   }, [toasts]);
 
   if (toasts.length === 0) return null;
 
-  const getIcon = (type: Warning['type']) => {
+  const getIcon = (type: Warning["type"]) => {
     switch (type) {
-      case 'info':
-        return 'ℹ️';
-      case 'warning':
-        return '⚠️';
-      case 'error':
-        return '⛔';
+      case "info":
+        return "ℹ️";
+      case "warning":
+        return "⚠️";
+      case "error":
+        return "⛔";
       default:
-        return '💬';
+        return "💬";
     }
   };
 
-  const getColorClasses = (type: Warning['type']) => {
+  const getColorClasses = (type: Warning["type"]) => {
     switch (type) {
-      case 'info':
-        return 'bg-blue-900 ring-blue-500/50 text-blue-100';
-      case 'warning':
-        return 'bg-amber-900 ring-amber-500/50 text-amber-100';
-      case 'error':
-        return 'bg-red-900 ring-red-500/50 text-red-100';
+      case "info":
+        return "bg-blue-900 ring-blue-500/50 text-blue-100";
+      case "warning":
+        return "bg-amber-900 ring-amber-500/50 text-amber-100";
+      case "error":
+        return "bg-red-900 ring-red-500/50 text-red-100";
       default:
-        return 'bg-slate-800 ring-slate-500/50 text-slate-100';
+        return "bg-slate-800 ring-slate-500/50 text-slate-100";
     }
   };
 
-  const getAriaLive = (type: Warning['type']): 'assertive' | 'polite' => {
-    return type === 'error' ? 'assertive' : 'polite';
+  const getAriaLive = (type: Warning["type"]): "assertive" | "polite" => {
+    return type === "error" ? "assertive" : "polite";
   };
 
   return (
