@@ -147,22 +147,7 @@ export default function PortfolioSelector() {
    * Check či je preset dostupný (blokované pri nízkych vkladoch)
    */
   const isPresetAvailable = (presetId: RiskPref): boolean => {
-    const v3 = readV3();
-    const profile = v3.profile || {};
-    const lumpSumEur = profile.lumpSumEur || 0;
-    const monthlyEur = (v3 as any).monthly || 0;
-    const totalFirstYear = lumpSumEur + monthlyEur * 12;
-
-    // Debug log
-    if (monthlyEur > 0) {
-      console.log(`[isPresetAvailable] ${presetId}:`, {
-        lumpSumEur,
-        monthlyEur,
-        totalFirstYear,
-      });
-    }
-
-    // Portfolio always available (removed 2000 EUR threshold per PR-11)
+    // All portfolios always available per PR-11
     return true;
   };
 
@@ -174,11 +159,13 @@ export default function PortfolioSelector() {
     const v3 = readV3();
     const profile = v3.profile || {};
 
-    // Log pre debug
+    // DEBUG PR-12: Log vstupného stavu
+    console.log("[PortfolioSelector] ========== SELECT START ==========");
     console.log("[PortfolioSelector] Selecting preset:", {
       presetId: preset.id,
       lumpSumEur: profile.lumpSumEur || 0,
       monthly: (v3 as any).monthly || 0,
+      monthlyIncome: profile.monthlyIncome || 0,
       totalFirstYear:
         (profile.lumpSumEur || 0) + ((v3 as any).monthly || 0) * 12,
     });
@@ -228,6 +215,9 @@ export default function PortfolioSelector() {
 
     if (!validation.valid) {
       console.error(
+        `[PortfolioSelector] ========== VALIDATION FAILED ==========`
+      );
+      console.error(
         `[PortfolioSelector] Validation failed: ${validation.message}`
       );
       WarningCenter.push({
@@ -242,6 +232,7 @@ export default function PortfolioSelector() {
     // Vypočítaj expected yield pre feedback
     const expectedYield = approxYieldAnnualFromMix(adjustedMix, preset.id);
 
+    console.log(`[PortfolioSelector] ========== APPLYING MIX ==========`);
     console.log(
       `[PortfolioSelector] Aplikujem ${preset.label} profil s adjustments:`,
       {
@@ -249,6 +240,9 @@ export default function PortfolioSelector() {
         cap,
         expectedYield: (expectedYield * 100).toFixed(1) + "%",
         warnings,
+        finalMix: adjustedMix
+          .map((m) => `${m.key}:${m.pct.toFixed(1)}`)
+          .join(", "),
       }
     );
 
@@ -313,6 +307,42 @@ export default function PortfolioSelector() {
           automaticky.
         </p>
       </div>
+
+      {/* INFO: Upozornenie pri nízkych vkladoch */}
+      {(() => {
+        const v3 = readV3();
+        const lumpSumEur = v3.profile?.lumpSumEur || 0;
+        if (lumpSumEur < 2500) {
+          return (
+            <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div className="flex-1 text-sm">
+                  <p className="font-semibold text-blue-300 mb-1">
+                    Tip: Zadajte jednorazový vklad
+                  </p>
+                  <p className="text-slate-300">
+                    Pri jednorazovom vklade pod <strong>2 500 €</strong> niektoré aktíva (dlhopisy, dynamické riadenie)
+                    nie sú dostupné kvôli minimálnym vstupným prahom. Pre plný prístup ku všetkým možnostiam
+                    zvýšte jednorazový vklad alebo pokračujte s mesačným sporením.
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       {/* Portfolio karty */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
