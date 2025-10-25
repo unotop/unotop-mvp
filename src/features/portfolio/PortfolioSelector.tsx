@@ -123,21 +123,10 @@ export default function PortfolioSelector() {
         lumpSumEur,
         monthlyEur,
         totalFirstYear,
-        threshold: 2000,
-        blocked:
-          totalFirstYear < 2000 &&
-          (presetId === "konzervativny" || presetId === "vyvazeny"),
       });
     }
 
-    // Blokuj konzervativny/vyvazeny pri < 2000 EUR/rok
-    if (
-      totalFirstYear < 2000 &&
-      (presetId === "konzervativny" || presetId === "vyvazeny")
-    ) {
-      return false;
-    }
-
+    // Portfolio always available (removed 2000 EUR threshold per PR-11)
     return true;
   };
 

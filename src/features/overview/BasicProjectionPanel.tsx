@@ -8,9 +8,10 @@ import {
 } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
 import { getCashReserveInfo } from "../portfolio/cashReserve";
-import { readV3 } from "../../persist/v3";
+import { readV3, writeV3 } from "../../persist/v3";
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
+import { getUnutilizedReserveCopy, getCollabOptInCopy } from "../ui/warnings/copy";
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -126,6 +127,21 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         },
         totalPortfolioEur,
         currentCashPct
+      )
+    : null;
+
+  // Unutilized reserve detection (PR-11)
+  const reserveEur = (v3.profile?.reserveEur as any) || 0;
+  const reserveMonths = (v3.profile?.reserveMonths as any) || 0;
+  const varExp = (v3.profile?.varExp as any) || 0;
+  const surplus = reserveEur - reserveMonths * varExp;
+  const hasUnutilizedReserve =
+    surplus >= 50 && surplus - monthlyVklad >= 50;
+  const unutilizedReserveCopy = hasUnutilizedReserve
+    ? getUnutilizedReserveCopy(
+        surplus,
+        monthlyVklad,
+        Math.round(monthlyVklad + surplus * 0.5)
       )
     : null;
 
@@ -395,6 +411,14 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         </h3>
 
         <div className="space-y-2">
+          {/* Priorita 0: Unutilized reserve (ak existuje, zobraz info) */}
+          {hasUnutilizedReserve && unutilizedReserveCopy && (
+            <div className="flex items-start gap-2 text-sm">
+              <span className="text-blue-500 shrink-0">💵</span>
+              <div className="text-slate-300">{unutilizedReserveCopy}</div>
+            </div>
+          )}
+
           {/* Priorita 1: Vysoké riziko (VŽDY prvé ak existuje) */}
           {isOverRisk && (
             <div className="flex items-start gap-2 text-sm">
@@ -488,6 +512,31 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                 ciele.
               </div>
             </div>
+
+            {/* PR-11: Collab opt-in checkbox */}
+            <label className="flex items-center gap-2 mt-2 text-xs text-slate-400 cursor-pointer hover:text-slate-300 transition-colors">
+              <input
+                type="checkbox"
+                checked={!!(v3.profile as any)?.collabOptIn}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  writeV3({ profile: { ...v3.profile, collabOptIn: checked } as any });
+                  // Track telemetry (PR-10)
+                  import("../../services/telemetry").then((t) =>
+                    t.trackCollabInterest({
+                      checked,
+                      stage,
+                      riskPref: validRiskPref,
+                      monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+                      monthlyVklad,
+                    })
+                  );
+                }}
+                aria-label="Zvýšiť príjem (collab opt-in)"
+                className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50"
+              />
+              <span>{getCollabOptInCopy()}</span>
+            </label>
           </div>
         </div>
       </div>

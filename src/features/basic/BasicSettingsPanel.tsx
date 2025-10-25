@@ -100,7 +100,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     // Aktualizuj clientType
     setClientType(pendingClientType);
 
-    // Persist reset
+    // Persist reset (včítane rezervy)
     writeV3({
       profile: {
         clientType: pendingClientType,
@@ -112,6 +112,8 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
         goalAssetsEur: 0,
       } as any,
       monthly: 0,
+      reserveEur: 0,
+      reserveMonths: 0,
     });
 
     // Zatvor modal

@@ -1,7 +1,7 @@
 /**
  * policy.redistribution.test.tsx
  * Integration tests for stage-aware redistribution logic
- * 
+ *
  * Verifies:
  * - Asset caps enforcement (GOLD, ETF, dyn+crypto combo)
  * - Redistribution maintains 100% sum (±0.05 tolerance)
@@ -99,9 +99,9 @@ describe("Policy Redistribution", () => {
     expect(etfPct).toBeLessThanOrEqual(50); // Under STARTER cap
 
     // Assert: No ETF cap adjustment was logged (since under limit)
-    const etfCapCalls = (telemetry.trackPolicyAdjustment as any).mock.calls.filter(
-      (call: any[]) => call[0].reason === "etf_cap"
-    );
+    const etfCapCalls = (
+      telemetry.trackPolicyAdjustment as any
+    ).mock.calls.filter((call: any[]) => call[0].reason === "etf_cap");
     expect(etfCapCalls).toHaveLength(0);
   });
 
@@ -138,12 +138,12 @@ describe("Policy Redistribution", () => {
 
     // Assert: Telemetry was called for crypto_cap
     expect(telemetry.trackPolicyAdjustment).toHaveBeenCalled();
-    
+
     const allCalls = (telemetry.trackPolicyAdjustment as any).mock.calls;
     const cryptoCapCall = allCalls.find(
       (call: any[]) => call[0].reason === "crypto_cap"
     );
-    
+
     expect(cryptoCapCall).toBeDefined();
     expect(cryptoCapCall[0].stage).toBe("CORE");
     expect(cryptoCapCall[0].asset).toBe("crypto");
