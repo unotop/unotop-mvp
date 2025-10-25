@@ -116,6 +116,9 @@ export function enforceStageCaps(
   // Snapshot pre telemetria (pre/po porovnanie)
   const sumBefore = mix.reduce((acc, m) => acc + m.pct, 0);
   
+  // PR-12 FIX: Snapshot vstupného mixu pre detekciu applyMinimums vynulovaných aktív
+  const inputSnapshot = new Map(mix.map((m) => [m.key, m.pct]));
+  
   // Helper: získaj index aktíva
   const getIdx = (key: MixItem["key"]) => mix.findIndex((m) => m.key === key);
   
@@ -183,7 +186,7 @@ export function enforceStageCaps(
   }
   
   // 3. Redistribuuj overflow podľa bucket poradia
-  // FIX PR-12: Preskočiť aktíva, ktoré boli vynulované applyMinimums (pct=0 pred caps)
+  // PR-12 FIX: Preskočiť aktíva, ktoré mali pct=0 NA VSTUPE (vynulované applyMinimums)
   if (overflow > 0.01) { // Tolerance 0.01%
     const buckets: MixItem["key"][] = 
       stage === "LATE"
@@ -194,9 +197,11 @@ export function enforceStageCaps(
       if (overflow < 0.01) break;
       
       const current = getPct(bucket);
+      const inputPct = inputSnapshot.get(bucket) ?? 0;
       
-      // Preskočiť aktíva, ktoré boli nedostupné (pct=0 znamená applyMinimums ich vynulovalo)
-      if (current === 0) {
+      // Preskočiť aktíva, ktoré boli vynulované PRED caps enforcement
+      // (applyMinimums ich označilo ako nedostupné)
+      if (inputPct === 0) {
         continue;
       }
       
