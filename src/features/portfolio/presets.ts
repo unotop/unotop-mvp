@@ -183,6 +183,7 @@ export function enforceStageCaps(
   }
   
   // 3. Redistribuuj overflow podľa bucket poradia
+  // FIX PR-12: Preskočiť aktíva, ktoré boli vynulované applyMinimums (pct=0 pred caps)
   if (overflow > 0.01) { // Tolerance 0.01%
     const buckets: MixItem["key"][] = 
       stage === "LATE"
@@ -192,8 +193,14 @@ export function enforceStageCaps(
     for (const bucket of buckets) {
       if (overflow < 0.01) break;
       
-      const cap = caps[bucket] ?? 40;
       const current = getPct(bucket);
+      
+      // Preskočiť aktíva, ktoré boli nedostupné (pct=0 znamená applyMinimums ich vynulovalo)
+      if (current === 0) {
+        continue;
+      }
+      
+      const cap = caps[bucket] ?? 40;
       const available = cap - current;
       
       if (available > 0.01) {
