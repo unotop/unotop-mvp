@@ -116,6 +116,15 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
       reserveMonths: 0,
     });
 
+    // PR-11 FIX: Reset uncontrolled inputs (visual clear)
+    incomeCtl.syncToDom(0);
+    fixedExpCtl.syncToDom(0);
+    varExpCtl.syncToDom(0);
+    lumpSumCtl.syncToDom(0);
+    monthlyVkladCtl.syncToDom(0);
+    horizonCtl.syncToDom(10);
+    goalCtl.syncToDom(0);
+
     // Zatvor modal
     setShowProfileWarning(false);
     setPendingClientType(null);

@@ -76,6 +76,10 @@ export default function PortfolioSelector() {
     const handleStorageChange = () => {
       const v3 = readV3();
       const income = v3.profile?.monthlyIncome || 0;
+      const lumpSum = v3.profile?.lumpSumEur || 0;
+      const monthly = (v3 as any).monthly || 0;
+      const horizon = v3.profile?.horizonYears || 0;
+      const goal = v3.profile?.goalAssetsEur || 0;
 
       // If income drops to 0 or invalid, clear selection
       if (income <= 0 && selectedPreset) {
@@ -92,6 +96,36 @@ export default function PortfolioSelector() {
             riskPref: undefined,
           } as any,
         });
+      }
+
+      // PR-11 FIX: Clear selection when key investment params change
+      // Store snapshot of params when portfolio was selected
+      const snapshotKey = "portfolio_snapshot";
+      const storedSnapshot = sessionStorage.getItem(snapshotKey);
+      
+      if (selectedPreset && storedSnapshot) {
+        const snapshot = JSON.parse(storedSnapshot);
+        const currentSnapshot = { lumpSum, monthly, horizon, goal };
+        
+        // If any param changed significantly, clear selection
+        if (
+          Math.abs(snapshot.lumpSum - currentSnapshot.lumpSum) > 10 ||
+          Math.abs(snapshot.monthly - currentSnapshot.monthly) > 5 ||
+          Math.abs(snapshot.horizon - currentSnapshot.horizon) > 0.5 ||
+          Math.abs(snapshot.goal - currentSnapshot.goal) > 100
+        ) {
+          console.log("[PortfolioSelector] Investment params changed, clearing selection");
+          setSelectedPreset(null);
+          sessionStorage.removeItem(snapshotKey);
+          
+          writeV3({
+            mix: [],
+            profile: {
+              ...(v3.profile || {}),
+              riskPref: undefined,
+            } as any,
+          });
+        }
       }
     };
 
@@ -228,6 +262,17 @@ export default function PortfolioSelector() {
 
     // UI feedback
     setSelectedPreset(preset.id);
+
+    // PR-11 FIX: Store snapshot of investment params for change detection
+    sessionStorage.setItem(
+      "portfolio_snapshot",
+      JSON.stringify({
+        lumpSum: profileForAdj.lumpSumEur,
+        monthly: profileForAdj.monthlyEur,
+        horizon: profileForAdj.horizonYears,
+        goal: profileForAdj.goalAssetsEur,
+      })
+    );
 
     // Auto-scroll to metrics + pulse animation
     setTimeout(() => {

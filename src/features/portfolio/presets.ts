@@ -317,17 +317,9 @@ export function validatePresetRisk(
   lumpSumEur = 0,
   monthlyEur = 0
 ): { valid: boolean; message?: string; isWarning?: boolean } {
-  // === CHECK 1: Nízke vklady (hard block pre konzervativny/vyvazeny) ===
-  const totalFirstYear = lumpSumEur + monthlyEur * 12;
+  // PR-11: Removed < 2000 EUR/year threshold - all portfolios available at any amount
   
-  if (totalFirstYear < 2000 && (riskPref === "konzervativny" || riskPref === "vyvazeny")) {
-    return {
-      valid: false,  // Hard block
-      message: `Pri investícii ${totalFirstYear.toLocaleString("sk-SK")} EUR/rok nie je možné efektívne diverzifikovať portfólio. Vyberte rastový profil alebo zvýšte vklady na min. 2 000 EUR/rok.`,
-    };
-  }
-
-  // === CHECK 2: Diverzifikácia (žiadne aktívum > 40%) ===
+  // === CHECK 1: Diverzifikácia (žiadne aktívum > 40%) ===
   for (const item of mix) {
     if (item.key === "bonds" && riskPref === "konzervativny") {
       // Výnimka: bonds môže byť až 30% v konzervatívnom

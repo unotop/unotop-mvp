@@ -11,7 +11,10 @@ import { getCashReserveInfo } from "../portfolio/cashReserve";
 import { readV3, writeV3 } from "../../persist/v3";
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
-import { getUnutilizedReserveCopy, getCollabOptInCopy } from "../ui/warnings/copy";
+import {
+  getUnutilizedReserveCopy,
+  getCollabOptInCopy,
+} from "../ui/warnings/copy";
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -135,8 +138,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const reserveMonths = (v3.profile?.reserveMonths as any) || 0;
   const varExp = (v3.profile?.varExp as any) || 0;
   const surplus = reserveEur - reserveMonths * varExp;
-  const hasUnutilizedReserve =
-    surplus >= 50 && surplus - monthlyVklad >= 50;
+  const hasUnutilizedReserve = surplus >= 50 && surplus - monthlyVklad >= 50;
   const unutilizedReserveCopy = hasUnutilizedReserve
     ? getUnutilizedReserveCopy(
         surplus,
@@ -520,7 +522,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                 checked={!!(v3.profile as any)?.collabOptIn}
                 onChange={(e) => {
                   const checked = e.target.checked;
-                  writeV3({ profile: { ...v3.profile, collabOptIn: checked } as any });
+                  writeV3({
+                    profile: { ...v3.profile, collabOptIn: checked } as any,
+                  });
                   // Track telemetry (PR-10)
                   import("../../services/telemetry").then((t) =>
                     t.trackCollabInterest({

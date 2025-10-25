@@ -59,11 +59,14 @@ export function applyBondMinimum(
   // Redistribúcia:
   // - Konzervativny: 70% gold (risk 0), 30% cash (risk 0) → udržíme nízke riziko
   // - Iné profily: 70% cash, 30% ETF
+  // HOTFIX: Cap gold na 40% (aby sme neviolovali asset caps)
+  const GOLD_CAP = 40;
+  
   const cashRatio = isKonzervativny ? 0.3 : 0.7;
   const goldRatio = isKonzervativny ? 0.7 : 0.0;
   const etfRatio = isKonzervativny ? 0.0 : 0.3;
 
-  const adjustedMix = mix.map((item) => {
+  let adjustedMix = mix.map((item) => {
     if (item.key === "bonds" || item.key === "bond3y9") {
       return { ...item, pct: 0 };
     }
@@ -78,6 +81,18 @@ export function applyBondMinimum(
     }
     return item;
   });
+
+  // HOTFIX: Ak gold prekročí 40%, presun prebytok do cash (bezpečné)
+  const goldItem = adjustedMix.find((m) => m.key === "gold");
+  if (goldItem && goldItem.pct > GOLD_CAP) {
+    const overflow = goldItem.pct - GOLD_CAP;
+    goldItem.pct = GOLD_CAP;
+    
+    const cashItem = adjustedMix.find((m) => m.key === "cash");
+    if (cashItem) {
+      cashItem.pct += overflow;
+    }
+  }
 
   return {
     mix: normalize(adjustedMix),
