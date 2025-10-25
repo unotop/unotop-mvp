@@ -27,7 +27,7 @@ export interface PolicyAdjustmentParams {
 
 export interface WarningShownParams {
   type: "info" | "warning" | "error";
-  scope: "mix" | "risk" | "global";
+  scope: "mix" | "risk" | "global" | "minimums";
   dedupeKey?: string;
   message: string;
 }

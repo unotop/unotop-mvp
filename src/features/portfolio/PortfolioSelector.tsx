@@ -102,11 +102,11 @@ export default function PortfolioSelector() {
       // Store snapshot of params when portfolio was selected
       const snapshotKey = "portfolio_snapshot";
       const storedSnapshot = sessionStorage.getItem(snapshotKey);
-      
+
       if (selectedPreset && storedSnapshot) {
         const snapshot = JSON.parse(storedSnapshot);
         const currentSnapshot = { lumpSum, monthly, horizon, goal };
-        
+
         // If any param changed significantly, clear selection
         if (
           Math.abs(snapshot.lumpSum - currentSnapshot.lumpSum) > 10 ||
@@ -114,10 +114,12 @@ export default function PortfolioSelector() {
           Math.abs(snapshot.horizon - currentSnapshot.horizon) > 0.5 ||
           Math.abs(snapshot.goal - currentSnapshot.goal) > 100
         ) {
-          console.log("[PortfolioSelector] Investment params changed, clearing selection");
+          console.log(
+            "[PortfolioSelector] Investment params changed, clearing selection"
+          );
           setSelectedPreset(null);
           sessionStorage.removeItem(snapshotKey);
-          
+
           writeV3({
             mix: [],
             profile: {

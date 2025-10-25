@@ -110,3 +110,70 @@ export function getProfileResetCopy(): string {
 export function getCollabOptInCopy(): string {
   return "Chcem zvýšiť svoj príjem – zaujíma ma spolupráca s UNOTOP.";
 }
+
+// ============================================================================
+// PR-12: Asset Minimums Copy
+// ============================================================================
+
+/**
+ * Bonds unavailable (requires 2500 EUR lump sum)
+ * @param redistribution - Where the allocation was moved (e.g., "ETF, hotovosť")
+ */
+export function getBondsMinimumCopy(redistribution: string): string {
+  return `Dlhopisy vyžadujú min. 2 500 € jednorazovo. Alokáciu sme presunuli do ${redistribution}.`;
+}
+
+/**
+ * Dynamic management unavailable (requires 1000 EUR lump sum)
+ */
+export function getDynMinimumCopy(): string {
+  return "Dynamické riadenie od 1 000 € jednorazovo – momentálne presunuté do ETF.";
+}
+
+/**
+ * Gold unavailable (requires 50 EUR monthly or more)
+ * @param redistribution - Where the allocation was moved
+ */
+export function getGoldMinimumCopy(redistribution: string): string {
+  return `Zlato vyžaduje min. 50 €/mes. Alokáciu sme presunuli do ${redistribution}.`;
+}
+
+/**
+ * Crypto unavailable (requires 50 EUR monthly or 100 EUR lump sum)
+ */
+export function getCryptoMinimumCopy(): string {
+  return "Krypto od 50 €/mes alebo 100 € jednorazovo – momentálne presunuté do ETF.";
+}
+
+/**
+ * Reality unavailable (requires large capital)
+ * @param redistribution - Where the allocation was moved
+ */
+export function getRealityMinimumCopy(redistribution: string): string {
+  return `Reality len pre väčší kapitál (300 000 € alebo príjem 3 500+ €/mes). Alokáciu sme presunuli do ${redistribution}.`;
+}
+
+/**
+ * Generic asset minimum message (fallback)
+ * @param assetLabel - Human-readable asset name
+ * @param minLump - Minimum lump sum (0 if not required)
+ * @param minMonthly - Minimum monthly (0 if not required)
+ * @param redistribution - Where the allocation was moved
+ */
+export function getAssetMinimumCopy(
+  assetLabel: string,
+  minLump: number,
+  minMonthly: number,
+  redistribution: string
+): string {
+  let requirement = "";
+  if (minLump > 0 && minMonthly > 0) {
+    requirement = `min. ${minLump.toLocaleString("sk-SK")} € jednorazovo alebo ${minMonthly} €/mes`;
+  } else if (minLump > 0) {
+    requirement = `min. ${minLump.toLocaleString("sk-SK")} € jednorazovo`;
+  } else if (minMonthly > 0) {
+    requirement = `min. ${minMonthly} €/mes`;
+  }
+  
+  return `${assetLabel} vyžaduje ${requirement}. Alokáciu sme presunuli do ${redistribution}.`;
+}

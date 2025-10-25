@@ -23,6 +23,7 @@ import { adjustMixForCashReserve, getCashReserveInfo } from "./cashReserve";
 import { applyBondMinimum, getBondMinimumInfo } from "./bondMinimum";
 import { enforceStageCaps } from "./presets";
 import { detectStage } from "../policy/stage";
+import { applyMinimums } from "../policy/applyMinimums";
 
 export interface ProfileForAdjustments {
   lumpSumEur: number;
@@ -150,7 +151,16 @@ export function getAdjustedMix(
     info.cashReserve = cashReserveInfo;
   }
 
-  // === STEP 5: Stage-aware caps enforcement (PR-8) ===
+  // === STEP 5: Apply asset minimums (PR-12) ===
+  // Presunie nedostupné aktíva do ETF/hotovosti
+  const { mix: mixAfterMinimums } = applyMinimums(mix, {
+    lumpSumEur: profile.lumpSumEur,
+    monthlyEur: profile.monthlyEur,
+    monthlyIncome: profile.monthlyIncome,
+  });
+  mix = mixAfterMinimums;
+
+  // === STEP 6: Stage-aware caps enforcement (PR-8) ===
   // Detekuj stage a aplikuj adaptive caps
   const stage = detectStage(
     profile.lumpSumEur,

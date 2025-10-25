@@ -5,13 +5,13 @@
  * - Žiadne modálne window.alert
  * - Deduplikácia (rovnaký dedupeKey v rámci 5s → ignore)
  * - Auto-dismiss po 6s (aria-live polite/assertive)
- * - Scope: 'mix', 'risk', 'global'
+ * - Scope: 'mix', 'risk', 'global', 'minimums'
  */
 
 import { trackWarningShown } from '../../../services/telemetry';
 
 export type WarningType = 'info' | 'warning' | 'error';
-export type WarningScope = 'mix' | 'risk' | 'global';
+export type WarningScope = 'mix' | 'risk' | 'global' | 'minimums';
 
 export interface Warning {
   id: string;
