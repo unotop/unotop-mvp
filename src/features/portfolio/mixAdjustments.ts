@@ -6,6 +6,7 @@
  * 2. Monthly scaling (500 EUR cap na dyn+crypto)
  * 3. Cash reserve optimization (dynamická rezerva)
  * 4. Bond minimum handling (2500 EUR threshold)
+ * 5. Stage-aware caps enforcement (PR-8: adaptive policy)
  * 
  * Export: Adjusted preset + warnings array pre UI
  */
@@ -13,12 +14,15 @@
 import type { MixItem } from "../mix/mix.service";
 import type { PortfolioPreset } from "./presets";
 import type { ReserveProfile } from "./cashReserve";
+import type { RiskPref } from "../mix/assetModel";
 
 import { normalize } from "../mix/mix.service";
 import { scaleMixByLumpSum, getLumpSumTierInfo } from "./lumpSumScaling";
 import { scaleMixByMonthly, getMonthlyCappingInfo } from "./monthlyScaling";
 import { adjustMixForCashReserve, getCashReserveInfo } from "./cashReserve";
 import { applyBondMinimum, getBondMinimumInfo } from "./bondMinimum";
+import { enforceStageCaps } from "./presets";
+import { detectStage } from "../policy/stage";
 
 export interface ProfileForAdjustments {
   lumpSumEur: number;
@@ -30,6 +34,10 @@ export interface ProfileForAdjustments {
   variableExpenses: number;
   reserveEur: number;
   reserveMonths: number;
+  // Goal for stage detection (PR-8)
+  goalAssetsEur?: number;
+  // Risk preference for stage caps
+  riskPref?: RiskPref;
 }
 
 export type AdjustmentWarning =
@@ -141,6 +149,17 @@ export function getAdjustedMix(
     }
     info.cashReserve = cashReserveInfo;
   }
+
+  // === STEP 5: Stage-aware caps enforcement (PR-8) ===
+  // Detekuj stage a aplikuj adaptive caps
+  const stage = detectStage(
+    profile.lumpSumEur,
+    profile.monthlyEur,
+    profile.horizonYears,
+    profile.goalAssetsEur
+  );
+  const riskPref = profile.riskPref || "vyvazeny"; // fallback
+  mix = enforceStageCaps(mix, riskPref, stage);
 
   return { mix: normalize(mix), warnings, info };
 }

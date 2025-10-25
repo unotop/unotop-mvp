@@ -4,12 +4,13 @@ import { calculateFutureValue } from "../../engine/calculations";
 import {
   approxYieldAnnualFromMix,
   riskScore0to10,
-  getRiskCap,
   type RiskPref,
 } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
 import { getCashReserveInfo } from "../portfolio/cashReserve";
 import { readV3 } from "../../persist/v3";
+import { detectStage } from "../policy/stage";
+import { getAdaptiveRiskCap } from "../policy/risk";
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -71,6 +72,14 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
       ? (riskPref as RiskPref)
       : "vyvazeny";
 
+  // Detect investment stage for adaptive caps
+  const stage = detectStage(
+    lumpSumEur,
+    monthlyVklad,
+    horizonYears,
+    goalAssetsEur
+  );
+
   // Calculations
   const approxYield = hasMix
     ? approxYieldAnnualFromMix(mix, validRiskPref)
@@ -89,9 +98,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
     goalAssetsEur > 0 ? Math.min((fv / goalAssetsEur) * 100, 100) : 0;
   const remaining = Math.max(goalAssetsEur - fv, 0);
 
-  // Risk metrics
+  // Risk metrics with adaptive cap
   const riskScore = hasMix ? riskScore0to10(mix, validRiskPref, 0) : 0;
-  const riskCap = getRiskCap(validRiskPref);
+  const riskCap = getAdaptiveRiskCap(validRiskPref, stage);
   const isOverRisk = riskScore > riskCap;
 
   // Risk profile label
@@ -167,7 +176,10 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             </div>
           </div>
 
-          <div className="text-4xl md:text-5xl font-bold text-white tabular-nums mb-3">
+          <div
+            className="text-4xl md:text-5xl font-bold text-white tabular-nums mb-3"
+            data-testid="expected-assets-value"
+          >
             {formatLargeNumber(fv)} €
           </div>
 

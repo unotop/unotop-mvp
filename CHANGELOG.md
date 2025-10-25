@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.6.2 (2025-10-25)
+
+**PR-8: Adaptive Policy – stage-aware caps & adaptive risk limits**
+
+- **Stage detection**: 3-tier classification (STARTER/CORE/LATE) based on capital, contributions, horizon, goal coverage
+- **Adaptive risk caps**: Baseline ±0.5 (STARTER: +0.5, CORE: baseline, LATE: -0.5)
+- **Stage-aware asset caps**:
+  - STARTER: ETF 50%, dyn +3 p.b., combo dyn+crypto 25%
+  - CORE: ETF 40%, dyn 15%, combo 22% (baseline)
+  - LATE: ETF 35%, dyn -5 p.b., combo 18%
+- **Enforcement & redistribution**: `enforceStageCaps()` with bucket ordering (bonds/gold/ETF/cash)
+- **Integration**: `mixAdjustments.ts`, `PortfolioSelector.tsx`, `BasicProjectionPanel.tsx`, `MetricsSection.tsx`
+- **Tests**: 40 policy unit tests (stage/risk/caps), 17 critical tests PASS
+- **Resolves**: ETF 43.96% error in growth phase, risk 7.7 > 7.5 warning in STARTER, GOLD 48.74% auto-redistribution
+
 ## v0.6.0-beta (2025-10-12)
 
 - fix: keep full app state on refresh (unotop_v1 + flush)

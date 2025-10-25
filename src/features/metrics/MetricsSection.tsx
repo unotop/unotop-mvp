@@ -7,9 +7,10 @@ import { calculateFutureValue } from "../../engine/calculations";
 import {
   approxYieldAnnualFromMix,
   riskScore0to10,
-  getRiskCap,
   type RiskPref,
 } from "../mix/assetModel";
+import { detectStage } from "../policy/stage";
+import { getAdaptiveRiskCap } from "../policy/risk";
 
 interface MetricsSectionProps {
   riskPref: string;
@@ -55,7 +56,16 @@ export function MetricsSection({
       ? (riskPref as RiskPref)
       : "vyvazeny";
 
-  const cap = getRiskCap(validRiskPref);
+  // Detect investment stage for adaptive caps
+  const stage = detectStage(
+    lumpSumEur,
+    monthlyVklad,
+    horizonYears,
+    goalAssetsEur
+  );
+
+  // Use adaptive risk cap based on stage
+  const cap = getAdaptiveRiskCap(validRiskPref, stage);
   const risk =
     Array.isArray(mix) && mix.length > 0
       ? riskScore0to10(mix, validRiskPref, 0)
@@ -124,13 +134,20 @@ export function MetricsSection({
               <button
                 type="button"
                 className="ml-1 text-slate-500 hover:text-slate-300 transition-colors"
-                title="Výnos je modelový odhad zloženia aktív a profilu rizika; projekcia používa konzervatívne scenáre."
+                title="Vypočítaný ako vážený priemer výnosov aktív podľa zvoleného profilu (p.a.). Projekcia používa mesačnú kapitalizáciu a mesačné vklady účtované na začiatku mesiaca (annuity due). Hodnota v karte je zaokrúhlená na 1 desatinné miesto, výpočet používa plnú presnosť."
                 aria-label="Info o výnose"
               >
                 ℹ️
               </button>
             </div>
-            <div className="text-lg font-bold tabular-nums">
+            <div
+              className="text-lg font-bold tabular-nums"
+              title={
+                Array.isArray(mix) && mix.length > 0
+                  ? `${(approxYield * 100).toFixed(2)} % p.a.`
+                  : undefined
+              }
+            >
               {!Array.isArray(mix) || mix.length === 0
                 ? "– (mix nezadaný)"
                 : `${(approxYield * 100).toFixed(1)} %`}

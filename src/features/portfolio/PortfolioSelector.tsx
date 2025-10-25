@@ -18,9 +18,10 @@ import { writeV3, readV3 } from "../../persist/v3";
 import {
   riskScore0to10,
   approxYieldAnnualFromMix,
-  getRiskCap,
   type RiskPref,
 } from "../mix/assetModel";
+import { detectStage } from "../policy/stage";
+import { getAdaptiveRiskCap } from "../policy/risk";
 
 /**
  * Farebné Tailwind utility classy pre karty (LIGHT THEME - HIGH CONTRAST)
@@ -143,9 +144,11 @@ export default function PortfolioSelector() {
       variableExpenses: profile.varExp || 0,
       reserveEur: profile.reserveEur || 0,
       reserveMonths: profile.reserveMonths || 0,
+      goalAssetsEur: profile.goalAssetsEur || 0,
+      riskPref: preset.id as RiskPref,
     };
 
-    // Aplikuj všetky adjustments (lump sum scaling, monthly capping, cash reserve, bond minimum)
+    // Aplikuj všetky adjustments (lump sum scaling, monthly capping, cash reserve, bond minimum, stage caps)
     const {
       preset: adjustedPreset,
       warnings,
@@ -154,9 +157,17 @@ export default function PortfolioSelector() {
 
     const adjustedMix = adjustedPreset.mix;
 
-    // Validácia: over risk cap + low investment warning
+    // Detekuj stage pre adaptívny risk cap (PR-8)
+    const stage = detectStage(
+      profileForAdj.lumpSumEur,
+      profileForAdj.monthlyEur,
+      profileForAdj.horizonYears,
+      profileForAdj.goalAssetsEur
+    );
+
+    // Validácia: over adaptive risk cap + low investment warning
     const risk = riskScore0to10(adjustedMix, preset.id);
-    const cap = getRiskCap(preset.id);
+    const cap = getAdaptiveRiskCap(preset.id as RiskPref, stage);
     const validation = validatePresetRisk(
       adjustedMix,
       preset.id,
