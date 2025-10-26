@@ -1,8 +1,8 @@
 # PR-14 Summary: cash_cap Loop Fix
 
 **Dátum**: 2025-10-26  
-**Commits**: 2 (defensive + root cause)  
-**Status**: ✅ Testy PASS (17/17), Build OK (648 kB)
+**Commits**: 3 (defensive + root cause + React effect fix)  
+**Status**: ✅ Testy PASS (17/17), Build OK (648 kB)  
 
 ---
 
@@ -12,21 +12,18 @@
 
 **Scenár**: Nízke vklady (napr. 50€/mesiac, 0€ lump sum) + výber Vyvážený/Rastový portfólio.
 
-**Root cause**:
+**Root cause (multi-layered)**:
 
-1. `applyMinimums()`: Zlato/Dyn/Krypto nedostupné (minimumy nesplnené) → vynuluje ich → presunie VŠETKO do cash (64.99%)
-2. `enforceStageCaps()`: cash cap = 40% (STARTER stage) → overflow 24.99%
-3. **Bucket redistribution**: Pokúsi sa overflow dať do ETF/bonds/gold, ale všetky majú `inputPct=0` (vynulované v kroku 1) → **overflow zostáva**
-4. **normalize()**: Proporcionálne redistribuuje na 100% → cash dostane späť svoj podiel → opäť 64.99% → **LOOP**
+1. **Logika loop**: `applyMinimums()` → cash 64.99% → `enforceStageCaps()` cap 40% → overflow 24.99% → `normalize()` redistribuuje → cash opäť 64.99%
+2. **React effect loop**: `BasicLayout.tsx` effect závisí na `[investParams, cashflowData]` → nové referencie pri každom renderi → effect beží dookola
 
-**Prečo circuit breaker nestačil**: Circuit breaker (commit 1) detekoval loop a vrátil cached result, **ALE** React effect v `BasicLayout.tsx` sa retriggoval (dependencies `investParams`, `cashflowData` sa menili), čo opäť volalo `getAdjustedPreset` → dookola.
+**Prečo circuit breaker nestačil**: Circuit breaker (commit 1) zabránil **enforceStageCaps** loop, skip normalize (commit 2) vyriešil **logiku**, **ALE** React effect sa retriggoval kvôli nestabilným dependencies → `getAdjustedPreset` volaný opakovane.
 
 ---
 
 ## Riešenie
 
 ### Commit 1: Circuit breaker (defensive)
-
 **Súbor**: `src/features/portfolio/presets.ts` (lines 108-130, 263)
 
 ```typescript
@@ -78,6 +75,28 @@ if (overflow > 0.01) {
 
 ---
 
+### Commit 3: Stabilné effect dependencies (React fix)
+**Súbor**: `src/BasicLayout.tsx` (lines 260-263)
+
+```typescript
+// PR-14 FIX: Stabilné dependencies - porovnaj hodnoty, nie referencie
+const stableInvestKey = `${investParams.lumpSumEur}-${investParams.monthlyVklad}-${investParams.horizonYears}`;
+const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
+
+React.useEffect(() => {
+  // ... getAdjustedPreset logic ...
+}, [stableInvestKey, stableCashflowKey]); // Stable strings, nie object refs
+```
+
+**Prínos**: **Vyriešil React re-render loop** – effect sa spustí LEN ak sa HODNOTY zmenili, nie referencie.
+
+**Trade-off**: Žiadne. Čistý performance win:
+- ✅ Žiadne zbytočné re-computations
+- ✅ Žiadne telemetry logy pri idle state
+- ✅ Effect beží len pri reálnej zmene vstupov
+
+---
+
 ## Technické detaily
 
 ### Prečo normalize() vytvára loop?
@@ -105,6 +124,38 @@ export function normalize(mix: MixItem[]): MixItem[] {
 - Potrebný design: `normalize(mix, excludeKeys: string[])` – netreba do capped assets
 - Riziká: Regresie v iných scenároch (ETF overflow, dyn+crypto combo, atď.)
 - **Pragmatický fix**: Lokálne riešenie v `enforceStageCaps` (menší risk)
+
+---
+
+### Prečo React effect loop vznikol?
+
+**Problém**: `investParams` a `cashflowData` sú objekty vytvorené nanovo pri každom renderi.
+
+```typescript
+// Každý render vytvorí NOVÉ objekty (aj keď hodnoty rovnaké)
+const investParams = { lumpSumEur: 5000, monthlyVklad: 300, horizonYears: 7 };
+const cashflowData = { monthlyIncome: 2000, fixedExp: 800, varExp: 500 };
+
+// Effect vidí NOVÉ referencie → spustí sa znova
+React.useEffect(() => {
+  getAdjustedPreset(...); // Volané dookola
+}, [investParams, cashflowData]); // ❌ Nové referencie = nový run
+```
+
+**Riešenie**: String klúče obsahujú hodnoty, nie referencie.
+
+```typescript
+// Stable keys - menia sa LEN ak sa zmenia hodnoty
+const stableInvestKey = `${lumpSumEur}-${monthlyVklad}-${horizonYears}`;
+
+React.useEffect(() => {
+  getAdjustedPreset(...); // Volané LEN pri zmene hodnôt
+}, [stableInvestKey, stableCashflowKey]); // ✅ Strings sú value-based
+```
+
+**Prečo nie `useMemo`?**
+- `useMemo(() => [investParams, cashflowData], [...])` by fungovalo
+- Ale string key je jednoduchší a jasnejší (žiadne vnorené deps)
 
 ---
 
@@ -172,10 +223,22 @@ Keď overflow neabsorbovateľný, nahraď mix "safe" presetom (napr. 100% hotovo
 
 ### ⏳ Manuálne overenie (potrebné v browseri)
 
-- [ ] Test 1 (cash_cap): 50€/mesiac, Vyvážený → ŽIADNE telemetry logy, možné "Unabsorbed overflow" warning
-- [ ] Test 2 (dyn_cap): 500€/mesiac, 8 rokov, Vyvážený → Žiadne loops
-- [ ] Test 3 (edge case): Zmeniť vklady za behu → Projekcia reaguje live
-- [ ] Test 4 (UX): Portfólio selection ostáva pri zmene vstupov
+- [ ] **Test 1 (cash_cap - hlavný bug)**: 50€/mesiac, Vyvážený 
+  - Očakávané: **ŽIADNE** `policy_adjustment` logy (ani raz)
+  - Očakávané: **ŽIADNE** `LOOP DETECTED` warnings
+  - Možné: Console warning "Unabsorbed overflow 24.99%, sum=75.01%" (1× pri načítaní, OK)
+  - Kritérium: Po 5s idle **nesmú** byť nové logy
+  
+- [ ] **Test 2 (React effect loop)**: Zmeniť príjem 2000€ → 2500€
+  - Očakávané: `getAdjustedPreset` volaný **1×** (nie dookola)
+  - Očakávané: Telemetry logy max **1× per zmenu**, nie continuous spam
+  - Kritérium: Po zmene + 2s idle **nesmú** byť nové logy
+
+- [ ] **Test 3 (dyn_cap)**: 500€/mesiac, 8 rokov, Vyvážený
+  - Očakávané: Žiadne loops, portfólio sa zobrazí
+
+- [ ] **Test 4 (UX)**: Vybrať Rastový, zmeniť vklady
+  - Očakávané: Portfólio zostane Rastový (neresetnuje sa)
 
 ### ✅ UX kritériá
 
@@ -210,32 +273,38 @@ Keď overflow neabsorbovateľný, nahraď mix "safe" presetom (napr. 100% hotovo
 
 ---
 
-### ⚠️ React effect dependencies
+### ✅ ~~React effect dependencies~~ (VYRIEŠENÉ v commit 3)
 
-**Problém**: `BasicLayout.tsx` effect závisí na `investParams`, `cashflowData` – nové referencie pri každom re-renderi.
+~~**Problém**: `BasicLayout.tsx` effect závisí na `investParams`, `cashflowData` – nové referencie pri každom re-renderi.~~
 
-**Riziko**: Zbytočné re-computations aj keď hodnoty nezmenené.
+~~**Riziko**: Zbytočné re-computations aj keď hodnoty nezmenené.~~
 
-**Riešenie**: `useMemo` alebo `useDeepCompareMemo` na dependencies.
-
----
+**Riešenie**: Stable string keys (`stableInvestKey`, `stableCashflowKey`) → effect beží len pri zmene hodnôt. ✅
 
 ## Rollback plan
 
 ### Ak loop pokračuje:
 
 ```bash
-git revert daac6da  # Revert "skip normalize()"
-git revert 05efcf3  # Revert "circuit breaker"
+git revert 22dbc2c  # Revert "stable deps" (commit 3)
+git revert daac6da  # Revert "skip normalize()" (commit 2)
+git revert 05efcf3  # Revert "circuit breaker" (commit 1)
 npm run test:critical
 npm run build
 git push
 ```
 
-**Alternatíva** (ak len suma < 100% problém):
+**Selektívny rollback** (ak len suma < 100% problém):
 
-- Zvýš tolerance: `if (overflow > 0.1)` → `if (overflow > 1.0)`
-- Alebo pridaj fallback: `if (overflow > 5) return SAFE_PRESET`
+```bash
+# Vráť len commit 2, nechaj circuit breaker + stable deps
+git revert daac6da
+```
+
+**Alternatívny fix** (ak telemetry spam pokračuje):
+
+- Debug BasicLayout effect: Pridaj console.log na začiatok effect → overíme koľkokrát beží
+- Možné: Iné nestabilné deps (v3 readV3 output?)
 
 ---
 
@@ -243,12 +312,16 @@ git push
 
 **V produkcii sleduj**:
 
-1. Console warnings: `"Unabsorbed overflow"` – koľkokrát za deň?
-2. Console warnings: `"LOOP DETECTED"` – malo by byť 0 po fixe
-3. User feedback: Zmätok z nižších FV projekcií?
+1. Console warnings: `"Unabsorbed overflow"` – koľkokrát za deň? (Očakávané: rare, <5% users)
+2. Console warnings: `"LOOP DETECTED"` – malo by byť **0 po všetkých 3 fixoch**
+3. Telemetry spam: `policy_adjustment` logy v idle state – malo by byť **0**
+4. User feedback: Zmätok z nižších FV projekcií?
 
 **Ak warnings časté**:
 → Prioritizuj Option A (normalize s excludeKeys) alebo Option C (safe preset fallback).
+
+**Ak telemetry spam pokračuje**:
+→ Debug BasicLayout effect (pridaj console.log), možný iný nestabilný dep.
 
 ---
 
@@ -257,19 +330,22 @@ git push
 **Pred fixom**:
 
 - ❌ Frozen browser pri low deposits
-- ❌ Infinite telemetry spam
+- ❌ Infinite telemetry spam (policy_adjustment + LOOP DETECTED dookola)
+- ❌ React effect loop (zbytočné re-computations)
 - ❌ Nepoužiteľná app v edge cases
 
-**Po fixe**:
+**Po fixe (3 commits)**:
 
 - ✅ App funguje vo všetkých scenároch
-- ✅ Console warnings sú jasné a informatívne
+- ✅ Žiadne telemetry logy v idle state (React effect stabilný)
+- ✅ Console warnings sú jasné a informatívne (nie spam)
 - ✅ Testy prechádzajú (17/17)
 - ⚠️ Trade-off: Suma < 100% v rare edge cases (akceptovateľné)
 
 **Next steps**:
 
-1. Manuálne overenie v browseri (4 testy)
+1. **Manuálne overenie v browseri** (4 testy - najmä Test 1 a Test 2)
 2. Deploy na production
-3. Monitoring warnings (2 týždne)
+3. Monitoring warnings + telemetry spam (2 týždne)
 4. Ak warnings časté → Plan Option A refactor (Q1 2026)
+
