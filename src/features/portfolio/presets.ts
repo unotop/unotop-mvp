@@ -243,7 +243,21 @@ export function enforceStageCaps(
   }
   
   // 4. Normalize na presne 100%
-  const normalized = normalize(mix);
+  // PR-14 FIX: Ak overflow zostal (capy zabránili redistribúcii), 
+  // NESMIEME normalize() - vytvorilo by to loop (redistribute späť nad capy)
+  const currentSum = mix.reduce((acc, m) => acc + m.pct, 0);
+  let normalized: MixItem[];
+  
+  if (overflow > 0.01) {
+    // Overflow neabsorbovaný -> NEPOUZIVAJ normalize (loop!)
+    // Radšej nechaj sumu < 100% než vytvor loop
+    console.warn(`[enforceStageCaps] Unabsorbed overflow ${overflow.toFixed(2)}%, sum=${currentSum.toFixed(2)}% - SKIPPING normalize to prevent loop`);
+    normalized = mix;
+  } else {
+    // Normálne: normalize na 100%
+    normalized = normalize(mix);
+  }
+  
   const sumAfter = normalized.reduce((acc, m) => acc + m.pct, 0);
   
   // Track sum drift correction if normalization was significant
