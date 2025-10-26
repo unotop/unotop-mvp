@@ -2,8 +2,10 @@
 
 ## Kontext
 
-- **Cieľ**: Circuit breaker pre enforceStageCaps infinite loops
-- **Commit**: `fix: PR-14 circuit breaker pre enforceStageCaps infinite loops`
+- **Cieľ**: Vyriešiť cash_cap infinite loop (root cause)
+- **Commits**:
+  1. `fix: PR-14 circuit breaker` (defensive - partial)
+  2. `fix: PR-14 root cause - skip normalize()` (root cause fix)
 - **Tests**: 17/17 PASS
 - **Build**: 648 kB ✅
 
@@ -11,7 +13,7 @@
 
 ## Implementované zmeny
 
-### 1. Circuit breaker v `presets.ts` (lines 108-130, 251)
+### 1. Circuit breaker v `presets.ts` (lines 108-130, 251) [DEFENSIVE]
 
 ```typescript
 // Detekcia opakovaného spracovania rovnakého mixu
@@ -40,6 +42,42 @@ enforceStageCaps._cache.set(cacheKey, { result: normalized, time: Date.now() });
 - Cache kľúč: `${riskPref}-${stage}-${mix percentages}`
 - Časové okno: 100ms
 - Akcia pri detekcii: Vráť cached result, vyhoď warning
+
+**Status**: DEFENSIVE FIX - zachytí loop, ale nefixuje root cause
+
+---
+
+### 2. Skip normalize() pri unabsorbed overflow (lines 247-268) [ROOT CAUSE FIX]
+
+```typescript
+// PR-14 FIX: Ak overflow zostal (capy zabránili redistribúcii),
+// NESMIEME normalize() - vytvorilo by to loop (redistribute späť nad capy)
+const currentSum = mix.reduce((acc, m) => acc + m.pct, 0);
+let normalized: MixItem[];
+
+if (overflow > 0.01) {
+  // Overflow neabsorbovaný -> NEPOUZIVAJ normalize (loop!)
+  // Radšej nechaj sumu < 100% než vytvor loop
+  console.warn(
+    `[enforceStageCaps] Unabsorbed overflow ${overflow.toFixed(2)}%, sum=${currentSum.toFixed(2)}% - SKIPPING normalize to prevent loop`
+  );
+  normalized = mix;
+} else {
+  // Normálne: normalize na 100%
+  normalized = normalize(mix);
+}
+```
+
+**Účel**: Vyriešiť ROOT CAUSE cash_cap loop
+
+**Mechanizmus**:
+
+- Detekcia: Po bucket redistribution, ak `overflow > 0.01%`
+- Problém: applyMinimums presunie VŠETKO do cash (64.99%), cap na 40%, overflow 24.99% NEMÔŽE byť absorbovaný (všetky iné aktíva vynulované)
+- Pôvodná logika: `normalize()` → proporcionálne redistribuuj → cash opäť nad 40% → LOOP
+- Fix: SKIP `normalize()`, akceptuj sumu < 100%
+
+**Dôvod**: `normalize()` nemôže rešpektovať capy. Pri unabsorbed overflow vždy vytvorí loop. Lepšie mať sumu ~75% než frozen browser.
 
 ---
 
@@ -70,15 +108,17 @@ npm run test:critical
 
 **Očakávané**:
 
-- ❌ BEZ circuit breaker: Infinite `[Telemetry] policy_adjustment: {reason: 'dyn_cap', ...}`
-- ✅ S circuit breakerom: Max 2-3 `policy_adjustment` logy, potom `[enforceStageCaps] LOOP DETECTED`
-- ✅ App nefreeźne, UI reaguje
+- ✅ S ROOT CAUSE FIX: ŽIADNE telemetry logy (loop už nevznikne)
+- ✅ App reaguje normálne
+- ⚠️ Možné: "Unabsorbed overflow" warning (OK - to je fix)
 
 **Prečo to loopovalo**:
 
 - Vyvážený preset: dyn = 18%
 - CORE stage cap: dyn = 15%
 - Overflow 3% → normalize() → proporcionálne späť do dyn → 18% again → LOOP
+
+**Status po fixe**: ⏳ POTREBNÉ MANUÁLNE OVERENIE
 
 ---
 
@@ -124,15 +164,21 @@ npm run test:critical
 
 **Očakávané**:
 
-- ✅ Žiadny infinite loop
-- ✅ applyMinimums presunie do cash, ale circuit breaker chráni
+- ✅ S ROOT CAUSE FIX: ŽIADNE telemetry logy, ŽIADNE "LOOP DETECTED"
+- ✅ Možné: Console warning "Unabsorbed overflow 24.99%, sum=75.01% - SKIPPING normalize"
+- ✅ Projekcia sa zobrazí (aj keď s nižším sumom)
+- ✅ App funguje normálne
 
 **Prečo to loopovalo**:
 
 - Nízke vklady → applyMinimums vynuluje dyn/crypto/gold (minimá nedostupné)
 - Všetko presunie do cash → 64.99%
 - STARTER stage: cash cap 40%
-- Overflow 24.99% → kde dať? → normalize → späť do cash → LOOP
+- Overflow 24.99% → **NEMÔŽE byť absorbovaný** (všetky iné aktíva input=0)
+- Pôvodne: normalize() → proporcionálne → cash opäť 64.99% → LOOP
+- **Fix: SKIP normalize(), akceptuj sum=75.01%**
+
+**Status po fixe**: ⏳ TOTO JE HLAVNÝ TEST - overuje ROOT CAUSE fix
 
 ---
 

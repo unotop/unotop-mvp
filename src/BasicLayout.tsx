@@ -257,6 +257,10 @@ export default function BasicLayout() {
   const validationMessage = getValidationMessage(validationState);
 
   // Portfolio adjustments - aplikuj pri zmene profilu/investičných parametrov
+  // PR-14 FIX: Stabilné dependencies - porovnaj hodnoty, nie referencie
+  const stableInvestKey = `${investParams.lumpSumEur}-${investParams.monthlyVklad}-${investParams.horizonYears}`;
+  const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
+  
   React.useEffect(() => {
     const v3 = readV3();
     const currentRiskPref = (v3.profile?.riskPref as any) || "vyvazeny";
@@ -291,7 +295,7 @@ export default function BasicLayout() {
 
     // NEROB automatickú aktualizáciu mixu - používateľ musí vybrať profil manuálne
     // (aby sme neprepisovali jeho ručné zmeny)
-  }, [investParams, cashflowData]);
+  }, [stableInvestKey, stableCashflowKey]);
 
   // Uncheck preset pri zmene vstupov (aby používateľ musel znovu vybrať)
   React.useEffect(() => {
