@@ -1,11 +1,20 @@
 # PR-14 Verification Checklist
 
+## ✅ VERIFIED – 2025-10-26 20:07 UTC
+
+**Status**: COMPLETE, loop úplne vyriešený, schválené pre production deployment.
+
+**User verification**: Po refresh + 5 sekúnd idle = ŽIADNE nové logy, len 6× single events pri page load (všetky rovnaký timestamp).
+
+---
+
 ## Kontext
 
 - **Cieľ**: Vyriešiť cash_cap infinite loop (root cause)
 - **Commits**:
   1. `fix: PR-14 circuit breaker` (defensive - partial)
   2. `fix: PR-14 root cause - skip normalize()` (root cause fix)
+  3. `fix: PR-14 stabilné effect dependencies` (React re-render fix)
 - **Tests**: 17/17 PASS
 - **Build**: 648 kB ✅
 
