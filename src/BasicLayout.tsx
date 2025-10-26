@@ -17,6 +17,7 @@ import { createMixListener } from "./persist/mixEvents";
 import type { MixItem } from "./features/mix/mix.service";
 import { calculateFutureValue } from "./engine/calculations";
 import { approxYieldAnnualFromMix } from "./features/mix/assetModel";
+import { detectStage } from "./features/policy/stage";
 import {
   validateBasicWorkflow,
   getValidationMessage,
@@ -153,6 +154,7 @@ export default function BasicLayout() {
     email: "",
     gdprConsent: false,
     honeypot: "", // Bot trap - must stay empty
+    reserveHelp: false, // PR-13B: Checkbox pre rezervu help
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitStatus, setSubmitStatus] = React.useState<
@@ -418,6 +420,17 @@ export default function BasicLayout() {
       const utmMedium = urlParams.get("utm_medium") || "";
       const utmCampaign = urlParams.get("utm_campaign") || "";
 
+      // PR-13B: Calculate reserve context
+      const fixedExp = (v3Data.profile?.fixedExp as any) || 0;
+      const varExp = (v3Data.profile?.varExp as any) || 0;
+      const expenses = fixedExp + varExp;
+      const reserveLow = Math.round(expenses * 3);
+      const reserveHigh = Math.round(expenses * 6);
+      const monthlyIncome = (v3Data.profile?.monthlyIncome as any) || 0;
+      const debtPayments = 0; // TODO: calculate from debts if needed
+      const surplus = monthlyIncome - expenses - debtPayments;
+      const stage = detectStage(lump, monthly, years, goal);
+
       // Prepare projection data
       const projectionData: ProjectionData = {
         user: {
@@ -445,6 +458,13 @@ export default function BasicLayout() {
           utm_medium: utmMedium,
           utm_campaign: utmCampaign,
           referenceCode,
+          reserveHelp: formData.reserveHelp, // PR-13B
+          // PR-13B: Reserve context
+          expenses,
+          reserveLow,
+          reserveHigh,
+          surplus,
+          stage,
         },
         recipients: ["info.unotop@gmail.com", "adam.belohorec@universal.sk"],
       };
@@ -477,6 +497,7 @@ export default function BasicLayout() {
           email: "",
           gdprConsent: false,
           honeypot: "",
+          reserveHelp: false, // PR-13B
         });
         setSubmitStatus("idle");
         setValidationErrors({});
@@ -915,6 +936,21 @@ export default function BasicLayout() {
                 aria-hidden="true"
               />
 
+              {/* PR-13B: Reserve help checkbox */}
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.reserveHelp}
+                  onChange={(e) =>
+                    setFormData({ ...formData, reserveHelp: e.target.checked })
+                  }
+                  className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-2 focus:ring-blue-500/50"
+                />
+                <span className="text-xs text-slate-300 leading-relaxed">
+                  ✓ Chcem pomôcť nastaviť rezervu a investičný plán
+                </span>
+              </label>
+
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -1023,6 +1059,7 @@ export default function BasicLayout() {
                     email: "",
                     gdprConsent: false,
                     honeypot: "",
+                    reserveHelp: false, // PR-13B
                   });
                   setSubmitStatus("idle");
                   setConfirmationCode("");

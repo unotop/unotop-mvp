@@ -29,6 +29,8 @@ export const ASSET_MINIMUMS = {
  * 
  * Formát: [target asset, % ratio]
  * Súčet ratios by mal byť 100 (pre jednoduchosť)
+ * 
+ * PR-13: Risk-aware fallback pre konzervativny profil
  */
 export const FALLBACKS: Record<
   string,
@@ -41,6 +43,22 @@ export const FALLBACKS: Record<
   crypto:  [["etf", 100]],
   gold:    [["etf", 60], ["cash", 40]],
   // etf/cash vždy dostupné – fallback netreba
+};
+
+/**
+ * Risk-aware fallback pre konzervativny profil
+ * Namiesto ETF-heavy, presúvaj do gold+cash (50:50)
+ */
+export const CONSERVATIVE_FALLBACKS: Record<
+  string,
+  Array<[keyof typeof ASSET_MINIMUMS, number]>
+> = {
+  bonds:   [["gold", 50], ["cash", 50]],
+  bond3y9: [["gold", 50], ["cash", 50]],
+  dyn:     [["gold", 50], ["cash", 50]],
+  real:    [["gold", 50], ["cash", 50]],
+  crypto:  [["etf", 100]], // crypto ostáva do ETF
+  gold:    [["cash", 100]], // gold už nemôže ísť do gold
 };
 
 /**

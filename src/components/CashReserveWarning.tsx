@@ -17,10 +17,32 @@ export function CashReserveWarning({
   message,
   onApply,
 }: Props) {
-  const isLow = current < optimal - 2;
-  const isHigh = current > optimal + 2;
+  // PR-13: Tri stavy pre hotovosť
+  const TOLERANCE = 1.0; // ±1 p.b. tolerancia
+  const isLow = current < optimal - TOLERANCE;
+  const isHigh = current > optimal + TOLERANCE;
+  const isOptimal = !isLow && !isHigh;
 
-  if (!isLow && !isHigh) return null; // Optimal range
+  if (isOptimal) {
+    // Optimálne pásmo - zobraziť pozitívny feedback
+    return (
+      <div className="bg-green-500/10 border-green-500/30 border rounded-lg p-4 text-sm">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">✅</span>
+          <div className="flex-1">
+            <p className="font-semibold text-slate-200 mb-2">
+              Rezerva je v optimálnom pásme
+            </p>
+            <p className="text-slate-300">
+              Vaša hotovostná rezerva ({current.toFixed(1)}%) je blízko
+              odporúčanej úrovne ({optimal.toFixed(1)}%). Môžete pokračovať v
+              investovaní.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -34,7 +56,9 @@ export function CashReserveWarning({
         <span className="text-2xl">{isLow ? "💵" : "💰"}</span>
         <div className="flex-1">
           <p className="font-semibold text-slate-200 mb-2">
-            {isLow ? "Odporúčanie k rezerve" : "Nadmerná hotovosť"}
+            {isLow
+              ? "Nižšia hotovosť – zváž doplniť rezervu 3–6 mes."
+              : "Nadmerná hotovosť"}
           </p>
           <p className="text-slate-300 mb-3">{message}</p>
 

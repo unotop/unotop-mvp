@@ -43,6 +43,13 @@ export interface ProjectionData {
     utm_medium?: string;
     utm_campaign?: string;
     referenceCode?: string;
+    // PR-13B: Reserve & financial context
+    reserveHelp?: boolean;
+    expenses?: number;
+    reserveLow?: number;
+    reserveHigh?: number;
+    surplus?: number;
+    stage?: string;
   };
   recipients: string[];
 }
@@ -79,6 +86,13 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
     utm_medium: data.metadata?.utm_medium || '',
     utm_campaign: data.metadata?.utm_campaign || '',
     reference_code: data.metadata?.referenceCode || '',
+    // PR-13B: Reserve context
+    reserve_help: data.metadata?.reserveHelp ? 'Áno' : 'Nie',
+    expenses: data.metadata?.expenses ? data.metadata.expenses.toLocaleString('sk-SK') : 'N/A',
+    reserve_low: data.metadata?.reserveLow ? data.metadata.reserveLow.toLocaleString('sk-SK') : 'N/A',
+    reserve_high: data.metadata?.reserveHigh ? data.metadata.reserveHigh.toLocaleString('sk-SK') : 'N/A',
+    surplus: data.metadata?.surplus ? data.metadata.surplus.toLocaleString('sk-SK') : 'N/A',
+    stage: data.metadata?.stage || 'N/A',
     mix_formatted: mixFormatted,
   };
 

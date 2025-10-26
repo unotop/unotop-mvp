@@ -2,13 +2,16 @@
  * Apply Asset Minimums - Presunie nedostupné aktíva do fallback buckets
  * 
  * PR-12: Jednoduchý fallback bez blokovania výberu
+ * PR-13: Risk-aware fallback pre konzervativny profil
  */
 
 import type { MixItem } from "../mix/mix.service";
+import type { RiskPref } from "../mix/assetModel";
 import { normalize } from "../mix/mix.service";
 import {
   ASSET_MINIMUMS,
   FALLBACKS,
+  CONSERVATIVE_FALLBACKS,
   isAssetAvailable,
   type AssetAvailabilityProfile,
 } from "./assetMinimums";
@@ -24,18 +27,25 @@ export interface MinimumAdjustmentResult {
 }
 
 /**
- * Aplikuj minimumy aktív - presunie nedostupné % do ETF/cash
+ * Aplikuj minimumy aktív - presunie nedostupné % do ETF/cash alebo gold/cash
+ * 
+ * PR-13: Risk-aware fallback pre konzervativny profil
  * 
  * @param baseMix - Vstupný mix (po reality filtri, pred stage capmi)
  * @param profile - Profil používateľa
+ * @param riskPref - Rizikový profil (pre výber fallback stratégie)
  * @returns Upravený mix + info o presunoch
  */
 export function applyMinimums(
   baseMix: MixItem[],
-  profile: AssetAvailabilityProfile
+  profile: AssetAvailabilityProfile,
+  riskPref: RiskPref = "vyvazeny"
 ): MinimumAdjustmentResult {
   let mix = [...baseMix];
   const adjustments: MinimumAdjustmentResult["adjustments"] = [];
+
+  // PR-13: Vyber fallback stratégiu podľa risk profilu
+  const fallbackMap = riskPref === "konzervativny" ? CONSERVATIVE_FALLBACKS : FALLBACKS;
 
   // Helper: získaj pct aktíva
   const getPct = (key: MixItem["key"]): number =>
@@ -60,7 +70,7 @@ export function applyMinimums(
     }
 
     // Aktívum nie je dostupné → presunúť do fallback
-    const fallback = FALLBACKS[item.key];
+    const fallback = fallbackMap[item.key];
     if (!fallback) {
       // Žiadny fallback definovaný (napr. etf, cash)
       continue;

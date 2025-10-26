@@ -110,6 +110,23 @@ export function enforceStageCaps(
   riskPref: RiskPref,
   stage: Stage
 ): MixItem[] {
+  // PR-14 CIRCUIT BREAKER: Detekcia opakovania toho istého mixu
+  const mixKey = mix.map((m) => `${m.key}:${m.pct.toFixed(2)}`).join("|");
+  const cacheKey = `${riskPref}-${stage}-${mixKey}`;
+  
+  // @ts-ignore - static cache pre detekciu loop
+  if (!enforceStageCaps._cache) enforceStageCaps._cache = new Map();
+  // @ts-ignore
+  if (enforceStageCaps._cache.has(cacheKey)) {
+    // @ts-ignore
+    const cached = enforceStageCaps._cache.get(cacheKey);
+    // @ts-ignore
+    if (Date.now() - cached.time < 100) { // 100ms window
+      console.warn(`[enforceStageCaps] LOOP DETECTED, returning cached result`);
+      return cached.result;
+    }
+  }
+  
   const caps = getAssetCaps(riskPref, stage);
   const comboCap = getDynCryptoComboCap(stage);
   
@@ -214,6 +231,15 @@ export function enforceStageCaps(
         overflow -= toAdd;
       }
     }
+    
+    // PR-14 FIX: Ak overflow stále existuje, NENIČ HO do aktíva s capom
+    // Nechaj nealokovaný → normalize() to proporcionálne rozdelí bez loopu
+    if (overflow > 0.01) {
+      console.warn(
+        `[enforceStageCaps] Unabsorbed overflow: ${overflow.toFixed(2)}% (will be normalized proportionally)`
+      );
+      // Overflow zostáva → normalize() nižšie ho rozdelí proporcionálne
+    }
   }
   
   // 4. Normalize na presne 100%
@@ -230,6 +256,10 @@ export function enforceStageCaps(
       sum_after: sumAfter,
     });
   }
+  
+  // PR-14: Ulož do cache pre loop detekciu
+  // @ts-ignore
+  enforceStageCaps._cache.set(cacheKey, { result: normalized, time: Date.now() });
   
   return normalized;
 }
@@ -359,11 +389,12 @@ export function validatePresetRisk(
     };
   }
 
-  // Nakoniec over risk cap
+  // Nakoniec over risk cap (PR-13: len warning, nie blokovanie)
   if (riskScore > riskCap) {
     return {
-      valid: false,
+      valid: true, // Neblokuj výber
       message: `Riziko ${riskScore.toFixed(1)} prekračuje limit ${riskCap} pre ${riskPref} profil.`,
+      isWarning: true, // Označiť ako warning
     };
   }
 

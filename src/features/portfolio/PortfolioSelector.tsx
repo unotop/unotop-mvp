@@ -97,9 +97,8 @@ export default function PortfolioSelector() {
         );
         setSelectedPreset(null);
 
-        // Clear from persist too
+        // PR-14: Clear only riskPref, keep mix for projection continuity
         writeV3({
-          mix: [],
           profile: {
             ...(v3.profile || {}),
             riskPref: undefined,
@@ -107,37 +106,9 @@ export default function PortfolioSelector() {
         });
       }
 
-      // PR-11 FIX: Clear selection when key investment params change
-      // Store snapshot of params when portfolio was selected
-      const snapshotKey = "portfolio_snapshot";
-      const storedSnapshot = sessionStorage.getItem(snapshotKey);
-
-      if (selectedPreset && storedSnapshot) {
-        const snapshot = JSON.parse(storedSnapshot);
-        const currentSnapshot = { lumpSum, monthly, horizon, goal };
-
-        // If any param changed significantly, clear selection
-        if (
-          Math.abs(snapshot.lumpSum - currentSnapshot.lumpSum) > 10 ||
-          Math.abs(snapshot.monthly - currentSnapshot.monthly) > 5 ||
-          Math.abs(snapshot.horizon - currentSnapshot.horizon) > 0.5 ||
-          Math.abs(snapshot.goal - currentSnapshot.goal) > 100
-        ) {
-          console.log(
-            "[PortfolioSelector] Investment params changed, clearing selection"
-          );
-          setSelectedPreset(null);
-          sessionStorage.removeItem(snapshotKey);
-
-          writeV3({
-            mix: [],
-            profile: {
-              ...(v3.profile || {}),
-              riskPref: undefined,
-            } as any,
-          });
-        }
-      }
+      // PR-14 CHANGE: Removed investment params change detection
+      // Portfolio selection now persists across lump/monthly/horizon/goal changes
+      // Only cleared when income becomes invalid (above) or user manually switches profiles
     };
 
     // Listen to storage events
@@ -238,6 +209,27 @@ export default function PortfolioSelector() {
       return;
     }
 
+    // PR-13: Zobraz warning ak isWarning=true, ale neprerušuj výber
+    if (validation.isWarning && validation.message) {
+      WarningCenter.push({
+        type: "warning",
+        message: validation.message,
+        scope: "risk",
+        dedupeKey: "preset-risk-warning",
+      });
+    }
+
+    // PR-13 ULTIMATE: Spracuj adjustment warnings
+    if (warnings.includes("risk-target-limited")) {
+      WarningCenter.push({
+        type: "info",
+        message:
+          "Cieľové riziko limitované – vyžaduje vyšší vklad alebo menej konzervatívne nastavenia.",
+        scope: "risk",
+        dedupeKey: "risk-target-limited",
+      });
+    }
+
     // Vypočítaj expected yield pre feedback
     const expectedYield = approxYieldAnnualFromMix(adjustedMix, preset.id);
 
@@ -268,16 +260,7 @@ export default function PortfolioSelector() {
     // UI feedback
     setSelectedPreset(preset.id);
 
-    // PR-11 FIX: Store snapshot of investment params for change detection
-    sessionStorage.setItem(
-      "portfolio_snapshot",
-      JSON.stringify({
-        lumpSum: profileForAdj.lumpSumEur,
-        monthly: profileForAdj.monthlyEur,
-        horizon: profileForAdj.horizonYears,
-        goal: profileForAdj.goalAssetsEur,
-      })
-    );
+    // PR-14: Removed snapshot storage (no longer needed)
 
     // Auto-scroll to metrics + pulse animation
     setTimeout(() => {

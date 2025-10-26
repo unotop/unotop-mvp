@@ -67,8 +67,25 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   goalAssetsEur,
   riskPref,
 }) => {
-  const hasMix =
-    Array.isArray(mix) && mix.length > 0 && mix.some((i) => i.pct > 0);
+  // PR-14: If mix is empty, use default fallback (vyvazeny preset) for projection continuity
+  const defaultMix: MixItem[] = [
+    { key: "gold", pct: 13 },
+    { key: "etf", pct: 32 },
+    { key: "bonds", pct: 10 },
+    { key: "bond3y9", pct: 10 },
+    { key: "dyn", pct: 18 },
+    { key: "cash", pct: 9 },
+    { key: "crypto", pct: 4 },
+    { key: "real", pct: 4 },
+  ];
+
+  const effectiveMix =
+    Array.isArray(mix) && mix.length > 0 && mix.some((i) => i.pct > 0)
+      ? mix
+      : defaultMix;
+
+  const hasMix = true; // Always show projection with effective mix
+  const isUsingFallback = effectiveMix === defaultMix;
 
   // Validate riskPref
   const validRiskPref: RiskPref =
@@ -84,10 +101,8 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
     goalAssetsEur
   );
 
-  // Calculations
-  const approxYield = hasMix
-    ? approxYieldAnnualFromMix(mix, validRiskPref)
-    : 0.04;
+  // Calculations (use effectiveMix)
+  const approxYield = approxYieldAnnualFromMix(effectiveMix, validRiskPref);
   const fv = calculateFutureValue(
     lumpSumEur,
     monthlyVklad,
@@ -102,8 +117,8 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
     goalAssetsEur > 0 ? Math.min((fv / goalAssetsEur) * 100, 100) : 0;
   const remaining = Math.max(goalAssetsEur - fv, 0);
 
-  // Risk metrics with adaptive cap
-  const riskScore = hasMix ? riskScore0to10(mix, validRiskPref, 0) : 0;
+  // Risk metrics with adaptive cap (use effectiveMix)
+  const riskScore = riskScore0to10(effectiveMix, validRiskPref, 0);
   const riskCap = getAdaptiveRiskCap(validRiskPref, stage);
   const isOverRisk = riskScore > riskCap;
 
@@ -116,22 +131,20 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
 
   // Cash reserve info
   const v3 = readV3();
-  const currentCashPct = mix.find((m) => m.key === "cash")?.pct || 0;
+  const currentCashPct = effectiveMix.find((m) => m.key === "cash")?.pct || 0;
   const totalPortfolioEur = lumpSumEur + monthlyVklad * 12 * horizonYears;
 
-  const cashReserveInfo = hasMix
-    ? getCashReserveInfo(
-        {
-          monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
-          fixedExpenses: (v3.profile?.fixedExp as any) || 0,
-          variableExpenses: (v3.profile?.varExp as any) || 0,
-          reserveEur: (v3.profile?.reserveEur as any) || 0,
-          reserveMonths: (v3.profile?.reserveMonths as any) || 0,
-        },
-        totalPortfolioEur,
-        currentCashPct
-      )
-    : null;
+  const cashReserveInfo = getCashReserveInfo(
+    {
+      monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+      fixedExpenses: (v3.profile?.fixedExp as any) || 0,
+      variableExpenses: (v3.profile?.varExp as any) || 0,
+      reserveEur: (v3.profile?.reserveEur as any) || 0,
+      reserveMonths: (v3.profile?.reserveMonths as any) || 0,
+    },
+    totalPortfolioEur,
+    currentCashPct
+  );
 
   // Unutilized reserve detection (PR-11)
   const reserveEur = (v3.profile?.reserveEur as any) || 0;
@@ -147,35 +160,23 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
       )
     : null;
 
-  // Empty state - ak nie je mix
-  if (!hasMix) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold text-slate-100 px-2">
-          📈 Vaša projekcia
-        </h2>
-        <div className="rounded-2xl ring-1 ring-white/5 bg-gradient-to-br from-slate-900/80 to-slate-800/60 p-8 text-center">
-          <div className="max-w-md mx-auto space-y-4">
-            <div className="text-4xl">📊</div>
-            <h3 className="text-xl font-semibold text-white">
-              Vyberte si portfólio
-            </h3>
-            <p className="text-slate-400 text-sm leading-relaxed">
-              Aby sme mohli vypočítať vašu projekciu, vyberte jedno z
-              predpripravených portfólií nižšie. Každé je prispôsobené vášmu
-              rizikovému profilu.
-            </p>
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <span className="text-xs text-slate-500">
-                → Scroll dole k sekcii "Portfólio"
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // PR-13B: "Rezerva najprv" hint conditions
+  const fixedExp = (v3.profile?.fixedExp as any) || 0;
+  const expenses = fixedExp + varExp;
+  const reserveLow = Math.round(expenses * 3);
+  const reserveHigh = Math.round(expenses * 6);
+  const debtPayments = 0; // TODO: calculate from debts if needed
+  const monthlyIncome = (v3.profile?.monthlyIncome as any) || 0;
+  const surplusIncome = monthlyIncome - expenses - debtPayments;
 
+  // Zobraz "Rezerva najprv" hint ak:
+  // 1. Konzervatívny profil, alebo
+  // 2. Minimumy aplicované (TODO: track this in adjustment result), alebo
+  // 3. Surplus > monthlyVklad
+  const showReserveHint =
+    validRiskPref === "konzervativny" || surplusIncome > monthlyVklad;
+
+  // PR-14: Always render projection (with fallback if needed), no empty state
   return (
     <div className="space-y-4">
       {/* Hlavička */}
@@ -325,8 +326,17 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
 
       {/* Graf */}
       <div className="rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4">
+        {/* PR-14: Fallback warning */}
+        {isUsingFallback && (
+          <div className="mb-3 px-3 py-2 rounded-lg bg-amber-900/20 border border-amber-500/30">
+            <p className="text-xs text-amber-300/90">
+              ℹ️ Predbežný odhad (použitý vyvážený mix). Pre presnejšiu
+              projekciu si vyberte portfólio nižšie.
+            </p>
+          </div>
+        )}
         <ProjectionChart
-          mix={mix}
+          mix={effectiveMix}
           debts={[]} // BASIC nemá dlhy v grafe
           lumpSumEur={lumpSumEur}
           monthlyVklad={monthlyVklad}
@@ -413,6 +423,22 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         </h3>
 
         <div className="space-y-2">
+          {/* PR-13B: Priorita -1: Rezerva najprv hint */}
+          {showReserveHint && expenses > 0 && (
+            <div className="flex items-start gap-2 text-sm bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+              <span className="text-blue-400 shrink-0 text-lg">🛡️</span>
+              <div className="text-slate-300">
+                <strong className="text-blue-300">
+                  Najprv si vybudujte rezervu 3–6 mesiacov.
+                </strong>{" "}
+                Vaše mesačné výdavky sú ~{formatNumber(expenses)} €, odporúčaná
+                rezerva {formatNumber(reserveLow)}–{formatNumber(reserveHigh)}{" "}
+                €. Keď bude rezerva hotová, vieme ju investovať a zvýšiť
+                dlhodobé zhodnotenie. Rád vám to vysvetlím osobne.
+              </div>
+            </div>
+          )}
+
           {/* Priorita 0: Unutilized reserve (ak existuje, zobraz info) */}
           {hasUnutilizedReserve && unutilizedReserveCopy && (
             <div className="flex items-start gap-2 text-sm">
