@@ -17,7 +17,7 @@ import { readV3, writeV3 } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import type { MixItem } from "./features/mix/mix.service";
 import { calculateFutureValue } from "./engine/calculations";
-import { approxYieldAnnualFromMix } from "./features/mix/assetModel";
+import { approxYieldAnnualFromMix, type RiskPref } from "./features/mix/assetModel";
 import { detectStage } from "./features/policy/stage";
 import {
   validateBasicWorkflow,
@@ -261,6 +261,52 @@ export default function BasicLayout() {
   // PR-14 FIX: Stabilné dependencies - porovnaj hodnoty, nie referencie
   const stableInvestKey = `${investParams.lumpSumEur}-${investParams.monthlyVklad}-${investParams.horizonYears}`;
   const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
+
+  // PR-17.D: Reactive Mix Recalculation - auto-prepočítaj pri zmene vstupov
+  React.useEffect(() => {
+    const v3 = readV3();
+    const riskPref = v3.profile?.riskPref as RiskPref | undefined;
+    const modeUi = (v3.profile?.modeUi as any) || "BASIC";
+    
+    // Skip ak nie je vybraný preset
+    if (!riskPref) return;
+    
+    // Skip ak sú vstupy prázdne
+    if (investParams.lumpSumEur === 0 && investParams.monthlyVklad === 0) return;
+    
+    console.log("[BasicLayout] PR-17.D: Investment params changed, recalculating mix...");
+    
+    // BASIC režim: vždy prepočítaj (override manual edits)
+    if (modeUi === "BASIC") {
+      const preset = PORTFOLIO_PRESETS.find((p) => p.id === riskPref);
+      if (!preset) return;
+      
+      const profile: ProfileForAdjustments = {
+        monthlyIncome: cashflowData.monthlyIncome,
+        fixedExpenses: cashflowData.fixedExp,
+        variableExpenses: cashflowData.varExp,
+        reserveEur: (v3.profile?.reserveEur as any) || 0,
+        reserveMonths: (v3.profile?.reserveMonths as any) || 0,
+        lumpSumEur: investParams.lumpSumEur,
+        monthlyEur: investParams.monthlyVklad,
+        horizonYears: investParams.horizonYears,
+        goalAssetsEur: investParams.goalAssetsEur,
+        riskPref: riskPref,
+      };
+      
+      const { preset: adjusted } = getAdjustedPreset(preset, profile);
+      
+      // Update mix in persist
+      writeV3({ mix: adjusted.mix });
+      setMix(adjusted.mix);
+      
+      console.log("[BasicLayout] PR-17.D: Mix auto-updated (BASIC mode)");
+    }
+    
+    // PRO režim: check mixDirty flag
+    // TODO: Implementovať mixDirty tracking + chip "Reaplikovať profil?"
+    
+  }, [stableInvestKey, investParams.goalAssetsEur, stableCashflowKey]);
 
   React.useEffect(() => {
     // PR-14.D: Vyčisti cache pri zmene vstupov (aby sa prepočítali caps/mix s novými parametrami)

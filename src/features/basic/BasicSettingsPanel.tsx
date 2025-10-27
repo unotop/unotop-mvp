@@ -6,6 +6,7 @@ import { approxYieldAnnualFromMix, type RiskPref } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
 import type { ValidationState } from "../../utils/validation";
 import { WarningCenter } from "../ui/warnings/WarningCenter";
+import { getClientLimits, type ClientType } from "../../config/clientLimits";
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -30,13 +31,25 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
 
   // Profil klienta
   const [clientType, setClientType] = React.useState<
-    "individual" | "family" | "firm"
+    "individual" | "family" | "company"
   >(() => (seed.profile?.clientType as any) || "individual");
+
+  // PR-17: Client limits
+  const clientLimits = React.useMemo(
+    () => getClientLimits(clientType as ClientType),
+    [clientType]
+  );
+
+  // Lump sum slider range (auto-expand podľa clientType)
+  const [lumpSumMax, setLumpSumMax] = React.useState(() => {
+    const initialLump = (seed.profile?.lumpSumEur as any) || 0;
+    return initialLump > 100_000 ? clientLimits.lumpSumMax : 100_000;
+  });
 
   // Warning modal pre zmenu profilu
   const [showProfileWarning, setShowProfileWarning] = React.useState(false);
   const [pendingClientType, setPendingClientType] = React.useState<
-    "individual" | "family" | "firm" | null
+    "individual" | "family" | "company" | null
   >(null);
 
   // Cashflow
@@ -65,7 +78,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   );
 
   // Persist helpers
-  const persistClientType = (value: "individual" | "family" | "firm") => {
+  const persistClientType = (value: "individual" | "family" | "company") => {
     // Ak už má nastavené hodnoty, zobraz warning
     const hasSettings =
       monthlyIncome > 0 ||
@@ -134,8 +147,21 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const incomeCtl = useUncontrolledValueInput({
     initial: monthlyIncome,
     parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) =>
-      Math.max(0, Math.min(clientType === "firm" ? 50000 : 10000, n)),
+    clamp: (n) => {
+      const clamped = Math.max(0, Math.min(n, clientLimits.monthlyIncomeMax));
+      
+      // PR-17: Show toast ak clamped
+      if (n > clientLimits.monthlyIncomeMax) {
+        WarningCenter.push({
+          type: "info",
+          message: `Limit pre mesačný príjem pri ${clientType === "company" ? "firmy" : clientType === "family" ? "rodiny" : "jednotlivca"} je ${clientLimits.monthlyIncomeMax.toLocaleString("sk-SK")} €.`,
+          scope: "global",
+          dedupeKey: "income-limit",
+        });
+      }
+      
+      return clamped;
+    },
     commit: (n) => {
       setMonthlyIncome(n);
       const cur = readV3();
@@ -147,7 +173,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     initial: fixedExp,
     parse: (r) => Number(r.replace(",", ".")) || 0,
     clamp: (n) =>
-      Math.max(0, Math.min(clientType === "firm" ? 50000 : 10000, n)),
+      Math.max(0, Math.min(clientType === "company" ? 50000 : 10000, n)),
     commit: (n) => {
       setFixedExp(n);
       const cur = readV3();
@@ -159,7 +185,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     initial: varExp,
     parse: (r) => Number(r.replace(",", ".")) || 0,
     clamp: (n) =>
-      Math.max(0, Math.min(clientType === "firm" ? 50000 : 10000, n)),
+      Math.max(0, Math.min(clientType === "company" ? 50000 : 10000, n)),
     commit: (n) => {
       setVarExp(n);
       const cur = readV3();
@@ -170,7 +196,26 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const lumpSumCtl = useUncontrolledValueInput({
     initial: lumpSumEur,
     parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, Math.min(n, 1000000)), // Cap na 1M €
+    clamp: (n) => {
+      const clamped = Math.max(0, Math.min(n, clientLimits.lumpSumMax));
+
+      // PR-17: Auto-expand slider ak textbox > current max
+      if (n > lumpSumMax && n <= clientLimits.lumpSumMax) {
+        setLumpSumMax(clientLimits.lumpSumMax);
+      }
+
+      // Show toast ak clamped
+      if (n > clientLimits.lumpSumMax) {
+        WarningCenter.push({
+          type: "info",
+          message: `Limit pre jednorazovú investíciu pri ${clientType === "company" ? "firmy" : clientType === "family" ? "rodiny" : "jednotlivca"} je ${clientLimits.lumpSumMax.toLocaleString("sk-SK")} €.`,
+          scope: "global",
+          dedupeKey: "lump-limit",
+        });
+      }
+
+      return clamped;
+    },
     commit: (n) => {
       setLumpSumEur(n);
       const cur = readV3();
@@ -181,7 +226,21 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const monthlyVkladCtl = useUncontrolledValueInput({
     initial: monthlyVklad,
     parse: (r) => Number(r.replace(",", ".")) || 0,
-    clamp: (n) => Math.max(0, n),
+    clamp: (n) => {
+      const clamped = Math.max(0, Math.min(n, clientLimits.monthlyContributionMax));
+      
+      // PR-17: Show toast ak clamped
+      if (n > clientLimits.monthlyContributionMax) {
+        WarningCenter.push({
+          type: "info",
+          message: `Limit pre mesačný vklad pri ${clientType === "company" ? "firmy" : clientType === "family" ? "rodiny" : "jednotlivca"} je ${clientLimits.monthlyContributionMax.toLocaleString("sk-SK")} €.`,
+          scope: "global",
+          dedupeKey: "monthly-limit",
+        });
+      }
+      
+      return clamped;
+    },
     commit: (n) => {
       setMonthlyVklad(n);
       writeV3({ monthly: n });
@@ -303,13 +362,13 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => persistClientType("firm")}
+                onClick={() => persistClientType("company")}
                 className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  clientType === "firm"
+                  clientType === "company"
                     ? "bg-blue-600 text-white ring-2 ring-blue-400"
                     : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                 }`}
-                aria-pressed={clientType === "firm"}
+                aria-pressed={clientType === "company"}
               >
                 🏢 Firma
               </button>
@@ -346,7 +405,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     <input
                       type="range"
                       min={0}
-                      max={clientType === "firm" ? 50000 : 10000}
+                      max={clientType === "company" ? 50000 : 10000}
                       step={100}
                       value={monthlyIncome}
                       onChange={(e) => {
@@ -363,7 +422,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       }}
                       aria-label="Mesačný príjem slider"
                       aria-valuemin={0}
-                      aria-valuemax={clientType === "firm" ? 50000 : 10000}
+                      aria-valuemax={clientType === "company" ? 50000 : 10000}
                       aria-valuenow={monthlyIncome}
                       aria-valuetext={`${monthlyIncome.toLocaleString("sk-SK")} eur`}
                       className="flex-1"
@@ -403,7 +462,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     <input
                       type="range"
                       min={0}
-                      max={clientType === "firm" ? 50000 : 5000}
+                      max={clientType === "company" ? 50000 : 5000}
                       step={50}
                       value={fixedExp}
                       disabled={!validationState?.hasIncome}
@@ -421,7 +480,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       }}
                       aria-label="Fixné výdavky slider"
                       aria-valuemin={0}
-                      aria-valuemax={clientType === "firm" ? 50000 : 5000}
+                      aria-valuemax={clientType === "company" ? 50000 : 5000}
                       aria-valuenow={fixedExp}
                       aria-valuetext={`${fixedExp.toLocaleString("sk-SK")} eur`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -461,7 +520,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     <input
                       type="range"
                       min={0}
-                      max={clientType === "firm" ? 50000 : 3000}
+                      max={clientType === "company" ? 50000 : 3000}
                       step={50}
                       value={varExp}
                       disabled={!validationState?.hasIncome}
@@ -479,7 +538,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       }}
                       aria-label="Variabilné výdavky slider"
                       aria-valuemin={0}
-                      aria-valuemax={clientType === "firm" ? 50000 : 3000}
+                      aria-valuemax={clientType === "company" ? 50000 : 3000}
                       aria-valuenow={varExp}
                       aria-valuetext={`${varExp.toLocaleString("sk-SK")} eur`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -552,7 +611,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 )}
               </h3>
               <div className="grid grid-cols-1 gap-3">
-                {/* Jednorazová investícia - len textbox (nie často mení) */}
+                {/* Jednorazová investícia - textbox + slider (PR-17) */}
                 <div className="space-y-2">
                   <label
                     htmlFor="lump-sum-basic"
@@ -560,19 +619,51 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   >
                     Jednorazová investícia
                   </label>
-                  <input
-                    id="lump-sum-basic"
-                    type="text"
-                    role="textbox"
-                    inputMode="decimal"
-                    aria-label="Jednorazová investícia"
-                    ref={lumpSumCtl.ref}
-                    onChange={lumpSumCtl.onChange}
-                    onBlur={lumpSumCtl.onBlur}
-                    defaultValue={lumpSumCtl.defaultValue}
-                    disabled={!validationState?.cashflowComplete}
-                    className="w-full px-3 py-2 rounded bg-slate-800 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="lump-sum-basic"
+                      type="text"
+                      role="textbox"
+                      inputMode="decimal"
+                      aria-label="Jednorazová investícia"
+                      ref={lumpSumCtl.ref}
+                      onChange={lumpSumCtl.onChange}
+                      onBlur={lumpSumCtl.onBlur}
+                      defaultValue={lumpSumCtl.defaultValue}
+                      disabled={!validationState?.cashflowComplete}
+                      className="w-24 px-2 py-1 rounded bg-slate-800 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <input
+                      type="range"
+                      min={0}
+                      max={lumpSumMax}
+                      step={100}
+                      value={lumpSumEur}
+                      disabled={!validationState?.cashflowComplete}
+                      onChange={(e) => {
+                        const val = Number(e.currentTarget.value);
+                        setLumpSumEur(val);
+                        lumpSumCtl.syncToDom(val); // Sync textbox
+                        const cur = readV3();
+                        writeV3({
+                          profile: {
+                            ...(cur.profile || {}),
+                            lumpSumEur: val,
+                          } as any,
+                        });
+                      }}
+                      aria-label="Jednorazová investícia slider"
+                      aria-valuemin={0}
+                      aria-valuemax={lumpSumMax}
+                      aria-valuenow={lumpSumEur}
+                      aria-valuetext={`${lumpSumEur.toLocaleString("sk-SK")} eur`}
+                      title={`Jednorazová investícia: ${lumpSumEur.toLocaleString("sk-SK")} €`}
+                      className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    <span className="text-sm tabular-nums font-semibold w-24 text-right">
+                      {lumpSumEur.toLocaleString("sk-SK")} €
+                    </span>
+                  </div>
                 </div>
                 {/* Mesačný vklad - textbox + slider */}
                 <div className="space-y-2">
@@ -615,8 +706,8 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       type="range"
                       min={0}
                       max={Math.min(
-                        5000,
-                        validationState?.monthlyVkladMax || 5000
+                        clientLimits.monthlyContributionMax,
+                        validationState?.monthlyVkladMax || clientLimits.monthlyContributionMax
                       )}
                       step={50}
                       value={monthlyVklad}
@@ -633,8 +724,8 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       aria-label="Mesačný vklad slider"
                       aria-valuemin={0}
                       aria-valuemax={Math.min(
-                        5000,
-                        validationState?.monthlyVkladMax || 5000
+                        clientLimits.monthlyContributionMax,
+                        validationState?.monthlyVkladMax || clientLimits.monthlyContributionMax
                       )}
                       aria-valuenow={monthlyVklad}
                       aria-valuetext={`${monthlyVklad.toLocaleString("sk-SK")} eur`}
@@ -821,3 +912,4 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     </>
   );
 };
+
