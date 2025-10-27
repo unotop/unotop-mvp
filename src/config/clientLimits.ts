@@ -21,7 +21,7 @@ export interface ClientLimits {
  */
 export const DEFAULT_LIMITS: ClientLimits = {
   monthlyIncomeMax: 10_000,
-  lumpSumMax: 100_000,
+  lumpSumMax: 200_000,           // Jednotlivec: 200k jednorazovo
   monthlyContributionMax: 5_000,
 } as const;
 
@@ -34,7 +34,7 @@ export const CLIENT_LIMITS: Record<ClientType, ClientLimits> = {
   family: {
     ...DEFAULT_LIMITS,
     monthlyIncomeMax: 20_000,      // Rodina: vyšší príjem
-    lumpSumMax: 200_000,           // Rodina: vyššia jednorazová
+    lumpSumMax: 300_000,           // Rodina: 300k jednorazovo
   },
   
   company: {

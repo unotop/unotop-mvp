@@ -38,7 +38,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const getClientLimitsForType = (type: ClientType) => {
     return getClientLimits(type);
   };
-  
+
   const clientLimits = React.useMemo(
     () => getClientLimitsForType(clientType as ClientType),
     [clientType]
@@ -46,9 +46,11 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
 
   // Lump sum slider range (auto-expand podľa clientType)
   const [lumpSumMax, setLumpSumMax] = React.useState(() => {
-    const initialLump = (seed.profile?.lumpSumEur as any) || 0;
-    const limits = getClientLimitsForType((seed.profile?.clientType as any) || "individual");
-    return initialLump > 100_000 ? limits.lumpSumMax : 100_000;
+    const limits = getClientLimitsForType(
+      (seed.profile?.clientType as any) || "individual"
+    );
+    // Vždy použiť clientLimits, nie hardcoded 100k
+    return limits.lumpSumMax;
   });
 
   // Warning modal pre zmenu profilu
@@ -420,7 +422,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     <input
                       type="range"
                       min={0}
-                      max={clientType === "company" ? 50000 : 10000}
+                      max={clientLimits.monthlyIncomeMax}
                       step={100}
                       value={monthlyIncome}
                       onChange={(e) => {
@@ -437,7 +439,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       }}
                       aria-label="Mesačný príjem slider"
                       aria-valuemin={0}
-                      aria-valuemax={clientType === "company" ? 50000 : 10000}
+                      aria-valuemax={clientLimits.monthlyIncomeMax}
                       aria-valuenow={monthlyIncome}
                       aria-valuetext={`${monthlyIncome.toLocaleString("sk-SK")} eur`}
                       className="flex-1"
