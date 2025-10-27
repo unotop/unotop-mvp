@@ -16,36 +16,36 @@ interface OnboardingStep {
 const TOUR_STEPS: OnboardingStep[] = [
   {
     id: 1,
-    title: "📝 Začnite s cashflow",
-    description: "Vyplňte príjem a výdavky",
+    title: "📝 Začnite s príjmom a výdavkami",
+    description: "Zadajte, koľko vám mesačne príde a odíde. To, čo zostane ako voľné peniaze, vieme investovať. Nič nepokazíte – čísla môžete kedykoľvek upraviť.",
     targetId: "sec1",
     position: "right", // Ľavý panel → tooltip vpravo
   },
   {
     id: 2,
-    title: "🎯 Investičné ciele",
-    description: "Nastavte vklad, horizont a cieľ",
+    title: "🎯 Nastavte investovanie",
+    description: "Jednorazovo = koľko máte dnes. Mesačný vklad = koľko chcete pravidelne posielať. Horizont = na koľko rokov. Cieľ je voliteľný – ak neviete, preskočte.",
     targetId: "sec2",
     position: "right", // Ľavý panel → tooltip vpravo
   },
   {
     id: 3,
-    title: "💼 Vyberte portfólio",
-    description: "Zvoľte si rizikový profil",
+    title: "💼 Zvoľte štýl portfólia",
+    description: "Tri jednoduché voľby: Konzervatívny (pokojnejší), Vyvážený, Rastový (vyšší výnos, väčšie výkyvy). V BASIC režime stačí vybrať štýl – detaily riešime na stretnutí.",
     targetId: "sec3",
     position: "right", // Ľavý panel → tooltip vpravo
   },
   {
     id: 4,
-    title: "📊 Sledujte projekciu",
-    description: "Tu vidíte rast vášho majetku",
+    title: "📊 Pozrite si odhad vývoja",
+    description: "Vpravo uvidíte očakávaný majetok, modelový ročný výnos a riziko (0–10). Krivka je odhad – mení sa podľa vašich vstupov. Odporúčame mať rezervu 3–6 mes. výdavkov.",
     targetId: "projection-panel",
     position: "left", // Pravý panel → tooltip vľavo
   },
   {
     id: 5,
-    title: "🚀 Zrealizujte plán",
-    description: "Odošlite projekciu agentovi",
+    title: "🚀 Dokončite plán",
+    description: "Kliknite Odoslať projekciu. Ozveme sa a nastavíme konkrétne riešenia (ETF, zlato, dlhopisy…) aj plán, ako dosiahnuť váš cieľ. Môžete zaškrtnúť, že chcete pomôcť s rezervou alebo zvýšiť príjem/spoluprácu.",
     targetId: "share-section",
     position: "left", // Pravý panel → tooltip vľavo
   },
