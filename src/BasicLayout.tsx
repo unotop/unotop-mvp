@@ -8,6 +8,7 @@ import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
 import {
   getAdjustedPreset,
+  enforceStageCaps, // PR-14.D: Import pre cache clear
   type ProfileForAdjustments,
   type AdjustmentWarning,
   PORTFOLIO_PRESETS,
@@ -260,8 +261,16 @@ export default function BasicLayout() {
   // PR-14 FIX: Stabilné dependencies - porovnaj hodnoty, nie referencie
   const stableInvestKey = `${investParams.lumpSumEur}-${investParams.monthlyVklad}-${investParams.horizonYears}`;
   const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
-  
+
   React.useEffect(() => {
+    // PR-14.D: Vyčisti cache pri zmene vstupov (aby sa prepočítali caps/mix s novými parametrami)
+    if (
+      typeof enforceStageCaps === "function" &&
+      (enforceStageCaps as any)._cache
+    ) {
+      (enforceStageCaps as any)._cache.clear();
+    }
+
     const v3 = readV3();
     const currentRiskPref = (v3.profile?.riskPref as any) || "vyvazeny";
 
@@ -352,10 +361,20 @@ export default function BasicLayout() {
   // Detektory nie sú potrebné, používateľ kliká "Rozumiem" na každom kroku
 
   const handleModeToggle = () => {
+    // Block PRO mode - show alert instead
+    if (modeUi === "BASIC") {
+      alert(
+        "⚠️ PRO verzia je v skúšobnej fáze\n\n" +
+          "PRO režim je momentálne v aktívnom vývoji. Niektoré funkcie ešte nie sú dokončené a môžu obsahovať nedostatky.\n\n" +
+          "Pre odoslanie projekcie agentovi použite BASIC režim, ktorý je plne funkčný."
+      );
+      return;
+    }
+
+    // Allow switch back to BASIC
     const cur = readV3();
-    const newMode = modeUi === "BASIC" ? "PRO" : "BASIC";
-    writeV3({ profile: { ...(cur.profile || {}), modeUi: newMode } as any });
-    window.location.reload(); // Force refresh to switch layout
+    writeV3({ profile: { ...(cur.profile || {}), modeUi: "BASIC" } as any });
+    window.location.reload();
   };
 
   const handleReset = () => {

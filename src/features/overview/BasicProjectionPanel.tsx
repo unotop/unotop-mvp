@@ -15,6 +15,12 @@ import {
   getUnutilizedReserveCopy,
   getCollabOptInCopy,
 } from "../ui/warnings/copy";
+import {
+  detectRightPanelState,
+  getStateBadgeCopy,
+  shouldShowYieldRisk,
+  shouldShowConcreteAdvice,
+} from "./rightPanelState";
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -134,21 +140,38 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const currentCashPct = effectiveMix.find((m) => m.key === "cash")?.pct || 0;
   const totalPortfolioEur = lumpSumEur + monthlyVklad * 12 * horizonYears;
 
+  // PR-16.A: Detect right panel state
+  const monthlyIncome = (v3.profile?.monthlyIncome as any) || 0;
+  const reserveEur = (v3.profile?.reserveEur as any) || 0;
+  const reserveMonths = (v3.profile?.reserveMonths as any) || 0;
+
+  const panelState = detectRightPanelState({
+    lumpSumEur,
+    monthlyVklad,
+    horizonYears,
+    goalAssetsEur,
+    monthlyIncome,
+    reserveEur,
+    reserveMonths,
+  });
+
+  const stateBadge = getStateBadgeCopy(panelState);
+  const showYieldRisk = shouldShowYieldRisk(panelState);
+  const showAdvice = shouldShowConcreteAdvice(panelState);
+
   const cashReserveInfo = getCashReserveInfo(
     {
-      monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+      monthlyIncome,
       fixedExpenses: (v3.profile?.fixedExp as any) || 0,
       variableExpenses: (v3.profile?.varExp as any) || 0,
-      reserveEur: (v3.profile?.reserveEur as any) || 0,
-      reserveMonths: (v3.profile?.reserveMonths as any) || 0,
+      reserveEur,
+      reserveMonths,
     },
     totalPortfolioEur,
     currentCashPct
   );
 
   // Unutilized reserve detection (PR-11)
-  const reserveEur = (v3.profile?.reserveEur as any) || 0;
-  const reserveMonths = (v3.profile?.reserveMonths as any) || 0;
   const varExp = (v3.profile?.varExp as any) || 0;
   const surplus = reserveEur - reserveMonths * varExp;
   const hasUnutilizedReserve = surplus >= 50 && surplus - monthlyVklad >= 50;
@@ -166,7 +189,6 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const reserveLow = Math.round(expenses * 3);
   const reserveHigh = Math.round(expenses * 6);
   const debtPayments = 0; // TODO: calculate from debts if needed
-  const monthlyIncome = (v3.profile?.monthlyIncome as any) || 0;
   const surplusIncome = monthlyIncome - expenses - debtPayments;
 
   // Zobraz "Rezerva najprv" hint ak:
@@ -179,6 +201,14 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   // PR-14: Always render projection (with fallback if needed), no empty state
   return (
     <div className="space-y-4">
+      {/* PR-16.A: State badge (ZERO/PARTIAL) */}
+      {stateBadge && (
+        <div className="rounded-xl bg-amber-900/20 ring-1 ring-amber-400/30 p-3 flex items-start gap-3">
+          <div className="text-lg">ℹ️</div>
+          <div className="text-sm text-amber-200/90">{stateBadge}</div>
+        </div>
+      )}
+
       {/* Hlavička */}
       <h2 className="text-lg font-bold text-slate-100 px-2">
         📈 Vaša projekcia
@@ -225,15 +255,29 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                 Ročný výnos
               </div>
             </div>
-            <div className="text-2xl font-bold text-white tabular-nums mb-1">
-              +{(approxYield * 100).toFixed(1)} %
-            </div>
-            <div className="text-xs text-blue-300/70">
-              {riskLabel}
-              {isOverRisk && (
-                <span className="text-amber-400 ml-2">⚠️ Vysoké riziko</span>
-              )}
-            </div>
+            {/* PR-16.A: Gate výnos/riziko (show "—" ak PARTIAL) */}
+            {showYieldRisk ? (
+              <>
+                <div className="text-2xl font-bold text-white tabular-nums mb-1">
+                  +{(approxYield * 100).toFixed(1)} %
+                </div>
+                <div className="text-xs text-blue-300/70">
+                  {riskLabel}
+                  {isOverRisk && (
+                    <span className="text-amber-400 ml-2">
+                      ⚠️ Vysoké riziko
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-slate-400 tabular-nums mb-1">
+                  —
+                </div>
+                <div className="text-xs text-slate-500">Vyplňte profil</div>
+              </>
+            )}
           </div>
 
           {/* Mini karta 2: Progres k cieľu */}

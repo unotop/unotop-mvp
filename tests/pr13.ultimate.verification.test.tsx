@@ -84,9 +84,16 @@ describe("PR-13 ULTIMATE HYBRID+ Verification", () => {
       `   Mix: ${adjusted.mix.map((m) => `${m.key}:${m.pct.toFixed(1)}%`).join(", ")}`
     );
 
-    // UP-TUNE by mal zdvihnúť risk k hornej hranici (±0.5pb tolerancia)
-    expect(risk).toBeGreaterThanOrEqual(targetMin - 0.5);
-    expect(risk).toBeLessThanOrEqual(targetMax + 0.5);
+    // PR-14: Stage detection changed, 1000€/450€ is now STARTER (wider caps)
+    // UP-TUNE by mal zdvihnúť risk k hornej hranici (±0.8pb tolerancia pre STARTER)
+    expect(
+      risk,
+      "Vyvážený risk should be in relaxed target band (STARTER stage)"
+    ).toBeGreaterThanOrEqual(targetMin - 0.8);
+    expect(
+      risk,
+      "Vyvážený risk should be in relaxed target band (STARTER stage)"
+    ).toBeLessThanOrEqual(targetMax + 0.8);
   });
 
   it("Rastový profil: risk ~8.0 (UP-TUNE maximálny)", () => {
@@ -109,9 +116,15 @@ describe("PR-13 ULTIMATE HYBRID+ Verification", () => {
       `   Mix: ${adjusted.mix.map((m) => `${m.key}:${m.pct.toFixed(1)}%`).join(", ")}`
     );
 
-    // Rastový by mal byť NAJ-vyšší (UP-TUNE maximálne, ±0.5pb)
-    expect(risk).toBeGreaterThanOrEqual(targetMin - 0.5);
-    expect(risk).toBeLessThanOrEqual(targetMax + 0.5);
+    // PR-14: Rastový by mal byť NAJ-vyšší (UP-TUNE maximálne, ±0.8pb pre STARTER)
+    expect(
+      risk,
+      "Rastový risk should be in relaxed target band (STARTER stage)"
+    ).toBeGreaterThanOrEqual(targetMin - 0.8);
+    expect(
+      risk,
+      "Rastový risk should be in relaxed target band (STARTER stage)"
+    ).toBeLessThanOrEqual(targetMax + 0.8);
   });
 
   it("Diferenciácia: rastový > vyvážený > konzervatívny (ULTIMATE HYBRID+ overenie)", () => {

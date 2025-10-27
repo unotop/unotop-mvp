@@ -2,7 +2,7 @@
 
 **Dátum**: 2025-10-26  
 **Commits**: 3 (defensive + root cause + React effect fix)  
-**Status**: ✅ Testy PASS (17/17), Build OK (648 kB)  
+**Status**: ✅ Testy PASS (17/17), Build OK (648 kB)
 
 ---
 
@@ -24,6 +24,7 @@
 ## Riešenie
 
 ### Commit 1: Circuit breaker (defensive)
+
 **Súbor**: `src/features/portfolio/presets.ts` (lines 108-130, 263)
 
 ```typescript
@@ -76,6 +77,7 @@ if (overflow > 0.01) {
 ---
 
 ### Commit 3: Stabilné effect dependencies (React fix)
+
 **Súbor**: `src/BasicLayout.tsx` (lines 260-263)
 
 ```typescript
@@ -91,6 +93,7 @@ React.useEffect(() => {
 **Prínos**: **Vyriešil React re-render loop** – effect sa spustí LEN ak sa HODNOTY zmenili, nie referencie.
 
 **Trade-off**: Žiadne. Čistý performance win:
+
 - ✅ Žiadne zbytočné re-computations
 - ✅ Žiadne telemetry logy pri idle state
 - ✅ Effect beží len pri reálnej zmene vstupov
@@ -154,6 +157,7 @@ React.useEffect(() => {
 ```
 
 **Prečo nie `useMemo`?**
+
 - `useMemo(() => [investParams, cashflowData], [...])` by fungovalo
 - Ale string key je jednoduchší a jasnejší (žiadne vnorené deps)
 
@@ -223,12 +227,11 @@ Keď overflow neabsorbovateľný, nahraď mix "safe" presetom (napr. 100% hotovo
 
 ### ⏳ Manuálne overenie (potrebné v browseri)
 
-- [ ] **Test 1 (cash_cap - hlavný bug)**: 50€/mesiac, Vyvážený 
+- [ ] **Test 1 (cash_cap - hlavný bug)**: 50€/mesiac, Vyvážený
   - Očakávané: **ŽIADNE** `policy_adjustment` logy (ani raz)
   - Očakávané: **ŽIADNE** `LOOP DETECTED` warnings
   - Možné: Console warning "Unabsorbed overflow 24.99%, sum=75.01%" (1× pri načítaní, OK)
   - Kritérium: Po 5s idle **nesmú** byť nové logy
-  
 - [ ] **Test 2 (React effect loop)**: Zmeniť príjem 2000€ → 2500€
   - Očakávané: `getAdjustedPreset` volaný **1×** (nie dookola)
   - Očakávané: Telemetry logy max **1× per zmenu**, nie continuous spam
@@ -348,4 +351,3 @@ git revert daac6da
 2. Deploy na production
 3. Monitoring warnings + telemetry spam (2 týždne)
 4. Ak warnings časté → Plan Option A refactor (Q1 2026)
-

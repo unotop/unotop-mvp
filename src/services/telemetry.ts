@@ -15,7 +15,7 @@ import type { Stage } from "../features/policy/stage";
 export interface PolicyAdjustmentParams {
   stage: Stage;
   riskPref: string;
-  reason: "gold_cap" | "etf_cap" | "risk_cap" | "dyn_crypto_combo" | "sum_drift" | "lump_scaling" | "monthly_cap" | "bond_minimum";
+  reason: "gold_cap" | "etf_cap" | "risk_cap" | "dyn_crypto_combo" | "sum_drift" | "lump_scaling" | "monthly_cap" | "bond_minimum" | "elastic_cash_sink" | "down_tune" | "up_tune";
   asset?: string; // Which asset was capped (e.g., "gold", "etf")
   pct_before?: number; // Percentage before enforcement
   pct_after?: number; // Percentage after enforcement
@@ -23,6 +23,7 @@ export interface PolicyAdjustmentParams {
   combo_cap?: number; // For dyn+crypto combo limit
   sum_before?: number; // Total sum before normalization
   sum_after?: number; // Total sum after normalization
+  overflow_absorbed?: number; // PR-14.C: Elastic cash sink - amount absorbed over cap
 }
 
 export interface WarningShownParams {

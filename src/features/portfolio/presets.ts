@@ -108,23 +108,25 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
 export function enforceStageCaps(
   mix: MixItem[],
   riskPref: RiskPref,
-  stage: Stage
+  stage: Stage,
+  paramHash?: string // PR-14.D: Optional param hash (lump-monthly-years-stage) pre cache invalidation
 ): MixItem[] {
-  // PR-14 CIRCUIT BREAKER: Detekcia opakovania toho istého mixu
+  // PR-14.D CIRCUIT BREAKER: Detekcia opakovania toho istého mixu
   const mixKey = mix.map((m) => `${m.key}:${m.pct.toFixed(2)}`).join("|");
-  const cacheKey = `${riskPref}-${stage}-${mixKey}`;
+  // PR-14.D: Pridaj paramHash do cache key (ak je poskytnutý)
+  const cacheKey = paramHash 
+    ? `${riskPref}-${stage}-${paramHash}-${mixKey}` 
+    : `${riskPref}-${stage}-${mixKey}`;
   
   // @ts-ignore - static cache pre detekciu loop
   if (!enforceStageCaps._cache) enforceStageCaps._cache = new Map();
+  
+  // PR-14.D: OKAMŽITÁ cache kontrola (0ms window - detekcia skutočného loop-u v rámci jednej operácie)
   // @ts-ignore
   if (enforceStageCaps._cache.has(cacheKey)) {
+    console.warn(`[enforceStageCaps] LOOP DETECTED (same mix processed again), returning cached result`);
     // @ts-ignore
-    const cached = enforceStageCaps._cache.get(cacheKey);
-    // @ts-ignore
-    if (Date.now() - cached.time < 100) { // 100ms window
-      console.warn(`[enforceStageCaps] LOOP DETECTED, returning cached result`);
-      return cached.result;
-    }
+    return enforceStageCaps._cache.get(cacheKey).result;
   }
   
   const caps = getAssetCaps(riskPref, stage);
@@ -204,6 +206,8 @@ export function enforceStageCaps(
   
   // 3. Redistribuuj overflow podľa bucket poradia
   // PR-12 FIX: Preskočiť aktíva, ktoré mali pct=0 NA VSTUPE (vynulované applyMinimums)
+  let elasticCashUsed = false;
+  
   if (overflow > 0.01) { // Tolerance 0.01%
     const buckets: MixItem["key"][] = 
       stage === "LATE"
@@ -232,32 +236,42 @@ export function enforceStageCaps(
       }
     }
     
-    // PR-14 FIX: Ak overflow stále existuje, NENIČ HO do aktíva s capom
-    // Nechaj nealokovaný → normalize() to proporcionálne rozdelí bez loopu
+    // PR-14.C: ELASTIC CASH SINK - ak overflow stále existuje, absorbuj do cash (prekroč cap)
     if (overflow > 0.01) {
-      console.warn(
-        `[enforceStageCaps] Unabsorbed overflow: ${overflow.toFixed(2)}% (will be normalized proportionally)`
-      );
-      // Overflow zostáva → normalize() nižšie ho rozdelí proporcionálne
+      const cashIdx = getIdx("cash");
+      if (cashIdx !== -1) {
+        const currentCash = getPct("cash");
+        const cashCap = caps["cash"] ?? 40;
+        
+        // Pridaj overflow do cash (aj nad cap)
+        setPct("cash", currentCash + overflow);
+        elasticCashUsed = true;
+        
+        console.warn(
+          `[enforceStageCaps] ELASTIC CASH SINK: ${overflow.toFixed(2)}% overflow absorbed into cash (${currentCash.toFixed(2)}% → ${(currentCash + overflow).toFixed(2)}%, cap=${cashCap}%)`
+        );
+        
+        // Track elastic cash usage
+        trackPolicyAdjustment({
+          stage,
+          riskPref,
+          reason: "elastic_cash_sink",
+          asset: "cash",
+          pct_before: currentCash,
+          pct_after: currentCash + overflow,
+          cap: cashCap,
+          overflow_absorbed: overflow,
+        });
+        
+        overflow = 0; // Absorbované
+      }
     }
   }
   
-  // 4. Normalize na presne 100%
-  // PR-14 FIX: Ak overflow zostal (capy zabránili redistribúcii), 
-  // NESMIEME normalize() - vytvorilo by to loop (redistribute späť nad capy)
+  // 4. Normalize na presne 100% (VŽDY - PR-14.C)
+  // Elastic cash sink zaručuje, že overflow je vždy 0 → normalize() nebude loopovať
   const currentSum = mix.reduce((acc, m) => acc + m.pct, 0);
-  let normalized: MixItem[];
-  
-  if (overflow > 0.01) {
-    // Overflow neabsorbovaný -> NEPOUZIVAJ normalize (loop!)
-    // Radšej nechaj sumu < 100% než vytvor loop
-    console.warn(`[enforceStageCaps] Unabsorbed overflow ${overflow.toFixed(2)}%, sum=${currentSum.toFixed(2)}% - SKIPPING normalize to prevent loop`);
-    normalized = mix;
-  } else {
-    // Normálne: normalize na 100%
-    normalized = normalize(mix);
-  }
-  
+  const normalized = normalize(mix);
   const sumAfter = normalized.reduce((acc, m) => acc + m.pct, 0);
   
   // Track sum drift correction if normalization was significant
@@ -271,9 +285,12 @@ export function enforceStageCaps(
     });
   }
   
-  // PR-14: Ulož do cache pre loop detekciu
+  // PR-14.D: Ulož do cache pre loop detekciu (0ms window - cache platí okamžite)
   // @ts-ignore
-  enforceStageCaps._cache.set(cacheKey, { result: normalized, time: Date.now() });
+  enforceStageCaps._cache.set(cacheKey, { 
+    result: normalized,
+    elasticCashUsed // PR-16: Flag pre warning chip
+  });
   
   return normalized;
 }
@@ -376,13 +393,30 @@ export function validatePresetRisk(
   // PR-11: Removed < 2000 EUR/year threshold - all portfolios available at any amount
   
   // === CHECK 1: Diverzifikácia (žiadne aktívum > 40%) ===
+  // PR-14: Elastic sink exceptions - cash 60%, ETF 50% (main buckets for overflow)
   for (const item of mix) {
     if (item.key === "bonds" && riskPref === "konzervativny") {
-      // Výnimka: bonds môže byť až 30% v konzervatívnom
+      // Výnimka: bonds môže byť až 35% v konzervatívnom
       if (item.pct > 35) {
         return {
           valid: false,
           message: `Príliš vysoká alokácia dlhopisov (${item.pct}%). Max 35%.`,
+        };
+      }
+    } else if (item.key === "cash") {
+      // PR-14: Cash môže ísť až 60% (elastic sink absorbs overflow)
+      if (item.pct > 60) {
+        return {
+          valid: false,
+          message: `Príliš vysoká alokácia hotovosti (${item.pct}%). Max 60%.`,
+        };
+      }
+    } else if (item.key === "etf") {
+      // PR-14: ETF môže ísť až 50% (main growth bucket, gets overflow before cash)
+      if (item.pct > 50) {
+        return {
+          valid: false,
+          message: `Príliš vysoká alokácia ETF (${item.pct}%). Max 50%.`,
         };
       }
     } else if (item.pct > 40) {

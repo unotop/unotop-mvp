@@ -14,10 +14,10 @@ export type Stage = "STARTER" | "CORE" | "LATE";
 /**
  * Detekuj investičnú fázu používateľa
  * 
- * Pravidlá:
- * - STARTER: lump < 20k AND monthly < 400 AND years >= 10, alebo coverage < 35%
- * - LATE: lump >= 50k OR monthly >= 1000 OR years <= 7, alebo coverage >= 80%
- * - CORE: všetko ostatné (default baseline)
+ * Pravidlá (PR-14.A - úzky CORE gap):
+ * - STARTER: lump < 30k AND monthly < 800 AND years >= 8, alebo coverage < 35%
+ * - LATE: lump >= 40k OR monthly >= 800 OR years <= 7, alebo coverage >= 80%
+ * - CORE: všetko ostatné (malý gap - len stredné scenáre)
  * 
  * @param lump - Jednorazová investícia (EUR)
  * @param monthly - Mesačný vklad (EUR)
@@ -35,15 +35,17 @@ export function detectStage(
   const investable = lump + monthly * 12 * Math.max(years, 0);
   const coverage = goal && goal > 0 ? investable / goal : undefined;
 
-  // STARTER: malý kapitál a dlhší čas
-  const isSmall = lump < 20_000 && monthly < 400 && years >= 10;
+  // STARTER: malý kapitál a dlhší čas (ROZŠÍRENÉ pravidlá - pokryje viac edge cases)
+  // PR-14.A: Rozšírená definícia - lump < 30k (namiesto 20k), monthly < 800 (namiesto <= 500)
+  const isSmall = lump < 30_000 && monthly < 800 && years >= 8;
   const isLowCoverage = coverage !== undefined && coverage < 0.35;
 
   // LATE: veľký kapitál alebo veľký mesačný vklad, alebo „cieľ skoro splnený"
-  const isBig = lump >= 50_000 || monthly >= 1_000 || years <= 7;
+  // PR-14.A: lump >= 40k OR monthly >= 800 (zachované z PR-14.1)
+  const isBig = lump >= 40_000 || monthly >= 800 || years <= 7;
   const isHighCoverage = coverage !== undefined && coverage >= 0.80;
 
   if (isBig || isHighCoverage) return "LATE";
   if (isSmall || isLowCoverage) return "STARTER";
-  return "CORE";
+  return "CORE"; // Malý gap: napr. 30k-40k lump, 800€ monthly presne, 8-10 rokov
 }

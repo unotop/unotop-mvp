@@ -228,7 +228,7 @@ export default function Toolbar({
             </button>
             <button
               type="button"
-              onClick={() => modeUi !== "PRO" && onModeToggle()}
+              onClick={onModeToggle}
               className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded text-[10px] sm:text-xs font-medium transition-all ${
                 modeUi === "PRO"
                   ? "bg-amber-600 text-white shadow-lg"
@@ -236,6 +236,7 @@ export default function Toolbar({
               }`}
               aria-pressed={modeUi === "PRO"}
               aria-label="Prepnúť na PRO režim"
+              title="PRO režim je v aktívnom vývoji"
             >
               PRO
             </button>
