@@ -17,7 +17,10 @@ import { readV3, writeV3 } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import type { MixItem } from "./features/mix/mix.service";
 import { calculateFutureValue } from "./engine/calculations";
-import { approxYieldAnnualFromMix, type RiskPref } from "./features/mix/assetModel";
+import {
+  approxYieldAnnualFromMix,
+  type RiskPref,
+} from "./features/mix/assetModel";
 import { detectStage } from "./features/policy/stage";
 import {
   validateBasicWorkflow,
@@ -267,20 +270,23 @@ export default function BasicLayout() {
     const v3 = readV3();
     const riskPref = v3.profile?.riskPref as RiskPref | undefined;
     const modeUi = (v3.profile?.modeUi as any) || "BASIC";
-    
+
     // Skip ak nie je vybraný preset
     if (!riskPref) return;
-    
+
     // Skip ak sú vstupy prázdne
-    if (investParams.lumpSumEur === 0 && investParams.monthlyVklad === 0) return;
-    
-    console.log("[BasicLayout] PR-17.D: Investment params changed, recalculating mix...");
-    
+    if (investParams.lumpSumEur === 0 && investParams.monthlyVklad === 0)
+      return;
+
+    console.log(
+      "[BasicLayout] PR-17.D: Investment params changed, recalculating mix..."
+    );
+
     // BASIC režim: vždy prepočítaj (override manual edits)
     if (modeUi === "BASIC") {
       const preset = PORTFOLIO_PRESETS.find((p) => p.id === riskPref);
       if (!preset) return;
-      
+
       const profile: ProfileForAdjustments = {
         monthlyIncome: cashflowData.monthlyIncome,
         fixedExpenses: cashflowData.fixedExp,
@@ -293,19 +299,18 @@ export default function BasicLayout() {
         goalAssetsEur: investParams.goalAssetsEur,
         riskPref: riskPref,
       };
-      
+
       const { preset: adjusted } = getAdjustedPreset(preset, profile);
-      
+
       // Update mix in persist
       writeV3({ mix: adjusted.mix });
       setMix(adjusted.mix);
-      
+
       console.log("[BasicLayout] PR-17.D: Mix auto-updated (BASIC mode)");
     }
-    
+
     // PRO režim: check mixDirty flag
     // TODO: Implementovať mixDirty tracking + chip "Reaplikovať profil?"
-    
   }, [stableInvestKey, investParams.goalAssetsEur, stableCashflowKey]);
 
   React.useEffect(() => {

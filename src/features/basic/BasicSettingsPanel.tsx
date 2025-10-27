@@ -34,16 +34,21 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     "individual" | "family" | "company"
   >(() => (seed.profile?.clientType as any) || "individual");
 
-  // PR-17: Client limits
+  // PR-17: Client limits (compute immediately, before useState)
+  const getClientLimitsForType = (type: ClientType) => {
+    return getClientLimits(type);
+  };
+  
   const clientLimits = React.useMemo(
-    () => getClientLimits(clientType as ClientType),
+    () => getClientLimitsForType(clientType as ClientType),
     [clientType]
   );
 
   // Lump sum slider range (auto-expand podľa clientType)
   const [lumpSumMax, setLumpSumMax] = React.useState(() => {
     const initialLump = (seed.profile?.lumpSumEur as any) || 0;
-    return initialLump > 100_000 ? clientLimits.lumpSumMax : 100_000;
+    const limits = getClientLimitsForType((seed.profile?.clientType as any) || "individual");
+    return initialLump > 100_000 ? limits.lumpSumMax : 100_000;
   });
 
   // Warning modal pre zmenu profilu
@@ -51,6 +56,13 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const [pendingClientType, setPendingClientType] = React.useState<
     "individual" | "family" | "company" | null
   >(null);
+
+  // PR-17: Auto-expand lumpSumMax keď clientType zmení na vyšší limit
+  React.useEffect(() => {
+    if (clientLimits.lumpSumMax > lumpSumMax) {
+      setLumpSumMax(clientLimits.lumpSumMax);
+    }
+  }, [clientType, clientLimits.lumpSumMax]);
 
   // Cashflow
   const [monthlyIncome, setMonthlyIncome] = React.useState(
@@ -149,7 +161,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     parse: (r) => Number(r.replace(",", ".")) || 0,
     clamp: (n) => {
       const clamped = Math.max(0, Math.min(n, clientLimits.monthlyIncomeMax));
-      
+
       // PR-17: Show toast ak clamped
       if (n > clientLimits.monthlyIncomeMax) {
         WarningCenter.push({
@@ -159,7 +171,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
           dedupeKey: "income-limit",
         });
       }
-      
+
       return clamped;
     },
     commit: (n) => {
@@ -227,8 +239,11 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     initial: monthlyVklad,
     parse: (r) => Number(r.replace(",", ".")) || 0,
     clamp: (n) => {
-      const clamped = Math.max(0, Math.min(n, clientLimits.monthlyContributionMax));
-      
+      const clamped = Math.max(
+        0,
+        Math.min(n, clientLimits.monthlyContributionMax)
+      );
+
       // PR-17: Show toast ak clamped
       if (n > clientLimits.monthlyContributionMax) {
         WarningCenter.push({
@@ -238,7 +253,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
           dedupeKey: "monthly-limit",
         });
       }
-      
+
       return clamped;
     },
     commit: (n) => {
@@ -707,7 +722,8 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       min={0}
                       max={Math.min(
                         clientLimits.monthlyContributionMax,
-                        validationState?.monthlyVkladMax || clientLimits.monthlyContributionMax
+                        validationState?.monthlyVkladMax ||
+                          clientLimits.monthlyContributionMax
                       )}
                       step={50}
                       value={monthlyVklad}
@@ -725,7 +741,8 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       aria-valuemin={0}
                       aria-valuemax={Math.min(
                         clientLimits.monthlyContributionMax,
-                        validationState?.monthlyVkladMax || clientLimits.monthlyContributionMax
+                        validationState?.monthlyVkladMax ||
+                          clientLimits.monthlyContributionMax
                       )}
                       aria-valuenow={monthlyVklad}
                       aria-valuetext={`${monthlyVklad.toLocaleString("sk-SK")} eur`}
@@ -912,4 +929,3 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     </>
   );
 };
-

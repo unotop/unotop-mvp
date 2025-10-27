@@ -18,7 +18,7 @@ export type Profile = {
   reserveMonths?: number; 
   riskMode?: 'legacy'|'current'; 
   modeUi?: 'BASIC'|'PRO'; 
-  clientType?: 'individual' | 'family' | 'firm';
+  clientType?: 'individual' | 'family' | 'company'; // PR-17: firm → company
   riskPref?: string; 
   crisisBias?: number;
   lumpSumEur?: number;
