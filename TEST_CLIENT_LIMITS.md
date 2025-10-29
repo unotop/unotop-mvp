@@ -24,14 +24,14 @@
 **Kroky:**
 
 1. Zmeň "Profil klienta":
-   - **Jednotlivec**: slider max = 100 000 €
-   - **Rodina**: slider max = 200 000 €
+   - **Jednotlivec**: slider max = 200 000 €
+   - **Rodina**: slider max = 300 000 €
    - **Firma**: slider max = 1 000 000 €
 
 **Očakávaný výsledok:**
 
 - Slider "Jednorazová investícia" max sa dynamicky mení
-- Nie je hardcoded na 100k pre všetkých!
+- Správne hodnoty podľa typu klienta ✅
 
 ---
 

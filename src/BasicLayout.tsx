@@ -266,10 +266,17 @@ export default function BasicLayout() {
   const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
 
   // PR-17.D: Reactive Mix Recalculation - auto-prepočítaj pri zmene vstupov
+  // PR-4: Rešpektuj mixLocked - neprepísať mix, ak je zamknutý
   React.useEffect(() => {
     const v3 = readV3();
     const riskPref = v3.profile?.riskPref as RiskPref | undefined;
     const modeUi = (v3.profile?.modeUi as any) || "BASIC";
+
+    // PR-4: Skip ak je mix zamknutý
+    if (v3.mixLocked) {
+      console.log("[BasicLayout] PR-4: Mix locked, skipping auto-update");
+      return;
+    }
 
     // Skip ak nie je vybraný preset
     if (!riskPref) return;
@@ -685,6 +692,7 @@ export default function BasicLayout() {
           riskPref={
             seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
           }
+          mode="BASIC"
         />
       </div>
 

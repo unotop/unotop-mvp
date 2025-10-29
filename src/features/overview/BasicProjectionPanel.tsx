@@ -53,6 +53,7 @@ interface BasicProjectionPanelProps {
   horizonYears: number;
   goalAssetsEur: number;
   riskPref: "konzervativny" | "vyvazeny" | "rastovy";
+  mode?: "BASIC" | "PRO"; // PR-4: Hide cash alerts in BASIC
 }
 
 /**
@@ -72,6 +73,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   horizonYears,
   goalAssetsEur,
   riskPref,
+  mode = "BASIC", // PR-4: Default to BASIC
 }) => {
   // PR-14: If mix is empty, use default fallback (vyvazeny preset) for projection continuity
   const defaultMix: MixItem[] = [
@@ -337,9 +339,10 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         </div>
       </div>
 
-      {/* Cash Reserve Info - ak treba upozorniť */}
-      {cashReserveInfo && cashReserveInfo.needsAdjustment && (
+      {/* PR-4: Cash Reserve Info - zobraz len v PRO režime */}
+      {mode === "PRO" && cashReserveInfo && cashReserveInfo.needsAdjustment && (
         <div
+          data-testid="panel-cash-alerts"
           className={`rounded-lg p-3 text-sm ${
             cashReserveInfo.current < cashReserveInfo.optimal
               ? "bg-blue-500/10 border border-blue-500/30"

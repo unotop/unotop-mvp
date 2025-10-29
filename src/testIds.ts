@@ -9,7 +9,31 @@ export const TEST_IDS = {
   SCENARIO_CHIP: 'scenario-chip',
   WIZARD_DIALOG: 'mini-wizard-dialog',
   WIZARD_ACTION_APPLY: 'wizard-apply',
-  DEEPLINK_BANNER: 'deeplink-banner'
+  DEEPLINK_BANNER: 'deeplink-banner',
+  
+  // PR-4: mixLocked + goal + debts
+  CHIP_MIX_LOCKED: 'chip-mix-locked',
+  BTN_UNLOCK_MIX: 'btn-unlock-mix',
+  GOAL_INPUT: 'goal-input',
+  GOAL_SLIDER: 'goal-slider',
+  BTN_ADD_DEBT: 'btn-add-debt',
+  MODAL_ADD_DEBT: 'modal-add-debt',
+  DEBT_TYPE: 'debt-type',
+  DEBT_PRINCIPAL: 'debt-principal',
+  DEBT_RATE: 'debt-rate',
+  DEBT_YEARS: 'debt-years',
+  DEBT_EXTRA_MONTHLY: 'debt-extra-monthly',
+  CHIP_DIRTY_CHANGES: 'chip-dirty-changes',
+  CTA_RECOMPUTE: 'cta-recompute',
+  
+  // PR-5: contact validation
+  CONTACT_EMAIL_INPUT: 'contact-email-input',
+  CONTACT_PHONE_INPUT: 'contact-phone-input',
+  CONTACT_CONSENT_CHECKBOX: 'contact-consent-checkbox',
+  CONTACT_SUBMIT_BTN: 'contact-submit-btn',
+  CONTACT_ERROR_SUMMARY: 'contact-error-summary',
+  HONEYPOT_COMPANY: 'honeypot-company',
+  CONTACT_RATE_LIMIT_HINT: 'contact-rate-limit-hint',
 } as const;
 
 export type TestIdKey = keyof typeof TEST_IDS;

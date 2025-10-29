@@ -14,6 +14,8 @@ import { AssetSlider } from "./AssetSlider";
 import { ASSET_STYLES } from "./assetStyles";
 import { StatusChips, type StatusChip } from "./StatusChips";
 import { WarningChips } from "../ui/warnings/WarningChips";
+import { MixLockChip } from "./MixLockChip"; // PR-4
+import { lockMix } from "./mix-lock"; // PR-4
 
 type AssetKey = MixItem["key"];
 interface AssetDef {
@@ -111,6 +113,9 @@ export const MixPanel: React.FC<{
     setMix((prev) =>
       prev.map((i) => (i.key === key ? { ...i, pct: rounded } : i))
     );
+    
+    // PR-4: Manuálny ťah na slidri → zamknúť mix
+    lockMix();
   };
 
   // Persist after any slider/text commit (debounced by input hook already)
@@ -394,6 +399,14 @@ export const MixPanel: React.FC<{
       <header id="mix-panel-title" className="mb-3 font-semibold">
         Zloženie portfólia
       </header>
+
+      {/* PR-4: Mix Lock Chip */}
+      <div className="mb-3">
+        <MixLockChip onUnlock={() => {
+          // Force re-render to show unlocked state
+          setMix([...mix]);
+        }} />
+      </div>
 
       {/* Summary Bar */}
       <div className="mb-3 p-2 rounded-lg bg-slate-800/50 ring-1 ring-white/5">

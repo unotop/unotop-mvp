@@ -7,6 +7,7 @@ import type { MixItem } from "../mix/mix.service";
 import type { ValidationState } from "../../utils/validation";
 import { WarningCenter } from "../ui/warnings/WarningCenter";
 import { getClientLimits, type ClientType } from "../../config/clientLimits";
+import { TEST_IDS } from "../../testIds"; // PR-4
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -838,20 +839,56 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         </span>
                       )}
                   </label>
-                  <input
-                    id="goal-basic"
-                    type="text"
-                    role="textbox"
-                    inputMode="decimal"
-                    aria-label="Cieľ majetku"
-                    placeholder="Napr. 100000"
-                    ref={goalCtl.ref}
-                    onChange={goalCtl.onChange}
-                    onBlur={goalCtl.onBlur}
-                    defaultValue={goalCtl.defaultValue}
-                    disabled={!validationState?.cashflowComplete}
-                    className="w-full px-3 py-2 rounded-lg bg-slate-800 text-sm font-semibold ring-1 ring-amber-500/30 focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
+                  <div className="space-y-2">
+                    <input
+                      id="goal-basic"
+                      type="text"
+                      role="textbox"
+                      inputMode="decimal"
+                      aria-label="Cieľ majetku"
+                      placeholder="Napr. 100000"
+                      data-testid={TEST_IDS.GOAL_INPUT}
+                      ref={goalCtl.ref}
+                      onChange={goalCtl.onChange}
+                      onBlur={goalCtl.onBlur}
+                      defaultValue={goalCtl.defaultValue}
+                      disabled={!validationState?.cashflowComplete}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-800 text-sm font-semibold ring-1 ring-amber-500/30 focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {/* PR-4: Slider pre Cieľ majetku (5k - 1M, krok 500) */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="range"
+                        min={5000}
+                        max={1000000}
+                        step={500}
+                        value={goalAssetsEur}
+                        data-testid={TEST_IDS.GOAL_SLIDER}
+                        disabled={!validationState?.cashflowComplete}
+                        onChange={(e) => {
+                          const val = Number(e.currentTarget.value);
+                          setGoalAssetsEur(val);
+                          goalCtl.syncToDom(val); // Sync textbox
+                          const cur = readV3();
+                          writeV3({
+                            profile: {
+                              ...(cur.profile || {}),
+                              goalAssetsEur: val,
+                            } as any,
+                          });
+                        }}
+                        aria-label="Cieľ majetku slider"
+                        aria-valuemin={5000}
+                        aria-valuemax={1000000}
+                        aria-valuenow={goalAssetsEur}
+                        aria-valuetext={`${goalAssetsEur.toLocaleString("sk-SK")} eur`}
+                        className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                      <span className="text-xs tabular-nums font-semibold w-24 text-right text-amber-400">
+                        {goalAssetsEur.toLocaleString("sk-SK")} €
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* FV (Future Value) - konečná hodnota investície (zarovnaný s Voľné prostriedky) */}

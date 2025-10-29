@@ -35,6 +35,7 @@ export type V3 = Partial<{
   debts: Debt[];
   mix: MixItem[];
   profile: Profile;
+  mixLocked?: boolean; // PR-4: Po výbere profilu/manuálnom ťahu → žiadne auto-prepisy
   // back-compat top-level mirrors (tests may read these directly)
   monthlyIncome: number;
   monthly: number; // mirror for monthlyVklad

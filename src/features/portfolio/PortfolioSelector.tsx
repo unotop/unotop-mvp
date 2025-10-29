@@ -15,6 +15,7 @@ import {
   type ProfileForAdjustments,
 } from "./presets";
 import { writeV3, readV3 } from "../../persist/v3";
+import { lockMix } from "../mix/mix-lock"; // PR-4
 import {
   riskScore0to10,
   approxYieldAnnualFromMix,
@@ -256,6 +257,9 @@ export default function PortfolioSelector() {
         riskPref: preset.id,
       } as any,
     });
+
+    // PR-4: Zamknúť mix po výbere profilu
+    lockMix();
 
     // UI feedback
     setSelectedPreset(preset.id);
