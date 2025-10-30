@@ -1,5 +1,6 @@
 import React from "react";
 import { ProjectionChart } from "../projection/ProjectionChart";
+import { DebtVsInvestmentChart } from "../projection/DebtVsInvestmentChart"; // PR-4 Task 8
 import { calculateFutureValue } from "../../engine/calculations";
 import {
   approxYieldAnnualFromMix,
@@ -490,6 +491,25 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             </span>
           </div>
         </div>
+
+        {/* PR-4 Task 8: Debt vs Investment Chart (ak sú dlhy) */}
+        {(() => {
+          const currentDebts = readV3().debts || [];
+          if (currentDebts.length === 0) return null;
+
+          return (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <DebtVsInvestmentChart
+                mix={effectiveMix}
+                debts={currentDebts}
+                lumpSumEur={projectionInputs.lumpSumEur}
+                monthlyVklad={projectionInputs.monthlyVklad}
+                horizonYears={projectionInputs.horizonYears}
+                riskPref={validRiskPref}
+              />
+            </div>
+          );
+        })()}
       </div>
 
       {/* Odporúčania - kompaktné, edukatívne */}
