@@ -113,7 +113,7 @@ export const MixPanel: React.FC<{
     setMix((prev) =>
       prev.map((i) => (i.key === key ? { ...i, pct: rounded } : i))
     );
-    
+
     // PR-4: Manuálny ťah na slidri → zamknúť mix
     lockMix();
   };
@@ -402,10 +402,12 @@ export const MixPanel: React.FC<{
 
       {/* PR-4: Mix Lock Chip */}
       <div className="mb-3">
-        <MixLockChip onUnlock={() => {
-          // Force re-render to show unlocked state
-          setMix([...mix]);
-        }} />
+        <MixLockChip
+          onUnlock={() => {
+            // Force re-render to show unlocked state
+            setMix([...mix]);
+          }}
+        />
       </div>
 
       {/* Summary Bar */}

@@ -1,6 +1,6 @@
 /**
  * PR-4: MixLockChip
- * 
+ *
  * Zobrazuje stav zamknutia portfólia + tlačidlo na odomknutie.
  */
 

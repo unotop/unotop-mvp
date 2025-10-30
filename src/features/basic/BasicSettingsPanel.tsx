@@ -8,6 +8,7 @@ import type { ValidationState } from "../../utils/validation";
 import { WarningCenter } from "../ui/warnings/WarningCenter";
 import { getClientLimits, type ClientType } from "../../config/clientLimits";
 import { TEST_IDS } from "../../testIds"; // PR-4
+import { AddDebtModal } from "../debts/AddDebtModal";
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -91,6 +92,9 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
   const [goalAssetsEur, setGoalAssetsEur] = React.useState(
     () => (seed.profile?.goalAssetsEur as any) || 0
   );
+
+  // PR-4: Debt modal state
+  const [isDebtModalOpen, setIsDebtModalOpen] = React.useState(false);
 
   // Persist helpers
   const persistClientType = (value: "individual" | "family" | "company") => {
@@ -572,30 +576,39 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                   <div style={{ height: "40px" }}></div>
                 </div>
 
-                {/* Pridať dlh button - NAD Voľné prostriedky */}
+                {/* Pridať dlh button */}
                 <div className="space-y-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      const message =
-                        "Pre správu dlhov prepnite do PRO režimu.\n\n" +
-                        "V PRO režime môžete:\n" +
-                        "• Pridávať hypotéky a spotrebné úvery\n" +
-                        "• Sledovať zostatok a splátky\n" +
-                        "• Plánovať rýchlejšie splatenie";
-                      WarningCenter.push({
-                        type: "info",
-                        message,
-                        scope: "global",
-                        dedupeKey: "pro-mode-info",
-                      });
-                    }}
+                    data-testid={TEST_IDS.BTN_ADD_DEBT}
+                    onClick={() => setIsDebtModalOpen(true)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 transition-colors text-sm font-medium text-slate-200"
                   >
                     <span>💳</span>
                     <span>Pridať dlh alebo hypotéku</span>
                   </button>
                 </div>
+
+                {/* PR-4: Debt KPI bar */}
+                {(() => {
+                  const currentDebts = readV3().debts || [];
+                  const totalMonthly = currentDebts.reduce((sum, d) => sum + d.monthly, 0);
+                  
+                  if (currentDebts.length === 0) return null;
+
+                  return (
+                    <div className="px-3 py-2 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400">
+                          Dlhy: <span className="font-semibold text-slate-200">{currentDebts.length}</span>
+                        </span>
+                        <span className="text-slate-400">
+                          Splátky: <span className="font-semibold text-amber-400">{totalMonthly.toLocaleString("sk-SK")} €</span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Voľné prostriedky - kompaktný box (zarovnaný s Konečná hodnota) */}
                 <div>
@@ -965,6 +978,15 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
           </div>
         </div>
       )}
+
+      {/* PR-4: Debt modal */}
+      <AddDebtModal
+        isOpen={isDebtModalOpen}
+        onClose={() => setIsDebtModalOpen(false)}
+        onSuccess={() => {
+          // Refresh potrebné? State je v persist, komponenty by mali reagovať
+        }}
+      />
     </>
   );
 };
