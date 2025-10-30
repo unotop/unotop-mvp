@@ -6,6 +6,7 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
+import { DirtyChangesChip } from "./features/ui/DirtyChangesChip"; // PR-4 Task 5
 import {
   getAdjustedPreset,
   enforceStageCaps, // PR-14.D: Import pre cache clear
@@ -59,6 +60,9 @@ export default function BasicLayout() {
   const [open3, setOpen3] = React.useState(true); // Portfolio panel
   const [shareOpen, setShareOpen] = React.useState(false);
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
+
+  // PR-4 Task 5: Force refresh state pre projekciu po CTA
+  const [projectionRefresh, setProjectionRefresh] = React.useState(0);
 
   // Onboarding tour state - progresívny systém
   const [tourOpen, setTourOpen] = React.useState(false);
@@ -677,9 +681,13 @@ export default function BasicLayout() {
 
   const right = (
     <div className="space-y-4">
+      {/* PR-4 Task 5: Dirty changes chip */}
+      <DirtyChangesChip onRecompute={() => setProjectionRefresh((p) => p + 1)} />
+
       {/* Projekcia - zobrazuje sa vždy (aj pre rodinu/firmu) */}
       <div id="projection-panel">
         <BasicProjectionPanel
+          key={projectionRefresh} // Force remount po CTA
           mix={mix}
           lumpSumEur={investParams.lumpSumEur}
           monthlyVklad={
