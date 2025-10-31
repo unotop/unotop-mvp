@@ -1,6 +1,6 @@
 /**
  * PR-4: AddDebtModal - Jednoduchý modal na pridanie dlhu
- * 
+ *
  * Polia:
  * - Typ: Spotrebiteľský / Hypotéka
  * - Výška úveru (€)
@@ -25,7 +25,9 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const [debtType, setDebtType] = React.useState<"consumer" | "mortgage">("consumer");
+  const [debtType, setDebtType] = React.useState<"consumer" | "mortgage">(
+    "consumer"
+  );
   const [principal, setPrincipal] = React.useState("");
   const [rate, setRate] = React.useState("");
   const [years, setYears] = React.useState("");
@@ -89,7 +91,7 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
     } else {
       // Annuita: P * [r(1+r)^n] / [(1+r)^n - 1]
       const pow = Math.pow(1 + r, termMonths);
-      monthlyPayment = principalNum * (r * pow) / (pow - 1);
+      monthlyPayment = (principalNum * (r * pow)) / (pow - 1);
     }
 
     // Vytvor amortizačný plán
@@ -182,7 +184,10 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
 
           {/* Výška úveru */}
           <div>
-            <label htmlFor="debt-principal" className="text-xs text-slate-400 block mb-1">
+            <label
+              htmlFor="debt-principal"
+              className="text-xs text-slate-400 block mb-1"
+            >
               Výška úveru (€)
             </label>
             <input
@@ -193,7 +198,9 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
               onChange={(e) => setPrincipal(e.target.value)}
               placeholder="napr. 50000"
               className={`w-full px-3 py-2 rounded-lg bg-slate-700 text-white placeholder:text-slate-500 ${
-                errors.principal ? "ring-2 ring-red-500" : "ring-1 ring-white/10"
+                errors.principal
+                  ? "ring-2 ring-red-500"
+                  : "ring-1 ring-white/10"
               }`}
             />
             {errors.principal && (
@@ -203,7 +210,10 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
 
           {/* Úrok p.a. */}
           <div>
-            <label htmlFor="debt-rate" className="text-xs text-slate-400 block mb-1">
+            <label
+              htmlFor="debt-rate"
+              className="text-xs text-slate-400 block mb-1"
+            >
               Úrok p.a. (%)
             </label>
             <input
@@ -225,7 +235,10 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
 
           {/* Splatnosť */}
           <div>
-            <label htmlFor="debt-years" className="text-xs text-slate-400 block mb-1">
+            <label
+              htmlFor="debt-years"
+              className="text-xs text-slate-400 block mb-1"
+            >
               Splatnosť (roky)
             </label>
             <input
@@ -246,7 +259,10 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
 
           {/* Mimoriadna splátka (voliteľné) */}
           <div>
-            <label htmlFor="debt-extra" className="text-xs text-slate-400 block mb-1">
+            <label
+              htmlFor="debt-extra"
+              className="text-xs text-slate-400 block mb-1"
+            >
               Mimoriadna mesačná splátka (€) - voliteľné
             </label>
             <input

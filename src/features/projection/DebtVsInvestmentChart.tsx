@@ -1,6 +1,6 @@
 /**
  * PR-4 Task 8: DebtVsInvestmentChart
- * 
+ *
  * Recharts-based chart showing:
  * - Investment growth (FV over time)
  * - Debt remaining balance (amortization)

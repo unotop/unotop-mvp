@@ -10,6 +10,7 @@
 ## Executive Summary
 
 Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabilnú a užívateľsky prívetiškú BASIC UX verziu. Tasks 6-7 (PR-5 validácie + docs) sú odložené do separátneho PR. Všetky kľúčové funkcie fungujú:
+
 - Mix sa "zamkne" po výbere profilu alebo manuálnom ťahu (žiadne auto-prepisy)
 - Cieľ majetku má slider (5k-1M €, krok 500 €)
 - Cash alerts skryté v BASIC režime
@@ -22,10 +23,12 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 ## Detailné výstupy
 
 ### Task 1: mixLocked mechanizmus ✅
+
 **Commit:** 1ff7bdd  
 **Files:** 10 changed, +198 lines
 
 **Čo bolo implementované:**
+
 - `persist/v3.ts`: Pridaný `mixLocked?: boolean` field
 - `features/mix/mix-lock.ts` (NEW): Centrálne funkcie lockMix(), unlockMix(), isMixLocked(), canOverwriteMix()
 - `features/mix/MixLockChip.tsx` (NEW): UI chip "🔒 Portfólio zamknuté" + button "Zmeniť mix"
@@ -35,6 +38,7 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 - `testIds.ts`: CHIP_MIX_LOCKED, BTN_UNLOCK_MIX
 
 **Akceptačné kritériá:**
+
 - ✅ Mix locked po výbere presetu (PortfolioSelector)
 - ✅ Mix locked po manuálnom ťahu (slider change)
 - ✅ Auto-prepis (21.4/16.2/11) blocked keď locked
@@ -44,10 +48,12 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 ---
 
 ### Task 2: Goal slider ✅
+
 **Commit:** 1ff7bdd (part of Phase 1)  
 **Files:** BasicSettingsPanel.tsx modified
 
 **Čo bolo implementované:**
+
 - Slider pod "Investičný horizont" (rozsah 5,000 - 1,000,000 €, krok 500 €)
 - Obojsmerná sync: input ↔ slider
 - Persist do `v3.profile.goalAssetsEur`
@@ -55,6 +61,7 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 - TEST_IDS: GOAL_INPUT, GOAL_SLIDER
 
 **Akceptačné kritériá:**
+
 - ✅ Slider funkčný (5k-1M €, step 500 €)
 - ✅ Input/slider sync works
 - ✅ Hodnota perzistuje pri reload
@@ -63,16 +70,19 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 ---
 
 ### Task 3: Cash alerts skryté v BASIC ✅
+
 **Commit:** 1ff7bdd (part of Phase 1)  
 **Files:** BasicProjectionPanel.tsx modified
 
 **Čo bolo implementované:**
+
 - Pridaný `mode?: "BASIC" | "PRO"` prop do BasicProjectionPanel
 - Default `mode="BASIC"`
 - Cash alerts wrapped do `{mode === "PRO" && ...}`
 - TEST_ID: panel-cash-alerts
 
 **Akceptačné kritériá:**
+
 - ✅ Cash alerts hidden v BASIC mode
 - ✅ Visible v PRO mode (future)
 - ✅ Test overiteľný cez data-testid
@@ -80,10 +90,12 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 ---
 
 ### Task 4: Debt modal + KPI bar ✅
+
 **Commit:** 5d31602  
 **Files:** 4 changed, +328 lines
 
 **Čo bolo implementované:**
+
 - `features/debts/AddDebtModal.tsx` (NEW): Modal s 5 polia (Typ, Výška €, Úrok p.a., Splatnosť rokov, Extra mesačná splátka)
 - Annuity formula pre výpočet mesačnej splátky: `P * r * (1+r)^n / ((1+r)^n - 1)`
 - Integrácia `buildAmortSchedule()` z `domain/amortization.ts`
@@ -94,6 +106,7 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 - Modal a11y: role="dialog", aria-modal="true", Esc close
 
 **Akceptačné kritériá:**
+
 - ✅ Modal otvára cez "Pridať dlh" button
 - ✅ Form fields validate correctly
 - ✅ Amortization schedule generated
@@ -104,10 +117,12 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 ---
 
 ### Task 5: Reaktivita CTA (Variant B) ✅
+
 **Commit:** c618a6c  
 **Files:** 4 changed, +178 lines
 
 **Čo bolo implementované:**
+
 - `features/overview/projectionSnapshot.ts` (NEW): Snapshot mechanizmus (getSnapshot, saveSnapshot, isDirty)
 - `features/ui/DirtyChangesChip.tsx` (NEW): Chip "Zmeny čakajú..." + CTA "Prepočítať projekciu"
 - BasicProjectionPanel: Uses snapshot inputs pre FV + graf, live values pre metriky (Riziko, Výnos)
@@ -116,6 +131,7 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 - TEST_IDS: CHIP_DIRTY_CHANGES, CTA_RECOMPUTE
 
 **Akceptačné kritériá:**
+
 - ✅ Chip zobrazuje sa pri dirty state (input changes)
 - ✅ CTA "Prepočítať projekciu" saves snapshot + refreshes
 - ✅ Projekcia (FV + graf) frozen until CTA
@@ -125,10 +141,12 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 ---
 
 ### Task 8: Recharts chart + crossover ✅
+
 **Commit:** 6ec0b5f  
 **Files:** 2 changed, +223 lines
 
 **Čo bolo implementované:**
+
 - `features/projection/DebtVsInvestmentChart.tsx` (NEW): Recharts-based chart
 - 2 lines: Investment growth (green) + Debt balance (red)
 - Crossover detection: first year where investment >= debt
@@ -139,6 +157,7 @@ Implementované boli **6 z 9 taskov PR-4** (Tasks 1-5, 8), ktoré tvoria stabiln
 - Y-axis: auto-scaled with 10% margin
 
 **Akceptačné kritériá:**
+
 - ✅ Chart renders only if debts exist
 - ✅ 2 lines visible (Investment + Debt)
 - ✅ Crossover marker at correct year
@@ -160,6 +179,7 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 
 **Critical tests (17 tests):** ✅ ALL PASS  
 **Test suite:**
+
 - `tests/invariants.limits.test.tsx` (2 tests)
 - `tests/accessibility.ui.test.tsx` (9 tests)
 - `tests/acceptance.mix-cap.ui.test.tsx` (3 tests)
@@ -168,10 +188,12 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 - `tests/deeplink.banner.test.tsx` (1 test)
 
 **Warnings (non-blocking):**
+
 - `act(...)` warnings v MixPanel, InvestSection, LegacyApp (React 18 strict mode, known issue)
 - RiskGauge TODO marker (future enhancement)
 
 **Build validation:**
+
 - Size: 665.06 kB (gzip: 199.06 kB)
 - Delta: +11.97 kB from baseline (653.09 kB)
 - Reason: AddDebtModal (+6kB), DirtyChangesChip (+2kB), DebtVsInvestmentChart (+2.3kB), projectionSnapshot (+1.6kB)
@@ -206,27 +228,27 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 
 ### Upravené súbory (6)
 
-1. **src/persist/v3.ts**  
+1. **src/persist/v3.ts**
    - Added `mixLocked?: boolean` field (line 37)
 
-2. **src/features/portfolio/PortfolioSelector.tsx**  
+2. **src/features/portfolio/PortfolioSelector.tsx**
    - Import lockMix (line 9)
    - Call lockMix() after preset selection (line 258)
 
-3. **src/features/mix/MixPanel.tsx**  
+3. **src/features/mix/MixPanel.tsx**
    - Import MixLockChip (line 16)
    - Import lockMix (line 103)
    - Call lockMix() in commitAsset (line 112)
    - Render MixLockChip (lines 404-409)
 
-4. **src/BasicLayout.tsx**  
+4. **src/BasicLayout.tsx**
    - Import DirtyChangesChip (line 9)
    - mixLocked check in PR-17.D effect (lines 268-276)
    - projectionRefresh state (line 63)
    - DirtyChangesChip rendered (line 680)
    - projectionRefresh key prop (line 684)
 
-5. **src/features/basic/BasicSettingsPanel.tsx**  
+5. **src/features/basic/BasicSettingsPanel.tsx**
    - Import AddDebtModal (line 11)
    - isDebtModalOpen state (line 95)
    - "Pridať dlh" button (lines 577-586)
@@ -234,7 +256,7 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
    - Goal slider (lines 842-892)
    - AddDebtModal render (lines 970-979)
 
-6. **src/features/overview/BasicProjectionPanel.tsx**  
+6. **src/features/overview/BasicProjectionPanel.tsx**
    - Import DebtVsInvestmentChart (line 3)
    - Import getSnapshot, saveSnapshot (line 22)
    - mode prop (line 52, default "BASIC")
@@ -249,6 +271,7 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 ### PR-4 Phase 1 (6/9 tasks complete)
 
 **✅ Task 1: mixLocked mechanizmus**
+
 - Mix locked after preset selection
 - Mix locked after manual slider change
 - Auto-prepis blocked when locked
@@ -256,17 +279,20 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 - Chip visible in DOM
 
 **✅ Task 2: Goal slider**
+
 - Range 5k-1M €, step 500 €
 - Bidirectional sync (input ↔ slider)
 - Persists to v3.profile.goalAssetsEur
 - Visible in BASIC mode
 
 **✅ Task 3: Cash alerts hidden in BASIC**
+
 - mode prop works
 - Cash alerts hidden by default (BASIC)
 - Visible when mode="PRO"
 
 **✅ Task 4: Debt modal + KPI bar**
+
 - Modal opens from "Pridať dlh" button
 - Form validates (principal > 0, rate 0-100%, years 1-50)
 - Amortization schedule calculated
@@ -275,6 +301,7 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 - Multiple debts supported
 
 **✅ Task 5: Reaktivita CTA (Variant B)**
+
 - Chip shows when dirty
 - CTA "Prepočítať projekciu" works
 - Projekcia uses snapshot (frozen until CTA)
@@ -282,6 +309,7 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 - Snapshot fallback at first load
 
 **✅ Task 8: Recharts chart + crossover**
+
 - Chart renders only if debts exist
 - 2 lines (Investment + Debt)
 - Crossover marker at correct year
@@ -289,6 +317,7 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 - Uses snapshot inputs
 
 **⏸️ Tasks 6-7: PR-5 (DEFERRED)**
+
 - Email/phone validation
 - Privacy Policy + GDPR docs
 
@@ -298,24 +327,25 @@ Tieto tasky sú odložené do separátneho PR-5, pretože sú nezávislé na BAS
 
 ### Identifikované riziká
 
-1. **Snapshot polling (500ms):**  
-   - Riziko: Performance overhead pri veľkom počte komponentov  
-   - Mitigácia: Polling len v BasicLayout, jednoduchý isDirty() check  
+1. **Snapshot polling (500ms):**
+   - Riziko: Performance overhead pri veľkom počte komponentov
+   - Mitigácia: Polling len v BasicLayout, jednoduchý isDirty() check
    - Rollback: Prejsť na event-based mechanizmus (persist event listener)
 
-2. **Recharts bundle size (+2.3kB):**  
-   - Riziko: Overhead pre users bez dlhov  
-   - Mitigácia: Conditional render (null ak debts.length === 0)  
+2. **Recharts bundle size (+2.3kB):**
+   - Riziko: Overhead pre users bez dlhov
+   - Mitigácia: Conditional render (null ak debts.length === 0)
    - Rollback: Lazy load cez dynamic import()
 
-3. **mixLocked conflict s PR-17.D:**  
-   - Riziko: Auto-update môže byť blokovaný aj keď user chce update  
-   - Mitigácia: Unlock button jasne visible  
+3. **mixLocked conflict s PR-17.D:**
+   - Riziko: Auto-update môže byť blokovaný aj keď user chce update
+   - Mitigácia: Unlock button jasne visible
    - Rollback: Remove mixLocked check z PR-17.D effect
 
 ### Rollback plán
 
 **Ak je potrebné vrátenie:**
+
 ```bash
 # Revert PR-4 Phase 1 (4 commits)
 git revert 6ec0b5f c618a6c 5d31602 1ff7bdd
@@ -325,6 +355,7 @@ git revert <commit_hash>
 ```
 
 **Kritické súbory na backup:**
+
 - `persist/v3.ts` (mixLocked field)
 - `BasicLayout.tsx` (PR-17.D effect)
 - `BasicProjectionPanel.tsx` (snapshot logic)
@@ -345,6 +376,7 @@ git revert <commit_hash>
 ## Ďalšie kroky (future work)
 
 ### PR-5 (Tasks 6-7 — contact validation + docs)
+
 - Email regex validation (RFC 5322)
 - Phone regex (SK format: +421 9XX XXX XXX)
 - Honeypot field (bot protection)
@@ -354,12 +386,14 @@ git revert <commit_hash>
 - Footer links
 
 ### PR-4 Phase 2 (optimalizácie)
+
 - Snapshot event-based mechanizmus (replace polling)
 - Recharts lazy loading (dynamic import)
 - RiskGauge role="meter" implementation
 - Screenshot capture pre marketing
 
 ### PR-4 Phase 3 (PRO features)
+
 - Debt management UI (edit/delete)
 - Export/import portfólia (JSON)
 - Advanced risk settings

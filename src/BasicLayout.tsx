@@ -182,6 +182,14 @@ export default function BasicLayout() {
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
 
+  // PR-4 FIX: Refresh projekciu pri zmene dlhov (aby sa zobrazil DebtVsInvestmentChart)
+  React.useEffect(() => {
+    const v3 = readV3();
+    const debtsCount = (v3.debts || []).length;
+    // Trigger refresh ak sa zmení počet dlhov (AddDebtModal pridá do persist)
+    setProjectionRefresh((p) => p + 1);
+  }, [(seed.debts || []).length]); // Počúvaj na zmenu počtu dlhov
+
   // Client type (individual/family/firm)
   const clientType = (seed.profile?.clientType as any) || "individual";
   const isPortfolioLocked = clientType === "family" || clientType === "firm";
@@ -682,7 +690,9 @@ export default function BasicLayout() {
   const right = (
     <div className="space-y-4">
       {/* PR-4 Task 5: Dirty changes chip */}
-      <DirtyChangesChip onRecompute={() => setProjectionRefresh((p) => p + 1)} />
+      <DirtyChangesChip
+        onRecompute={() => setProjectionRefresh((p) => p + 1)}
+      />
 
       {/* Projekcia - zobrazuje sa vždy (aj pre rodinu/firmu) */}
       <div id="projection-panel">

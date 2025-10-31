@@ -1,12 +1,13 @@
 /**
  * PR-4 Task 5: Chip "Zmeny čakajú..." + CTA "Prepočítať projekciu"
- * 
+ *
  * Zobrazuje sa, keď sú zmeny v inputoch, ktoré ešte neboli aplikované na projekciu
  */
 
 import React from "react";
 import { TEST_IDS } from "../../testIds";
 import { isDirty, saveSnapshot } from "../overview/projectionSnapshot";
+import { unlockMix } from "../mix/mix-lock"; // PR-4 Task 5 FIX
 
 interface DirtyChangesChipProps {
   onRecompute: () => void;
@@ -31,6 +32,7 @@ export const DirtyChangesChip: React.FC<DirtyChangesChipProps> = ({
 
   const handleRecompute = () => {
     saveSnapshot(); // Uloží aktuálny stav ako snapshot
+    unlockMix(); // PR-4 FIX: Unlock mix aby PR-17.D effect mohol prepočítať (21.4/16.2/11 → správne hodnoty)
     setDirty(false);
     onRecompute(); // Notify parent (refresh projekcie)
   };

@@ -592,18 +592,27 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 {/* PR-4: Debt KPI bar */}
                 {(() => {
                   const currentDebts = readV3().debts || [];
-                  const totalMonthly = currentDebts.reduce((sum, d) => sum + d.monthly, 0);
-                  
+                  const totalMonthly = currentDebts.reduce(
+                    (sum, d) => sum + d.monthly,
+                    0
+                  );
+
                   if (currentDebts.length === 0) return null;
 
                   return (
                     <div className="px-3 py-2 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-slate-400">
-                          Dlhy: <span className="font-semibold text-slate-200">{currentDebts.length}</span>
+                          Dlhy:{" "}
+                          <span className="font-semibold text-slate-200">
+                            {currentDebts.length}
+                          </span>
                         </span>
                         <span className="text-slate-400">
-                          Splátky: <span className="font-semibold text-amber-400">{totalMonthly.toLocaleString("sk-SK")} €</span>
+                          Splátky:{" "}
+                          <span className="font-semibold text-amber-400">
+                            {totalMonthly.toLocaleString("sk-SK")} €
+                          </span>
                         </span>
                       </div>
                     </div>
