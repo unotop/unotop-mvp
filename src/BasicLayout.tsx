@@ -278,17 +278,14 @@ export default function BasicLayout() {
   const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
 
   // PR-17.D: Reactive Mix Recalculation - auto-prepočítaj pri zmene vstupov
-  // PR-4: Rešpektuj mixLocked - neprepísať mix, ak je zamknutý
+  // PR-6 Task B: mixLocked NEBLOKUJE tento effect (blokuje len CTA v MixPanel)
+  // Výpočty (yield/risk/FV) sa robia vždy z v3.mix cez useProjection hook
   React.useEffect(() => {
     const v3 = readV3();
     const riskPref = v3.profile?.riskPref as RiskPref | undefined;
     const modeUi = (v3.profile?.modeUi as any) || "BASIC";
 
-    // PR-4: Skip ak je mix zamknutý
-    if (v3.mixLocked) {
-      console.log("[BasicLayout] PR-4: Mix locked, skipping auto-update");
-      return;
-    }
+    // PR-6 Task B: mixLocked check REMOVED - lock affects only UI (normalize/recommend CTA), not calculations
 
     // Skip ak nie je vybraný preset
     if (!riskPref) return;

@@ -15,7 +15,7 @@ import { ASSET_STYLES } from "./assetStyles";
 import { StatusChips, type StatusChip } from "./StatusChips";
 import { WarningChips } from "../ui/warnings/WarningChips";
 import { MixLockChip } from "./MixLockChip"; // PR-4
-import { lockMix } from "./mix-lock"; // PR-4
+import { lockMix, isMixLocked } from "./mix-lock"; // PR-4 + PR-6 Task B
 
 type AssetKey = MixItem["key"];
 interface AssetDef {
@@ -263,16 +263,34 @@ export const MixPanel: React.FC<{
     }, 0);
   };
   const normalizeAll = () => {
+    // PR-6 Task B: Blokuj ak je mix locked
+    if (isMixLocked()) {
+      setToast("⚠️ Mix je zamknutý");
+      setTimeout(() => setToast(null), 1400);
+      return;
+    }
     const n = normalize(mix);
     setMix(n);
     writeV3({ mix: n });
   };
   const optimizeRisk = () => {
+    // PR-6 Task B: Blokuj ak je mix locked
+    if (isMixLocked()) {
+      setToast("⚠️ Mix je zamknutý");
+      setTimeout(() => setToast(null), 1400);
+      return;
+    }
     const constrained = applyRiskConstrainedMix(mix, cap);
     setMix(constrained);
     writeV3({ mix: constrained });
   };
   const applyRecommended = () => {
+    // PR-6 Task B: Blokuj ak je mix locked
+    if (isMixLocked()) {
+      setToast("⚠️ Mix je zamknutý");
+      setTimeout(() => setToast(null), 1400);
+      return;
+    }
     // Simple recommendation: ensure gold at least 12 %, then normalize
     let next = mix;
     if (goldPct < 12) next = setGoldTarget(next, 12);
@@ -287,6 +305,12 @@ export const MixPanel: React.FC<{
     setTimeout(() => setToast(null), 1400);
   };
   const applyRules = () => {
+    // PR-6 Task B: Blokuj ak je mix locked
+    if (isMixLocked()) {
+      setToast("⚠️ Mix je zamknutý");
+      setTimeout(() => setToast(null), 1400);
+      return;
+    }
     const constrained = applyRiskConstrainedMix(mix, cap);
     if (JSON.stringify(constrained) === JSON.stringify(mix)) {
       setToast("Žiadne úpravy");
