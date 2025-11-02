@@ -473,12 +473,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
           return (
             <div className="mt-4 pt-4 border-t border-white/5">
               <DebtVsInvestmentChart
-                mix={effectiveMix}
-                debts={currentDebts}
-                lumpSumEur={lumpSumEur} // PR-6: live values
-                monthlyVklad={monthlyVklad} // PR-6: live values
-                horizonYears={horizonYears} // PR-6: live values
-                riskPref={validRiskPref}
+                fvSeries={fvSeries} // PR-6 Task D: series z useProjection hook
+                debtSeries={debtSeries} // PR-6 Task D: series z useProjection hook
+                crossoverIndex={crossoverIndex} // PR-6 Task D: priesečník z useProjection hook
               />
             </div>
           );

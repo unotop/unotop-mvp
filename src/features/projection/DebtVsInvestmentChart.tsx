@@ -1,5 +1,6 @@
 /**
  * PR-4 Task 8: DebtVsInvestmentChart
+ * PR-6 Task D: Refactored to accept pre-calculated series (from useProjection hook)
  *
  * Recharts-based chart showing:
  * - Investment growth (FV over time)
@@ -19,20 +20,6 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-import { calculateFutureValue } from "../../engine/calculations";
-import { approxYieldAnnualFromMix, type RiskPref } from "../mix/assetModel";
-import type { MixItem } from "../mix/mix.service";
-import type { Debt } from "../../persist/v3";
-import { buildAmortSchedule } from "../../domain/amortization";
-
-interface DebtVsInvestmentChartProps {
-  mix: MixItem[];
-  debts: Debt[];
-  lumpSumEur: number;
-  monthlyVklad: number;
-  horizonYears: number;
-  riskPref: RiskPref;
-}
 
 interface DataPoint {
   year: number;
@@ -40,69 +27,36 @@ interface DataPoint {
   dlh: number;
 }
 
+interface DebtVsInvestmentChartProps {
+  fvSeries: number[]; // Ročné FV hodnoty [year0, year1, ..., yearN] (z useProjection)
+  debtSeries: number[]; // Ročné debt zostatky [year0, year1, ..., yearN] (z useProjection)
+  crossoverIndex: number | null; // Rok kedy investícia >= dlh (null ak nikdy)
+}
+
 export const DebtVsInvestmentChart: React.FC<DebtVsInvestmentChartProps> = ({
-  mix,
-  debts,
-  lumpSumEur,
-  monthlyVklad,
-  horizonYears,
-  riskPref,
+  fvSeries,
+  debtSeries,
+  crossoverIndex,
 }) => {
-  // Ak žiadne dlhy, nezobraziť
-  if (!debts || debts.length === 0) {
+  // Ak žiadne dlhy alebo prázdne series, nezobraziť
+  if (!debtSeries || debtSeries.length === 0 || !fvSeries || fvSeries.length === 0) {
     return null;
   }
 
-  // Výpočet investície (ročne)
-  const approxYield = approxYieldAnnualFromMix(mix, riskPref);
+  // Build data points from series
   const dataPoints: DataPoint[] = [];
+  const maxYears = Math.max(fvSeries.length, debtSeries.length);
 
-  // Total debt balance v každom roku
-  const getTotalDebtAtYear = (year: number): number => {
-    return debts.reduce((sum, debt) => {
-      const termMonths = debt.monthsLeft || 0;
-      const targetMonth = year * 12;
-
-      if (targetMonth >= termMonths) {
-        return sum; // Dlh už splatený
-      }
-
-      // Build amortization schedule
-      const schedule = buildAmortSchedule({
-        principal: debt.principal,
-        ratePa: debt.ratePa / 100, // % → decimal
-        termMonths,
-        monthlyPayment: debt.monthly - (debt.extraMonthly || 0), // Base payment
-        extraMonthly: debt.extraMonthly || 0,
-      });
-
-      // Get balance at target month
-      const monthData = schedule.months[targetMonth];
-      return sum + (monthData?.balance || 0);
-    }, 0);
-  };
-
-  // Generuj data body pre každý rok
-  for (let year = 0; year <= horizonYears; year++) {
-    const investmentFV = calculateFutureValue(
-      lumpSumEur,
-      monthlyVklad,
-      year,
-      approxYield
-    );
-    const debtBalance = getTotalDebtAtYear(year);
-
+  for (let year = 0; year < maxYears; year++) {
     dataPoints.push({
       year,
-      investicia: Math.round(investmentFV),
-      dlh: Math.round(debtBalance),
+      investicia: fvSeries[year] || 0,
+      dlh: debtSeries[year] || 0,
     });
   }
 
-  // Nájdi crossover point (prvý rok kde investicia >= dlh a dlh > 0)
-  const crossoverYear = dataPoints.find(
-    (p, i) => i > 0 && p.investicia >= p.dlh && p.dlh > 0
-  )?.year;
+  // PR-6 Task D: crossoverIndex je už vypočítané v useProjection hook
+  const crossoverYear = crossoverIndex;
 
   // Max value pre Y axis
   const maxValue = Math.max(
