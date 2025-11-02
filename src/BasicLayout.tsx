@@ -6,7 +6,7 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
-import { DirtyChangesChip } from "./features/ui/DirtyChangesChip"; // PR-4 Task 5
+// PR-6 Task E+F: DirtyChangesChip removed (instant reactivity via useProjection hook)
 import {
   getAdjustedPreset,
   enforceStageCaps, // PR-14.D: Import pre cache clear
@@ -61,8 +61,7 @@ export default function BasicLayout() {
   const [shareOpen, setShareOpen] = React.useState(false);
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
-  // PR-4 Task 5: Force refresh state pre projekciu po CTA
-  const [projectionRefresh, setProjectionRefresh] = React.useState(0);
+  // PR-6 Task E+F: projectionRefresh removed (instant reactivity via useProjection hook)
 
   // Onboarding tour state - progresívny systém
   const [tourOpen, setTourOpen] = React.useState(false);
@@ -182,13 +181,7 @@ export default function BasicLayout() {
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
 
-  // PR-4 FIX: Refresh projekciu pri zmene dlhov (aby sa zobrazil DebtVsInvestmentChart)
-  React.useEffect(() => {
-    const v3 = readV3();
-    const debtsCount = (v3.debts || []).length;
-    // Trigger refresh ak sa zmení počet dlhov (AddDebtModal pridá do persist)
-    setProjectionRefresh((p) => p + 1);
-  }, [(seed.debts || []).length]); // Počúvaj na zmenu počtu dlhov
+  // PR-6 Task E+F: projectionRefresh removed (debts tracked by useProjection hook debtsKey)
 
   // Client type (individual/family/firm)
   const clientType = (seed.profile?.clientType as any) || "individual";
@@ -686,15 +679,11 @@ export default function BasicLayout() {
 
   const right = (
     <div className="space-y-4">
-      {/* PR-4 Task 5: Dirty changes chip */}
-      <DirtyChangesChip
-        onRecompute={() => setProjectionRefresh((p) => p + 1)}
-      />
+      {/* PR-6 Task E+F: DirtyChangesChip removed (instant reactivity via useProjection hook) */}
 
       {/* Projekcia - zobrazuje sa vždy (aj pre rodinu/firmu) */}
       <div id="projection-panel">
         <BasicProjectionPanel
-          key={projectionRefresh} // Force remount po CTA
           mix={mix}
           lumpSumEur={investParams.lumpSumEur}
           monthlyVklad={
