@@ -1,12 +1,8 @@
 import React from "react";
 import { ProjectionChart } from "../projection/ProjectionChart";
 import { DebtVsInvestmentChart } from "../projection/DebtVsInvestmentChart"; // PR-4 Task 8
-import { calculateFutureValue } from "../../engine/calculations";
-import {
-  approxYieldAnnualFromMix,
-  riskScore0to10,
-  type RiskPref,
-} from "../mix/assetModel";
+import { useProjection } from "../projection/useProjection"; // PR-6 Task A: centralizovaná reaktivita
+import type { RiskPref } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
 import { getCashReserveInfo } from "../portfolio/cashReserve";
 import { readV3, writeV3 } from "../../persist/v3";
@@ -22,7 +18,6 @@ import {
   shouldShowYieldRisk,
   shouldShowConcreteAdvice,
 } from "./rightPanelState";
-import { getSnapshot, saveSnapshot } from "./projectionSnapshot"; // PR-4 Task 5
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -103,61 +98,40 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
       ? (riskPref as RiskPref)
       : "vyvazeny";
 
-  // PR-4 Task 5: Use snapshot for projection (FV + graf), live values for metrics
-  const snapshot = getSnapshot();
-  const projectionInputs = snapshot
-    ? {
-        lumpSumEur: snapshot.lumpSumEur,
-        monthlyVklad: snapshot.monthlyVklad,
-        horizonYears: snapshot.horizonYears,
-        goalAssetsEur: snapshot.goalAssetsEur,
-      }
-    : {
-        lumpSumEur, // Fallback: prvé načítanie, žiadny snapshot
-        monthlyVklad,
-        horizonYears,
-        goalAssetsEur,
-      };
+  // PR-6 Task A: useProjection hook - instant reactivity, no snapshot
+  const v3 = readV3();
+  const projection = useProjection({
+    lumpSumEur,
+    monthlyVklad,
+    horizonYears,
+    goalAssetsEur,
+    mix: effectiveMix,
+    debts: v3.debts || [],
+    riskPref: validRiskPref,
+  });
 
-  // Ak žiadny snapshot existuje, vytvor prvý pri mount
-  React.useEffect(() => {
-    if (!snapshot) {
-      saveSnapshot();
-    }
-  }, []); // Run iba pri mount
+  // Unpack projection results
+  const {
+    fvFinal: fv,
+    fvSeries,
+    totalVklady,
+    zisk,
+    debtSeries,
+    crossoverIndex,
+    totalDebtRemaining,
+    approxYield,
+    riskScore,
+    goalProgress: progressPercent,
+    remaining,
+  } = projection;
 
-  // Detect investment stage for adaptive caps (use live values pre metriky)
+  // Detect investment stage for adaptive caps
   const stage = detectStage(
     lumpSumEur,
     monthlyVklad,
     horizonYears,
     goalAssetsEur
   );
-
-  // Calculations:
-  // - FV a graf: zo snapshot inputov
-  // - Yield a risk: z live effectiveMix (metriky sú live)
-  const approxYield = approxYieldAnnualFromMix(effectiveMix, validRiskPref);
-  const fv = calculateFutureValue(
-    projectionInputs.lumpSumEur,
-    projectionInputs.monthlyVklad,
-    projectionInputs.horizonYears,
-    approxYield
-  );
-  const totalVklady =
-    projectionInputs.lumpSumEur +
-    projectionInputs.monthlyVklad * 12 * projectionInputs.horizonYears;
-  const zisk = fv - totalVklady;
-
-  // Progress calculation (capped at 100%, use snapshot goal)
-  const progressPercent =
-    projectionInputs.goalAssetsEur > 0
-      ? Math.min((fv / projectionInputs.goalAssetsEur) * 100, 100)
-      : 0;
-  const remaining = Math.max(projectionInputs.goalAssetsEur - fv, 0);
-
-  // Risk metrics with adaptive cap (use effectiveMix)
-  const riskScore = riskScore0to10(effectiveMix, validRiskPref, 0);
   const riskCap = getAdaptiveRiskCap(validRiskPref, stage);
   const isOverRisk = riskScore > riskCap;
 
@@ -169,7 +143,6 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   }[validRiskPref];
 
   // Cash reserve info
-  const v3 = readV3();
   const currentCashPct = effectiveMix.find((m) => m.key === "cash")?.pct || 0;
   const totalPortfolioEur = lumpSumEur + monthlyVklad * 12 * horizonYears;
 
@@ -416,10 +389,10 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         <ProjectionChart
           mix={effectiveMix}
           debts={[]} // BASIC nemá dlhy v grafe
-          lumpSumEur={projectionInputs.lumpSumEur} // PR-4: snapshot
-          monthlyVklad={projectionInputs.monthlyVklad} // PR-4: snapshot
-          horizonYears={projectionInputs.horizonYears} // PR-4: snapshot
-          goalAssetsEur={projectionInputs.goalAssetsEur} // PR-4: snapshot
+          lumpSumEur={lumpSumEur} // PR-6: live values (instant reaktivita)
+          monthlyVklad={monthlyVklad} // PR-6: live values
+          horizonYears={horizonYears} // PR-6: live values
+          goalAssetsEur={goalAssetsEur} // PR-6: live values
           riskPref={validRiskPref}
           hideDebts={true}
         />
@@ -502,9 +475,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
               <DebtVsInvestmentChart
                 mix={effectiveMix}
                 debts={currentDebts}
-                lumpSumEur={projectionInputs.lumpSumEur}
-                monthlyVklad={projectionInputs.monthlyVklad}
-                horizonYears={projectionInputs.horizonYears}
+                lumpSumEur={lumpSumEur} // PR-6: live values
+                monthlyVklad={monthlyVklad} // PR-6: live values
+                horizonYears={horizonYears} // PR-6: live values
                 riskPref={validRiskPref}
               />
             </div>
