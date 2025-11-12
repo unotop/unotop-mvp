@@ -22,6 +22,9 @@ const ASSET_LABELS: Record<
 };
 
 export function InfoMixLine({ mix }: InfoMixLineProps) {
+  // Defensive guard: mix môže byť undefined v testoch
+  if (!Array.isArray(mix) || mix.length === 0) return null;
+
   // Filter out 0% assets
   const activeAssets = mix
     .filter((item) => item.pct > 0)
