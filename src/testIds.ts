@@ -29,9 +29,12 @@ export const TEST_IDS = {
   // PR-5: contact validation
   CONTACT_EMAIL_INPUT: 'contact-email-input',
   CONTACT_PHONE_INPUT: 'contact-phone-input',
+  CONTACT_MESSAGE_INPUT: 'contact-message-input', // PR-7
   CONTACT_CONSENT_CHECKBOX: 'contact-consent-checkbox',
   CONTACT_SUBMIT_BTN: 'contact-submit-btn',
   CONTACT_ERROR_SUMMARY: 'contact-error-summary',
+  CONTACT_MODAL: 'contact-modal', // PR-7
+  CONTACT_MODAL_CLOSE: 'contact-modal-close', // PR-7
   HONEYPOT_COMPANY: 'honeypot-company',
   CONTACT_RATE_LIMIT_HINT: 'contact-rate-limit-hint',
   

@@ -6,6 +6,7 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { PrivacyModal } from "./components/PrivacyModal"; // PR-7: GDPR
 import { Footer } from "./components/layout/Footer"; // PR-7: Footer s GDPR linkom
 import { StickyBottomBar } from "./components/StickyBottomBar"; // PR-7: Bottom bar s CTA
+import { ContactModal } from "./components/ContactModal"; // PR-7: Contact form
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
@@ -68,6 +69,9 @@ export default function BasicLayout() {
 
   // PR-7: Privacy modal state
   const [privacyOpen, setPrivacyOpen] = React.useState(false);
+
+  // PR-7 Task 7: Contact modal state
+  const [contactOpen, setContactOpen] = React.useState(false);
 
   // Onboarding tour state - progresívny systém
   const [tourOpen, setTourOpen] = React.useState(false);
@@ -1185,6 +1189,9 @@ export default function BasicLayout() {
       {/* PR-7: Privacy Modal */}
       <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
 
+      {/* PR-7 Task 7: Contact Modal */}
+      <ContactModal isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+
       {/* PR-7: StickyBottomBar */}
       <StickyBottomBar
         mix={mix}
@@ -1193,10 +1200,7 @@ export default function BasicLayout() {
         horizonYears={investParams.horizonYears}
         goalAssetsEur={investParams.goalAssetsEur}
         riskPref={(seed.profile?.riskPref as RiskPref) || "vyvazeny"}
-        onSubmitClick={() => {
-          // Placeholder - bude prepojené s ContactModal v Task 7
-          alert("Contact modal - TODO Task 7");
-        }}
+        onSubmitClick={() => setContactOpen(true)} // PR-7 Task 7: Open contact modal
       />
 
       {/* PR-7: Footer s GDPR linkom */}
