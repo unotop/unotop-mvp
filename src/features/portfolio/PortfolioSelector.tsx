@@ -25,6 +25,8 @@ import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
 import { WarningCenter } from "../ui/warnings/WarningCenter";
 import { InfoMixLine } from "../../components/InfoMixLine";
+import { ProfileStickyBadge } from "../../components/ProfileStickyBadge";
+import { RecChangedChip } from "../../components/RecChangedChip";
 import type { MixItem } from "../../persist/v3";
 
 /**
@@ -261,6 +263,7 @@ export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
       profile: {
         ...(currentV3.profile || {}),
         riskPref: preset.id,
+        selected: preset.id, // PR-7 Task 4: sticky profile selection
       } as any,
     });
 
@@ -298,12 +301,18 @@ export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
     >
       {/* Header */}
       <div className="mb-4">
-        <h3
-          id="portfolio-selector-title"
-          className="text-lg font-semibold text-slate-100 mb-1"
-        >
-          Investičný profil
-        </h3>
+        <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <h3
+            id="portfolio-selector-title"
+            className="text-lg font-semibold text-slate-100"
+          >
+            Investičný profil
+          </h3>
+          <div className="flex items-center gap-2">
+            <ProfileStickyBadge />
+            <RecChangedChip />
+          </div>
+        </div>
         <p className="text-sm text-slate-300">
           Vyberte profil podľa vašej tolerancie rizika. Mix aktív sa aplikuje
           automaticky.
