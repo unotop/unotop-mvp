@@ -24,6 +24,8 @@ import {
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
 import { WarningCenter } from "../ui/warnings/WarningCenter";
+import { InfoMixLine } from "../../components/InfoMixLine";
+import type { MixItem } from "../../persist/v3";
 
 /**
  * Farebné Tailwind utility classy pre karty (LIGHT THEME - HIGH CONTRAST)
@@ -55,7 +57,11 @@ const COLOR_CLASSES = {
   },
 };
 
-export default function PortfolioSelector() {
+interface PortfolioSelectorProps {
+  mix: MixItem[];
+}
+
+export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
   const [selectedPreset, setSelectedPreset] = React.useState<RiskPref | null>(
     null
   );
@@ -432,6 +438,9 @@ export default function PortfolioSelector() {
           manuálne. Prepnite režim v hornom menu.
         </p>
       </div>
+
+      {/* InfoMixLine: Single-line mix preview (PR-7 Task 3) */}
+      <InfoMixLine mix={mix} />
     </div>
   );
 }

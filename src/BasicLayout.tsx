@@ -660,7 +660,7 @@ export default function BasicLayout() {
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
           <div className="mb-4" data-testid="mixpanel-slot">
-            <PortfolioSelector />
+            <PortfolioSelector mix={mix} />
           </div>
 
           {/* Lump Sum Scaling Info - vysvetľuje auto-adjustments */}
