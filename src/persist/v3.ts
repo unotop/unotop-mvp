@@ -29,6 +29,7 @@ export type Profile = {
   currentReserve?: number;
   emergencyMonths?: number;
   hideTour?: boolean; // Nezobrazovať welcome modal
+  selected?: 'konzervativny' | 'vyvazeny' | 'rastovy'; // PR-7: sticky profil po výbere
 };
 
 export type V3 = Partial<{

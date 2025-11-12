@@ -5,6 +5,7 @@ import Sidebar from "./components/Sidebar";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { PrivacyModal } from "./components/PrivacyModal"; // PR-7: GDPR
 import { Footer } from "./components/layout/Footer"; // PR-7: Footer s GDPR linkom
+import { StickyBottomBar } from "./components/StickyBottomBar"; // PR-7: Bottom bar s CTA
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
@@ -1183,6 +1184,20 @@ export default function BasicLayout() {
 
       {/* PR-7: Privacy Modal */}
       <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+
+      {/* PR-7: StickyBottomBar */}
+      <StickyBottomBar
+        mix={mix}
+        lumpSumEur={investParams.lumpSumEur}
+        monthlyVklad={investParams.monthlyVklad}
+        horizonYears={investParams.horizonYears}
+        goalAssetsEur={investParams.goalAssetsEur}
+        riskPref={(seed.profile?.riskPref as RiskPref) || "vyvazeny"}
+        onSubmitClick={() => {
+          // Placeholder - bude prepojené s ContactModal v Task 7
+          alert("Contact modal - TODO Task 7");
+        }}
+      />
 
       {/* PR-7: Footer s GDPR linkom */}
       <Footer onPrivacyClick={() => setPrivacyOpen(true)} />
