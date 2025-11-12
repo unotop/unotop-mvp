@@ -34,6 +34,22 @@ export const TEST_IDS = {
   CONTACT_ERROR_SUMMARY: 'contact-error-summary',
   HONEYPOT_COMPANY: 'honeypot-company',
   CONTACT_RATE_LIMIT_HINT: 'contact-rate-limit-hint',
+  
+  // PR-7: GDPR + StickyBottomBar + InfoMixLine
+  PRIVACY_OPEN_LINK: 'privacy-open-link',
+  PRIVACY_MODAL: 'privacy-modal',
+  PRIVACY_CLOSE_BTN: 'privacy-close-btn',
+  FOOTER_PRIVACY_LINK: 'footer-privacy-link',
+  BBAR_FV: 'bbar-fv',
+  BBAR_YIELD: 'bbar-yield',
+  BBAR_DEBT_CLEAR: 'bbar-debt-clear',
+  BBAR_SUM: 'bbar-sum',
+  BBAR_PROFILE: 'bbar-profile',
+  BBAR_SUBMIT: 'bbar-submit',
+  BBAR_CHANGE_MIX: 'bbar-change-mix',
+  MIXLINE: 'mixline',
+  PROFILE_STICKY_BADGE: 'profile-sticky-badge',
+  REC_CHANGED_CHIP: 'rec-changed-chip',
 } as const;
 
 export type TestIdKey = keyof typeof TEST_IDS;

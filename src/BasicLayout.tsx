@@ -3,6 +3,8 @@ import PageLayout from "./app/PageLayout";
 import Toolbar from "./components/Toolbar";
 import Sidebar from "./components/Sidebar";
 import { OnboardingTour } from "./components/OnboardingTour";
+import { PrivacyModal } from "./components/PrivacyModal"; // PR-7: GDPR
+import { Footer } from "./components/layout/Footer"; // PR-7: Footer s GDPR linkom
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
@@ -62,6 +64,9 @@ export default function BasicLayout() {
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
   // PR-6 Task E+F: projectionRefresh removed (instant reactivity via useProjection hook)
+
+  // PR-7: Privacy modal state
+  const [privacyOpen, setPrivacyOpen] = React.useState(false);
 
   // Onboarding tour state - progresívny systém
   const [tourOpen, setTourOpen] = React.useState(false);
@@ -1175,6 +1180,12 @@ export default function BasicLayout() {
         onClose={handleTourClose}
         onComplete={handleTourComplete}
       />
+
+      {/* PR-7: Privacy Modal */}
+      <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+
+      {/* PR-7: Footer s GDPR linkom */}
+      <Footer onPrivacyClick={() => setPrivacyOpen(true)} />
     </div>
   );
 }

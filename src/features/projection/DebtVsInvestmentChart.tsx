@@ -39,7 +39,12 @@ export const DebtVsInvestmentChart: React.FC<DebtVsInvestmentChartProps> = ({
   crossoverIndex,
 }) => {
   // Ak žiadne dlhy alebo prázdne series, nezobraziť
-  if (!debtSeries || debtSeries.length === 0 || !fvSeries || fvSeries.length === 0) {
+  if (
+    !debtSeries ||
+    debtSeries.length === 0 ||
+    !fvSeries ||
+    fvSeries.length === 0
+  ) {
     return null;
   }
 
