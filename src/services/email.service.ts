@@ -9,13 +9,23 @@ import emailjs from '@emailjs/browser';
  * 2. Create email service (Gmail/Outlook)
  * 3. Create email template
  * 4. Get Service ID, Template ID, Public Key
- * 5. Set env variables or hardcode here
+ * 5. Create .env.local file with credentials (see .env.local.example)
+ * 
+ * Security:
+ * - Credentials are loaded from environment variables
+ * - Enable rate limiting in EmailJS dashboard (max 200/day)
+ * - Whitelist only your domains (unotop.sk, unotop.netlify.app)
  */
 
-// EmailJS credentials - UNOTOP Production
-const EMAILJS_SERVICE_ID = 'service_r2eov4s';
-const EMAILJS_TEMPLATE_ID = 'template_bmcskm8';
-const EMAILJS_PUBLIC_KEY = '1hx6DPz-diYTb9Bzf';
+// PR-13: Load from environment variables (NOT hardcoded)
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
+
+// Validate credentials on load
+if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+  console.error('[EmailJS] ⚠️ Missing credentials - email service disabled. Check .env.local file.');
+}
 
 export interface ProjectionData {
   user: {
@@ -34,6 +44,7 @@ export interface ProjectionData {
     yieldAnnual: number;
     mix: Array<{ key: string; pct: number }>;
     deeplink: string;
+    bonuses?: string[]; // PR-13 HOTFIX: Bonusy pre email
   };
   metadata?: {
     riskPref?: string;
@@ -45,6 +56,7 @@ export interface ProjectionData {
     referenceCode?: string;
     // PR-13B: Reserve & financial context
     reserveHelp?: boolean;
+    collabOptIn?: boolean; // Spolupráca / zvýšiť príjem
     expenses?: number;
     reserveLow?: number;
     reserveHigh?: number;
@@ -62,6 +74,11 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
   const mixFormatted = data.projection.mix
     .map(item => `${item.key}: ${item.pct.toFixed(1)}%`)
     .join(', ');
+
+  // PR-13 HOTFIX: Format bonuses for email
+  const bonusesFormatted = data.projection.bonuses && data.projection.bonuses.length > 0
+    ? data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join('\n')
+    : '';
 
   // Prepare template params for EmailJS
   const templateParams = {
@@ -94,6 +111,8 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
     surplus: data.metadata?.surplus ? data.metadata.surplus.toLocaleString('sk-SK') : 'N/A',
     stage: data.metadata?.stage || 'N/A',
     mix_formatted: mixFormatted,
+    // PR-13 HOTFIX: Bonuses
+    bonuses_formatted: bonusesFormatted,
   };
 
   try {
@@ -121,6 +140,12 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
  */
 export function sendViaMailto(data: ProjectionData): void {
   const subject = `UNOTOP Projekcia - ${data.user.firstName} ${data.user.lastName}`;
+  
+  // PR-13 HOTFIX: Bonuses section for mailto
+  const bonusesSection = data.projection.bonuses && data.projection.bonuses.length > 0
+    ? `\n\n=== BONUSY ===\n${data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join('\n')}`
+    : '';
+  
   const body = `
 Nová investičná projekcia od klienta:
 
@@ -141,6 +166,7 @@ Očakávaný výnos: ${(data.projection.yieldAnnual * 100).toFixed(1)}% p.a.
 
 === PORTFÓLIO ===
 ${data.projection.mix.map(item => `${item.key}: ${item.pct.toFixed(1)}%`).join('\n')}
+${bonusesSection}
 
 === DEEPLINK ===
 ${data.projection.deeplink}

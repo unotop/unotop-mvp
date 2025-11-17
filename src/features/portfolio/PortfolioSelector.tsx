@@ -265,6 +265,15 @@ export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
         riskPref: preset.id,
         selected: preset.id, // PR-7 Task 4: sticky profile selection
       } as any,
+      // PR-12: Mix origin tracking pre lazy reapply
+      mixOrigin: "presetAdjusted",
+      presetId: preset.id as "konzervativny" | "vyvazeny" | "rastovy",
+      profileSnapshot: {
+        lumpSum: profileForAdj.lumpSumEur,
+        monthly: profileForAdj.monthlyEur,
+        horizon: profileForAdj.horizonYears,
+        ts: Date.now(),
+      },
     });
 
     // PR-4: Zamknúť mix po výbere profilu

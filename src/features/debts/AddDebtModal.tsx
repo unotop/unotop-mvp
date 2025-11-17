@@ -113,7 +113,7 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
       principal: principalNum,
       ratePa: rateNum * 100, // späť na %
       monthly: monthlyPayment + extraMonthlyNum,
-      monthsLeft: schedule.months.length,
+      monthsLeft: termMonths, // PR-13 FIX: Použiť pôvodný termMonths, nie schedule.months.length
       remaining: schedule.months[schedule.months.length - 1]?.balance || 0,
       extraMonthly: extraMonthlyNum,
     };
@@ -132,8 +132,9 @@ export const AddDebtModal: React.FC<AddDebtModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
-      onClick={handleClose}
+      className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      // PR-13: Klik na backdrop nezatvára modal (len tlačidlo Zavrieť alebo ESC)
+      // PR-13: z-index fix (z-50 → z-[1100], nad StickyBottomBar z-[1000])
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-debt-title"

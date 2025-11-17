@@ -23,6 +23,17 @@ export const TEST_IDS = {
   DEBT_RATE: 'debt-rate',
   DEBT_YEARS: 'debt-years',
   DEBT_EXTRA_MONTHLY: 'debt-extra-monthly',
+  // PR-13: EditDebtModal refactor
+  EDIT_DEBT_MODAL: 'edit-debt-modal',
+  DEBT_TYPE_MORTGAGE: 'debt-type-mortgage',
+  DEBT_TYPE_CONSUMER: 'debt-type-consumer',
+  DEBT_NAME_INPUT: 'debt-name-input',
+  DEBT_PRINCIPAL_INPUT: 'debt-principal-input',
+  DEBT_RATE_INPUT: 'debt-rate-input',
+  DEBT_YEARS_INPUT: 'debt-years-input',
+  DEBT_EXTRA_INPUT: 'debt-extra-input',
+  DEBT_SAVE_BTN: 'debt-save-btn',
+  DEBT_CANCEL_BTN: 'debt-cancel-btn',
   CHIP_DIRTY_CHANGES: 'chip-dirty-changes',
   CTA_RECOMPUTE: 'cta-recompute',
   
@@ -43,6 +54,20 @@ export const TEST_IDS = {
   PRIVACY_MODAL: 'privacy-modal',
   PRIVACY_CLOSE_BTN: 'privacy-close-btn',
   FOOTER_PRIVACY_LINK: 'footer-privacy-link',
+  
+  // PR-13: Footer komponent
+  FOOTER: 'footer',
+  FOOTER_PRIVACY: 'footer-privacy',
+  FOOTER_CONTACT: 'footer-contact',
+  
+  // PR-8: StickyBottomBar human-readable metrics (nahradenie starých BBAR_*)
+  BB_WEALTH: 'bb-wealth',
+  BB_YIELD: 'bb-yield',
+  BB_DEBT_CLEAR: 'bb-debt-clear',
+  BB_RISK: 'bb-risk',
+  BB_SUBMIT: 'bb-submit',
+  
+  // Legacy (zachované pre kompatibilitu, ale nepoužité v PR-8)
   BBAR_FV: 'bbar-fv',
   BBAR_YIELD: 'bbar-yield',
   BBAR_DEBT_CLEAR: 'bbar-debt-clear',
@@ -50,6 +75,7 @@ export const TEST_IDS = {
   BBAR_PROFILE: 'bbar-profile',
   BBAR_SUBMIT: 'bbar-submit',
   BBAR_CHANGE_MIX: 'bbar-change-mix',
+  
   MIXLINE: 'mixline',
   PROFILE_STICKY_BADGE: 'profile-sticky-badge',
   REC_CHANGED_CHIP: 'rec-changed-chip',

@@ -1,6 +1,6 @@
 /**
  * PR-7: PrivacyModal - GDPR zásady ochrany súkromia
- * 
+ *
  * Modal načítava privacy-policy.sk.md a zobrazuje obsah.
  * Spúšťa sa z Intro (OnboardingTour) aj z Footer.
  */
@@ -20,6 +20,14 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
   const [content, setContent] = React.useState<string>("");
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
 
+  // PR-8: Lock body scroll and add modal-open class when modal is open
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+      return () => document.body.classList.remove("modal-open");
+    }
+  }, [isOpen]);
+
   // Load privacy policy markdown
   React.useEffect(() => {
     if (isOpen) {
@@ -27,7 +35,9 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
         .then((res) => res.text())
         .then((text) => setContent(text))
         .catch(() =>
-          setContent("❌ Nepodarilo sa načítať dokument. Kontaktujte info.unotop@gmail.com")
+          setContent(
+            "❌ Nepodarilo sa načítať dokument. Kontaktujte info.unotop@gmail.com"
+          )
         );
     }
   }, [isOpen]);
@@ -48,7 +58,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Simple markdown rendering (headings, lists, bold)
+  // Simple markdown rendering (headings, lists, bold, HTML tags)
   const renderMarkdown = (md: string) => {
     return md.split("\n").map((line, i) => {
       // Headings
@@ -61,22 +71,30 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
       }
       if (line.startsWith("## ")) {
         return (
-          <h2 key={i} className="text-xl font-semibold text-slate-200 mb-3 mt-5">
+          <h2
+            key={i}
+            className="text-xl font-semibold text-slate-200 mb-3 mt-5"
+          >
             {line.slice(3)}
           </h2>
         );
       }
-      // Lists
+      // Lists (support both markdown ** and HTML <strong>)
       if (line.startsWith("- ")) {
+        let content = line.slice(2);
+        // Convert markdown bold to HTML if present
+        content = content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
         return (
-          <li key={i} className="text-sm text-slate-300 ml-4 mb-1">
-            {line.slice(2).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}
-          </li>
+          <li
+            key={i}
+            className="text-sm text-slate-300 ml-4 mb-1"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         );
       }
-      // Bold text
-      if (line.includes("**")) {
-        const html = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      // Bold text or HTML tags (support both ** and <strong>)
+      if (line.includes("**") || line.includes("<strong>")) {
+        let html = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
         return (
           <p
             key={i}
@@ -99,7 +117,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -124,6 +142,18 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
         {/* Content */}
         <div id="privacy-modal-title" className="prose prose-invert max-w-none">
           {renderMarkdown(content)}
+        </div>
+
+        {/* PR-10 Task F: Primárne tlačidlo "Beriem na vedomie" */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/20 transition-colors"
+            aria-label="Beriem na vedomie a zavrieť"
+          >
+            ✓ Beriem na vedomie
+          </button>
         </div>
       </div>
     </div>

@@ -22,13 +22,20 @@ import {
 import { RiskGauge } from "./components/RiskGauge";
 import { MetricsSection } from "./features/metrics/MetricsSection";
 import { ProjectionChart } from "./features/projection/ProjectionChart";
+import { EditDebtModal } from "./components/EditDebtModal";
+// PR-12: AdminConsole moved to RootLayout (global), keep isProUnlocked
+import { isProUnlocked } from "./features/admin/AdminConsole";
 
 const IS_TEST = process.env.NODE_ENV === "test";
 interface Debt extends PersistDebt {
   payment?: number;
 }
 
-export default function LegacyApp() {
+export default function LegacyApp({
+  onAboutClick,
+}: {
+  onAboutClick?: () => void;
+}) {
   const seed = readV3();
   const [open0, setOpen0] = React.useState(true); // sec0: Profil klienta (now managed by ProfileSection)
   const [open1, setOpen1] = React.useState(true);
@@ -41,6 +48,9 @@ export default function LegacyApp() {
   const [debts, setDebts] = React.useState<Debt[]>(
     () => (seed.debts as any as Debt[]) || []
   );
+  // PR-10 Priorita 4: Edit debt modal state
+  const [editingDebt, setEditingDebt] = React.useState<Debt | null>(null);
+
   // test-only / accessibility stubs (sec1 cashflow only)
   const [crisisIdx, setCrisisIdx] = React.useState(0);
   const [monthlyIncome, setMonthlyIncome] = React.useState("");
@@ -50,9 +60,15 @@ export default function LegacyApp() {
   const [emergencyMonths, setEmergencyMonths] = React.useState("");
   const [shareOpen, setShareOpen] = React.useState(false);
   const shareBtnRef = React.useRef<HTMLButtonElement | null>(null);
-  const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(
-    () => (seed.profile?.modeUi as any) || "BASIC"
-  );
+
+  // Check admin unlock
+  const isAdminUnlocked = isProUnlocked();
+
+  const [modeUi, setModeUi] = React.useState<"BASIC" | "PRO">(() => {
+    // Admin unlock overrides
+    if (isAdminUnlocked) return "PRO";
+    return (seed.profile?.modeUi as any) || "BASIC";
+  });
 
   // Mix state (syncs from localStorage via polling)
   const [mix, setMix] = React.useState<any[]>(() => {
@@ -143,6 +159,14 @@ export default function LegacyApp() {
       persistDebts(n);
       return n;
     });
+
+  // PR-10 Priorita 4: Edit debt modal handler
+  const handleEditDebtSave = (updated: Partial<Debt>) => {
+    if (!editingDebt) return;
+    updateDebt(editingDebt.id, updated);
+    setEditingDebt(null);
+  };
+
   const [wizardOpen, setWizardOpen] = React.useState(false);
   const [wizardType, setWizardType] = React.useState<"reserve" | "gold">(
     "reserve"
@@ -161,9 +185,20 @@ export default function LegacyApp() {
   };
 
   // Reset handler (clear all localStorage)
+  // PR-10 Priorita 5: Zachovaj onboarding flags pri resete
   const handleReset = () => {
+    // Zachovaj onboarding flags
+    const welcomeSeen = localStorage.getItem("welcome-seen");
+    const tourSteps = localStorage.getItem("tour-completed-steps");
+
+    // Vymaz všetko
     localStorage.removeItem("unotop:v3");
     localStorage.removeItem("unotop_v3");
+
+    // Obnov onboarding flags
+    if (welcomeSeen) localStorage.setItem("welcome-seen", welcomeSeen);
+    if (tourSteps) localStorage.setItem("tour-completed-steps", tourSteps);
+
     window.location.reload();
   };
 
@@ -631,14 +666,25 @@ export default function LegacyApp() {
                             />
                           </td>
                           <td className="px-2 py-2">
-                            <button
-                              type="button"
-                              aria-label={`Zmazať dlh ${idx + 1}`}
-                              onClick={() => deleteDebt(d.id)}
-                              className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
-                            >
-                              🗑️
-                            </button>
+                            <div className="flex gap-2">
+                              {/* PR-10 Priorita 4: Upraviť tlačidlo */}
+                              <button
+                                type="button"
+                                aria-label={`Upraviť dlh ${idx + 1}`}
+                                onClick={() => setEditingDebt(d)}
+                                className="px-3 py-1 rounded bg-blue-600/20 ring-1 ring-blue-500/40 text-xs font-medium hover:bg-blue-600/30 transition-colors"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Zmazať dlh ${idx + 1}`}
+                                onClick={() => deleteDebt(d.id)}
+                                className="px-3 py-1 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 transition-colors"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1059,7 +1105,7 @@ export default function LegacyApp() {
         >
           <div className="mb-4" data-testid="mixpanel-slot">
             {modeUi === "BASIC" ? (
-              <PortfolioSelector />
+              <PortfolioSelector mix={mix} />
             ) : (
               <MixPanel
                 mode={modeUi}
@@ -1252,12 +1298,15 @@ export default function LegacyApp() {
   );
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
+      {/* PR-12: AdminConsole moved to RootLayout (global) */}
+
       {/* Sticky Toolbar */}
       <Toolbar
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
         modeUi={modeUi}
         onModeToggle={handleModeToggle}
         onReset={handleReset}
+        onContactClick={onAboutClick} // PR-14: Kontakt button
       />
 
       {/* Sidebar Navigation (overlay) */}
@@ -1619,6 +1668,13 @@ S pozdravom`;
           </div>
         </div>
       )}
+
+      {/* PR-10 Priorita 4: Edit Debt Modal */}
+      <EditDebtModal
+        debt={editingDebt}
+        onClose={() => setEditingDebt(null)}
+        onSave={handleEditDebtSave}
+      />
     </div>
   );
 }
@@ -1699,18 +1755,18 @@ function MixInvariantsBarTestOnly() {
     if (dyn + crypto > 22) {
       assets["Dynamické riadenie"] = Math.max(0, 22 - crypto);
     }
-    // Normalize to 100
+    // Normalize to 100 (use 2 decimal places for precision)
     const sum = Object.values(assets).reduce((a, b) => a + b, 0) || 1;
     const scale = 100 / sum;
     Object.keys(assets).forEach(
-      (k) => (assets[k] = Math.round(assets[k] * scale))
+      (k) => (assets[k] = +(assets[k] * scale).toFixed(2))
     );
-    // Fix rounding drift on gold
+    // Fix rounding drift on gold (should be minimal with 2 decimals)
     const postSum = Object.values(assets).reduce((a, b) => a + b, 0);
-    if (postSum !== 100) {
-      assets["Zlato (fyzické)"] = Math.max(
-        0,
-        assets["Zlato (fyzické)"] + (100 - postSum)
+    const drift = 100 - postSum;
+    if (Math.abs(drift) > 0.01) {
+      assets["Zlato (fyzické)"] = +(assets["Zlato (fyzické)"] + drift).toFixed(
+        2
       );
     }
     // Detect change

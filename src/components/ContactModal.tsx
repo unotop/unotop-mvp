@@ -11,13 +11,85 @@ import {
   recordSubmission,
   validateMinTime,
 } from "../utils/validate";
+import { readV3, writeV3 } from "../persist/v3"; // PR-13
 
 interface ContactModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenPrivacy?: () => void; // PR-8: Open privacy modal
 }
 
-export function ContactModal({ isOpen, onClose }: ContactModalProps) {
+// PR-13 FIX: Správny zoznam bonusov
+const BONUS_OPTIONS = [
+  {
+    id: "ufo",
+    label: "UFO – Univerzálny finančný organizér ZDARMA",
+    testId: "bonus-ufo",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "refi",
+    label: "Refinancovanie / zníženie splátok hypotéky",
+    testId: "bonus-refi",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "expenses",
+    label: "Chcem znížiť/optimalizovať svoje výdavky",
+    testId: "bonus-expenses",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "reserve",
+    label: "Chcem pomôcť nastaviť rezervu a investičný plán",
+    testId: "bonus-reserve",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "income",
+    label: "Chcem zvýšiť svoj príjem – zaujíma ma spolupráca s UNOTOP",
+    testId: "bonus-income",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "audit",
+    label: "Bezplatný audit poistiek a úverov",
+    testId: "bonus-audit",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "pdf",
+    label: "PDF report mojej projekcie",
+    testId: "bonus-pdf",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "ebook",
+    label: "E-book zdarma (už čoskoro)",
+    testId: "bonus-ebook",
+    disabled: true,
+    tooltip: "Dostupné po vydaní",
+  },
+] as const;
+
+const REFI_DEADLINE_OPTIONS = [
+  { value: "3", label: "3 dni" },
+  { value: "7", label: "7 dní" },
+  { value: "14", label: "14 dní" },
+] as const;
+
+export function ContactModal({
+  isOpen,
+  onClose,
+  onOpenPrivacy,
+}: ContactModalProps) {
   const [email, setEmail] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [message, setMessage] = React.useState("");
@@ -26,8 +98,20 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
+  // PR-13 FIX: Bonuses state
+  const [selectedBonuses, setSelectedBonuses] = React.useState<string[]>([]);
+  const [refiDeadline, setRefiDeadline] = React.useState<string>("7");
+
   const mountTimeRef = React.useRef(Date.now());
   const closeButtonRef = React.useRef<HTMLButtonElement>(null);
+
+  // PR-8: Lock body scroll and add modal-open class when modal is open
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+      return () => document.body.classList.remove("modal-open");
+    }
+  }, [isOpen]);
 
   // Reset state when modal opens
   React.useEffect(() => {
@@ -40,6 +124,18 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
       setConsent(false);
       setError(null);
       setSubmitting(false);
+
+      // PR-13 FIX: Load persisted bonuses on open
+      const v3 = readV3();
+      setSelectedBonuses(v3.contact?.bonuses || []);
+      // Extract refi deadline if exists
+      const refiBonus = v3.contact?.bonuses?.find((b) =>
+        b.startsWith("Refinancovanie")
+      );
+      if (refiBonus) {
+        const match = refiBonus.match(/\(ponuka do (\d+) dní\)/);
+        if (match) setRefiDeadline(match[1]);
+      }
     }
   }, [isOpen]);
 
@@ -63,6 +159,25 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
       closeButtonRef.current.focus();
     }
   }, [isOpen]);
+
+  // PR-13 FIX: Helper functions for bonuses
+  const toggleBonus = (bonusId: string) => {
+    setSelectedBonuses((prev) =>
+      prev.includes(bonusId)
+        ? prev.filter((id) => id !== bonusId)
+        : [...prev, bonusId]
+    );
+  };
+
+  const formatBonusForStorage = (bonusId: string): string => {
+    const option = BONUS_OPTIONS.find((opt) => opt.id === bonusId);
+    if (!option) return bonusId;
+
+    if (bonusId === "refi") {
+      return `${option.label} (ponuka do ${refiDeadline} dní)`;
+    }
+    return option.label;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,6 +225,15 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
       setError("Musíte súhlasiť so spracovaním údajov (GDPR)");
       return;
     }
+
+    // PR-13 FIX: Save bonuses to persist before submit
+    const formattedBonuses = selectedBonuses.map(formatBonusForStorage);
+    writeV3({
+      contact: {
+        ...readV3().contact,
+        bonuses: formattedBonuses,
+      },
+    });
 
     // Submit (placeholder – will wire to EmailJS or API later)
     setSubmitting(true);
@@ -187,6 +311,8 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
           </div>
         )}
 
+        {/* PR-13 FIX: Old read-only bonuses display removed - now interactive checkboxes in form */}
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
@@ -263,6 +389,78 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
             autoComplete="off"
           />
 
+          {/* PR-13 FIX: Bonuses section (directly in form, before GDPR) */}
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200 mb-1">
+                Vyberte si bonusy, o ktoré máte záujem
+              </h3>
+              <p className="text-xs text-slate-400">
+                Budú súčasťou vašej požiadavky na projekciu. Neovplyvňujú
+                výpočty.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              {BONUS_OPTIONS.map((option) => (
+                <div key={option.id}>
+                  <label
+                    className={`flex items-start gap-2 p-2.5 rounded-lg hover:bg-slate-800/50 transition-colors ${
+                      option.disabled
+                        ? "opacity-60 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedBonuses.includes(option.id)}
+                      onChange={() =>
+                        !option.disabled && toggleBonus(option.id)
+                      }
+                      disabled={option.disabled || submitting}
+                      data-testid={option.testId}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-600 text-violet-600 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50"
+                    />
+                    <span className="text-sm text-slate-300 flex-1 select-none">
+                      {option.label}
+                      {option.tooltip && (
+                        <span
+                          className="ml-1.5 text-xs text-slate-500"
+                          title={option.tooltip}
+                          role="img"
+                          aria-label={option.tooltip}
+                        >
+                          ℹ️
+                        </span>
+                      )}
+                    </span>
+                  </label>
+
+                  {/* Refi deadline dropdown (conditional) */}
+                  {option.id === "refi" && selectedBonuses.includes("refi") && (
+                    <div className="ml-6 mt-1.5 mb-2">
+                      <label className="block text-xs text-slate-400 mb-1">
+                        Mám záujem o ponuku do:
+                      </label>
+                      <select
+                        value={refiDeadline}
+                        onChange={(e) => setRefiDeadline(e.target.value)}
+                        disabled={submitting}
+                        className="w-full max-w-[150px] px-2.5 py-1.5 text-sm bg-slate-800 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-violet-500 focus:border-violet-500 disabled:opacity-50"
+                      >
+                        {REFI_DEADLINE_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Consent checkbox (GDPR) */}
           <div className="flex items-start gap-2">
             <input
@@ -274,20 +472,20 @@ export function ContactModal({ isOpen, onClose }: ContactModalProps) {
               className="mt-0.5 w-4 h-4 rounded border-white/20 bg-slate-900 text-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
               data-testid={TEST_IDS.CONTACT_CONSENT_CHECKBOX}
             />
-            <label
-              htmlFor="contact-consent"
-              className="text-xs text-slate-400"
-            >
-              Súhlasím so spracovaním osobných údajov na účely kontaktovania
-              poradcom (v súlade so{" "}
-              <a
-                href="/docs/privacy-policy.sk.md"
-                target="_blank"
-                className="text-blue-400 hover:underline"
+            <label htmlFor="contact-consent" className="text-xs text-slate-400">
+              Súhlasím so spracovaním osobných údajov za účelom zaslania
+              investičnej projekcie finančnému agentovi. Údaje nebudú uložené
+              ani zdieľané s tretími stranami.{" "}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenPrivacy?.();
+                }}
+                className="text-blue-400 hover:text-blue-300 underline cursor-pointer"
               >
-                zásadami ochrany súkromia
-              </a>
-              ).
+                Zásady ochrany súkromia
+              </button>
             </label>
           </div>
 

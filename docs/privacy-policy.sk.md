@@ -1,36 +1,72 @@
-# Zásady ochrany súkromia – UNOTOP Planner (účinné od 12.11.2025)
+# Zásady ochrany súkromia – UNOTOP – majetkový plánovač (účinné od 12.11.2025)
 
-**Prevádzkovateľ**  
-FINEXPERT GROUP a. s., Južná trieda 2881/4B, 040 01 Košice – mestská časť Juh, IČO: 56 965 001  
-Kontakt: adam.belohorec@universal.sk, +421 915 637 495  
-Kontakt pre súkromie (GDPR): info.unotop@gmail.com  
-Zodpovedná osoba (kontakt): Ing. Adam Belohorec
+## Autor a vlastníctvo aplikácie
+
+Autorské práva k aplikácii UNOTOP – majetkový plánovač a k jej metodike patria Ing. Adamovi Belohorcovi.
+
+Bez predchádzajúceho písomného súhlasu autora nie je dovolené aplikáciu alebo jej časti kopírovať, upravovať, šíriť ani používať na komerčné účely mimo dohodnutých podmienok.
+
+## Prevádzkovateľ osobných údajov
+
+Osobné údaje, ktoré zadávate do aplikácie (napr. meno, e-mail, telefón), spracúva ako prevádzkovateľ spoločnosť FINEXPERT GROUP a. s., člen skupiny UNIVERSAL maklérsky dom, a. s., ktorá pôsobí na slovenskom finančnom trhu od roku 2001.
+
+Údaje sa používajú výhradne na účely kontaktovania používateľa a prípravy orientačnej finančnej projekcie podľa podmienok uvedených v tomto dokumente.
+
+**Prevádzkovateľ:**  
+FINEXPERT GROUP a. s., Južná trieda 2881/4B, 040 01 Košice – mestská časť Juh, IČO: 56 965 001
+
+**Kontakt:** adam.belohorec@universal.sk, +421 915 637 495  
+**Kontakt pre súkromie (GDPR):** info.unotop@gmail.com
+
+**Zodpovedná osoba (kontakt):** Ing. Adam Belohorec
 
 ## Aké údaje spracúvame a prečo
-- **Kontaktné údaje** (email, telefón): na účel odoslania vašej projekcie a následného jednorazového spätného kontaktu. Právny základ: čl. 6(1)(b) GDPR (predzmluvné konanie) a čl. 6(1)(f) (oprávnený záujem).  
-- **Vstupy do simulácie** (príjem, výdavky, vklady, horizont, dlh atď.): spracúvajú sa **len lokálne vo vašom prehliadači** (localStorage) a bez odoslania na server. Právny základ: čl. 6(1)(b).  
-- **Marketing** (voliteľne): len ak udelíte súhlas (čl. 6(1)(a)).
+
+- **Kontaktné údaje (e-mail, telefón)** – na účel odoslania vašej projekcie a následného jednorazového spätného kontaktu.  
+  _Právny základ:_ čl. 6 ods. 1 písm. b) GDPR (predzmluvné konanie) a čl. 6 ods. 1 písm. f) (oprávnený záujem).
+
+- **Vstupy do simulácie (príjem, výdavky, vklady, horizont, dlh atď.)** – spracúvajú sa len lokálne vo vašom prehliadači (localStorage) a neodosielajú sa na server.  
+  _Právny základ:_ čl. 6 ods. 1 písm. b) GDPR.
+
+- **Marketing (voliteľne)** – len ak udelíte výslovný súhlas.  
+  _Právny základ:_ čl. 6 ods. 1 písm. a) GDPR.
 
 ## Odkiaľ údaje získavame
+
 Výlučne od vás pri vypĺňaní formulára.
 
-## Príjemcovia/spracovatelia
-- EmailJS (odoslanie projekcie mailom)  
-- Hosting: Netlify (prevádzka webovej aplikácie)  
-Prenos mimo EÚ: **nie**.
+## Príjemcovia / spracovatelia
 
-## Uchovávanie
-- Lokálne vstupy: vo vašom prehliadači, do vymazania alebo resetu.  
-- Kontaktné údaje pre odoslanie projekcie: max. **12 mesiacov** od poslednej interakcie.
+- **EmailJS** – odoslanie projekcie e-mailom (EU dátacentrum, bez prenosu mimo EÚ – podľa technického nastavenia).
+
+- **Netlify** – hosting webovej aplikácie (EU režim, bez prenosu mimo EÚ – podľa nastavenia hostingu).
+
+**Prenos mimo EÚ:** vaše údaje sa neprenášajú mimo Európskej únie, pokiaľ sa nezmení technologické nastavenie. V takom prípade budú zásady aktualizované.
+
+## Uchovávanie (doba uchovávania)
+
+- **Lokálne vstupy do simulácie:** uložené len vo vašom prehliadači, nie na našich serveroch. Zostávajú až do vymazania/resetu.
+
+- **Kontaktné údaje (z formulára „Odoslať projekciu"):** max. 12 mesiacov od poslednej komunikácie.
 
 ## Vaše práva
-Prístup, oprava, vymazanie, obmedzenie, prenosnosť, námietka. Sťažnosť: ÚOOÚ SR (www.dataprotection.gov.sk).
+
+Máte právo na prístup k údajom, opravu, vymazanie, obmedzenie spracúvania, prenosnosť a právo namietať proti spracúvaniu.
+
+Máte tiež právo podať sťažnosť na Úrad na ochranu osobných údajov SR (www.dataprotection.gov.sk).
 
 ## Cookies a tracking
-Nepoužívame marketingové ani analytické cookies. Aplikácia používa len technicky nevyhnutné úložisko prehliadača (localStorage).
+
+Nepoužívame marketingové ani analytické cookies.
+
+Aplikácia používa len technicky nevyhnutné lokálne úložisko prehliadača (localStorage) pre fungovanie investičnej kalkulačky a uloženie vašich vstupov.
 
 ## Automatizované rozhodovanie
-Nevykonávame.
+
+Nevykonávame profilovanie ani automatizované individuálne rozhodovanie s právnymi účinkami.
 
 ## Kontakt
-info.unotop@gmail.com (GDPR), adam.belohorec@universal.sk.
+
+**Otázky k ochrane súkromia:** info.unotop@gmail.com
+
+**Všeobecný kontakt:** adam.belohorec@universal.sk, tel. +421 915 637 495

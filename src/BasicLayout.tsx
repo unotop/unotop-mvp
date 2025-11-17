@@ -6,11 +6,15 @@ import { OnboardingTour } from "./components/OnboardingTour";
 import { PrivacyModal } from "./components/PrivacyModal"; // PR-7: GDPR
 import { Footer } from "./components/layout/Footer"; // PR-7: Footer s GDPR linkom
 import { StickyBottomBar } from "./components/StickyBottomBar"; // PR-7: Bottom bar s CTA
-import { ContactModal } from "./components/ContactModal"; // PR-7: Contact form
+// PR-12: AdminConsole moved to RootLayout (global)
+// ContactModal REMOVED - ShareModal je správny formulár
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
 // PR-6 Task E+F: DirtyChangesChip removed (instant reactivity via useProjection hook)
+// PR-12: useProjection import pre drift detection
+import { useProjection } from "./features/projection/useProjection";
+import { RecalculateProfileChip } from "./components/RecalculateProfileChip"; // PR-12
 import {
   getAdjustedPreset,
   enforceStageCaps, // PR-14.D: Import pre cache clear
@@ -19,7 +23,7 @@ import {
   PORTFOLIO_PRESETS,
 } from "./features/portfolio/presets";
 import { readV3, writeV3 } from "./persist/v3";
-import { createMixListener } from "./persist/mixEvents";
+import { createMixListener, emitMixChangeEvent } from "./persist/mixEvents";
 import type { MixItem } from "./features/mix/mix.service";
 import { calculateFutureValue } from "./engine/calculations";
 import {
@@ -50,19 +54,103 @@ import {
   getRemainingCooldown,
 } from "./utils/rate-limiter";
 import SubmissionWarningModal from "./components/SubmissionWarningModal";
-import { WarningCenter } from "./features/ui/warnings/WarningCenter";
+import { WarningCenter } from "./features/ui/warnings/WarningCenter"; // PR-12
 import { ToastStack } from "./features/ui/warnings/ToastStack";
+import { isDev, isPreview } from "./shared/env"; // PR-15: Debug logy v DEV mode
+
+// PR-13 HOTFIX: Bonusy pre BasicLayout formulár (identické s ContactModal)
+const BONUS_OPTIONS = [
+  {
+    id: "ufo",
+    label: "UFO – Univerzálny finančný organizér ZDARMA",
+    testId: "bonus-ufo",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "refi",
+    label: "Refinancovanie / zníženie splátok hypotéky",
+    testId: "bonus-refi",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "expenses",
+    label: "Chcem znížiť/optimalizovať svoje výdavky",
+    testId: "bonus-expenses",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "reserve",
+    label: "Chcem pomôcť nastaviť rezervu a investičný plán",
+    testId: "bonus-reserve",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "income",
+    label: "Chcem zvýšiť svoj príjem – zaujíma ma spolupráca s UNOTOP",
+    testId: "bonus-income",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "audit",
+    label: "Bezplatný audit poistiek a úverov",
+    testId: "bonus-audit",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "pdf",
+    label: "PDF report mojej projekcie",
+    testId: "bonus-pdf",
+    disabled: false,
+    tooltip: undefined,
+  },
+  {
+    id: "ebook",
+    label: "E-book zdarma (už čoskoro)",
+    testId: "bonus-ebook",
+    disabled: true,
+    tooltip: "Dostupné po vydaní",
+  },
+] as const;
+
+const REFI_DEADLINE_OPTIONS = [
+  { value: "3", label: "3 dni" },
+  { value: "7", label: "7 dní" },
+  { value: "14", label: "14 dní" },
+] as const;
+
+// PR-13 HOTFIX: Helper pre formátovanie bonusov do storage
+function formatBonusForStorage(bonusId: string, refiDeadline: string): string {
+  const option = BONUS_OPTIONS.find((opt) => opt.id === bonusId);
+  if (!option) return bonusId;
+  if (bonusId === "refi") {
+    return `${option.label} (ponuka do ${refiDeadline} dní)`;
+  }
+  return option.label;
+}
 
 /**
  * BasicLayout - jednoduchá verzia pre nováčikov
  * Left: Nastavenia (profil+cashflow+invest) + Portfolio
  * Right: Projekcia & Metriky (spojené)
  */
-export default function BasicLayout() {
+export default function BasicLayout({
+  onAboutClick,
+  onAdminOpen, // PR-16: DEV admin button v toolbare
+}: {
+  onAboutClick?: () => void;
+  onAdminOpen?: () => void; // PR-16
+}) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [open0, setOpen0] = React.useState(true); // Settings panel
   const [open3, setOpen3] = React.useState(true); // Portfolio panel
   const [shareOpen, setShareOpen] = React.useState(false);
+  const [bonusesExpanded, setBonusesExpanded] = React.useState(false); // PR-17: Collapsible bonuses
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
   // PR-6 Task E+F: projectionRefresh removed (instant reactivity via useProjection hook)
@@ -70,8 +158,9 @@ export default function BasicLayout() {
   // PR-7: Privacy modal state
   const [privacyOpen, setPrivacyOpen] = React.useState(false);
 
-  // PR-7 Task 7: Contact modal state
-  const [contactOpen, setContactOpen] = React.useState(false);
+  // PR-12: Admin console state moved to RootLayout (global)
+
+  // ContactModal state REMOVED - používame ShareModal
 
   // Onboarding tour state - progresívny systém
   const [tourOpen, setTourOpen] = React.useState(false);
@@ -107,35 +196,53 @@ export default function BasicLayout() {
     }
   };
 
-  // Počúvaj na zatvorenie welcome modalu a spusti tour
+  // PR-13: Počúvaj na zatvorenie welcome modalu a spusti tour
   React.useEffect(() => {
-    let hasStarted = false; // Flag aby sa nespustil viac krát
+    // Check flag on mount (ak WelcomeModal sa zatvoril pred BasicLayout mount)
+    const shouldStartTour = sessionStorage.getItem(
+      "unotop_startTourAfterWelcome"
+    );
 
-    const checkWelcome = () => {
-      const welcomeSeen = localStorage.getItem("unotop:welcome-seen");
-      const tourCompleted = completedSteps.length === 5;
-
-      if (welcomeSeen && !tourCompleted && !tourOpen && !hasStarted) {
-        hasStarted = true; // Označ že tour bol spustený
-        console.log("[Tour] Welcome modal closed, auto-starting tour...");
-        setTimeout(() => {
-          setCurrentTourStep(1);
-          setTourOpen(true);
-        }, 2500);
+    const handleWelcomeClosed = () => {
+      // Skip ak GDPR link bol kliknutý v intro
+      const skipTour = sessionStorage.getItem("unotop_skipTourAfterIntro");
+      if (skipTour) {
+        sessionStorage.removeItem("unotop_skipTourAfterIntro");
+        console.log("[Tour] Skipping tour after GDPR link in Intro");
+        return;
       }
+
+      // PR-13 Fix: Skip ak tour už raz bezel (uložené v localStorage)
+      const tourWasStarted = localStorage.getItem("unotop:tour_started");
+      if (tourWasStarted === "true") {
+        console.log("[Tour] Tour was already started before, skipping");
+        sessionStorage.removeItem("unotop_startTourAfterWelcome");
+        return;
+      }
+
+      console.log("[Tour] Welcome modal closed, auto-starting tour in 2s...");
+      sessionStorage.removeItem("unotop_startTourAfterWelcome");
+
+      // Označ že tour už bol spustený (aby sa neopakoval)
+      localStorage.setItem("unotop:tour_started", "true");
+
+      setTimeout(() => {
+        setCurrentTourStep(1);
+        setTourOpen(true);
+      }, 2000);
     };
 
-    // Poll pre welcome flag každých 500ms (fallback ak custom event nefunguje)
-    const pollInterval = setInterval(checkWelcome, 500);
+    // Ak flag existuje, spusti tour hneď
+    if (shouldStartTour === "true") {
+      handleWelcomeClosed();
+    }
 
-    // Listen na custom event z WelcomeModal
-    window.addEventListener("storage", checkWelcome);
-
+    // Listener pre prípad live event
+    window.addEventListener("welcomeClosed", handleWelcomeClosed);
     return () => {
-      clearInterval(pollInterval);
-      window.removeEventListener("storage", checkWelcome);
+      window.removeEventListener("welcomeClosed", handleWelcomeClosed);
     };
-  }, []); // Len raz pri mount
+  }, []); // PR-13 Fix: Odstránené completedSteps z dependencies
 
   const handleTourComplete = () => {
     setTourOpen(false);
@@ -151,6 +258,7 @@ export default function BasicLayout() {
   const restartTour = () => {
     // Vyčisti completed steps aby detektory mohli fungovať znovu
     localStorage.removeItem("unotop:tour_steps");
+    localStorage.removeItem("unotop:tour_started"); // PR-13 Fix
     setCompletedSteps([]);
     setCurrentTourStep(1);
     setTourOpen(true);
@@ -159,6 +267,7 @@ export default function BasicLayout() {
   // Reset tour (pre testovanie)
   const resetTour = () => {
     localStorage.removeItem("unotop:tour_steps");
+    localStorage.removeItem("unotop:tour_started"); // PR-13 Fix
     setCompletedSteps([]);
     setCurrentTourStep(1);
   };
@@ -171,7 +280,9 @@ export default function BasicLayout() {
     email: "",
     gdprConsent: false,
     honeypot: "", // Bot trap - must stay empty
-    reserveHelp: false, // PR-13B: Checkbox pre rezervu help
+    captchaAnswer: "", // PR-13: Simple CAPTCHA "1+3=?"
+    selectedBonuses: [] as string[], // PR-13 HOTFIX: Bonusy vo formulári
+    refiDeadline: "7", // PR-13 HOTFIX: Default 7 dní pre refi
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitStatus, setSubmitStatus] = React.useState<
@@ -190,6 +301,49 @@ export default function BasicLayout() {
 
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
+
+  // Track collabOptIn for real-time sync
+  const [collabOptInState, setCollabOptInState] = React.useState(
+    !!(seed.profile as any)?.collabOptIn
+  );
+
+  // Sync collabOptIn from "Čo ďalej?" do selectedBonuses (real-time)
+  React.useEffect(() => {
+    setFormData((prev) => {
+      const hasIncome = prev.selectedBonuses.includes("income");
+
+      // Pridaj "income" ak je collabOptIn true ale ešte nie je v bonusoch
+      if (collabOptInState && !hasIncome) {
+        return {
+          ...prev,
+          selectedBonuses: [...prev.selectedBonuses, "income"],
+        };
+      }
+
+      // Odstráň "income" ak je collabOptIn false ale je v bonusoch
+      if (!collabOptInState && hasIncome) {
+        return {
+          ...prev,
+          selectedBonuses: prev.selectedBonuses.filter((id) => id !== "income"),
+        };
+      }
+
+      return prev;
+    });
+  }, [collabOptInState]); // Re-sync pri zmene collabOptIn
+
+  // Listen for collabOptIn changes in localStorage/v3
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      const v3 = readV3();
+      const currentCollabOptIn = !!(v3.profile as any)?.collabOptIn;
+      if (currentCollabOptIn !== collabOptInState) {
+        setCollabOptInState(currentCollabOptIn);
+      }
+    }, 500); // Check every 500ms
+
+    return () => clearInterval(interval);
+  }, [collabOptInState]);
 
   // PR-6 Task E+F: projectionRefresh removed (debts tracked by useProjection hook debtsKey)
 
@@ -231,106 +385,242 @@ export default function BasicLayout() {
     return unsub;
   }, []);
 
-  // Sync cashflow data from persist (100ms polling)
+  // PR-15: Sync cashflow data from persist (300ms polling + value equality guard)
   React.useEffect(() => {
     const interval = setInterval(() => {
       const v3 = readV3();
-      setCashflowData({
+      const nextCashflowData = {
         monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
         fixedExp: (v3.profile?.fixedExp as any) || 0,
         varExp: (v3.profile?.varExp as any) || 0,
+      };
+
+      // PR-15: Value equality check - setState len ak changed
+      setCashflowData((prev) => {
+        const changed =
+          prev.monthlyIncome !== nextCashflowData.monthlyIncome ||
+          prev.fixedExp !== nextCashflowData.fixedExp ||
+          prev.varExp !== nextCashflowData.varExp;
+
+        if (changed && (isDev() || isPreview())) {
+          console.log("[POLL] cashflow changed", nextCashflowData);
+        }
+
+        return changed ? nextCashflowData : prev;
       });
-    }, 100);
+    }, 300); // PR-15: 100ms → 300ms
     return () => clearInterval(interval);
   }, []);
 
-  // Sync invest params from persist (100ms polling)
+  // PR-15: Sync invest params from persist (300ms polling + value equality guard)
   React.useEffect(() => {
     const interval = setInterval(() => {
       const v3 = readV3();
-      setInvestParams({
+      const nextInvestParams = {
         lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
         monthlyVklad: (v3 as any).monthly || 0,
         horizonYears: (v3.profile?.horizonYears as any) || 10,
         goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
+      };
+
+      // PR-15: Value equality check - setState len ak changed
+      setInvestParams((prev) => {
+        const changed =
+          prev.lumpSumEur !== nextInvestParams.lumpSumEur ||
+          prev.monthlyVklad !== nextInvestParams.monthlyVklad ||
+          prev.horizonYears !== nextInvestParams.horizonYears ||
+          prev.goalAssetsEur !== nextInvestParams.goalAssetsEur;
+
+        if (changed && (isDev() || isPreview())) {
+          console.log("[POLL] invest changed", nextInvestParams);
+        }
+
+        return changed ? nextInvestParams : prev;
       });
-    }, 100);
+    }, 300); // PR-15: 100ms → 300ms
     return () => clearInterval(interval);
   }, []);
 
   // Validation state (reactive)
   const validationState: ValidationState = React.useMemo(() => {
-    const v3 = readV3();
     return validateBasicWorkflow({
-      monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
-      fixedExp: (v3.profile?.fixedExp as any) || 0,
-      varExp: (v3.profile?.varExp as any) || 0,
+      monthlyIncome: cashflowData.monthlyIncome,
+      fixedExp: cashflowData.fixedExp,
+      varExp: cashflowData.varExp,
       lumpSumEur: investParams.lumpSumEur,
       monthlyVklad: investParams.monthlyVklad,
       horizonYears: investParams.horizonYears,
       goalAssetsEur: investParams.goalAssetsEur,
       mix: mix,
     });
-  }, [investParams, mix]);
+  }, [cashflowData, investParams, mix]);
 
   const validationMessage = getValidationMessage(validationState);
 
-  // Portfolio adjustments - aplikuj pri zmene profilu/investičných parametrov
-  // PR-14 FIX: Stabilné dependencies - porovnaj hodnoty, nie referencie
-  const stableInvestKey = `${investParams.lumpSumEur}-${investParams.monthlyVklad}-${investParams.horizonYears}`;
+  // PR-12: Force refresh drift state po zmene mixu (aby chip zmiznul po reapply)
+  const [driftRefreshKey, setDriftRefreshKey] = React.useState(0);
+
+  React.useEffect(() => {
+    return createMixListener(() => {
+      // Mix changed → refresh drift detection
+      setDriftRefreshKey((prev) => prev + 1);
+    });
+  }, []);
+
+  // PR-12 FIX: Zaokrúhľovanie horizontu (stabilita bez FP šumu)
+  const horizonYearsRounded = Math.round(investParams.horizonYears);
+
+  // PR-12 FIX: Stabilné primitívy v dependencies (nie object reference)
+  const v3ForDrift = React.useMemo(
+    () => readV3(),
+    [
+      driftRefreshKey,
+      investParams.lumpSumEur,
+      investParams.monthlyVklad,
+      horizonYearsRounded,
+      investParams.goalAssetsEur,
+    ]
+  );
+
+  const projection = useProjection({
+    lumpSumEur: investParams.lumpSumEur,
+    monthlyVklad: investParams.monthlyVklad,
+    horizonYears: investParams.horizonYears,
+    goalAssetsEur: investParams.goalAssetsEur,
+    mix,
+    debts: v3ForDrift.debts || [],
+    riskPref: (v3ForDrift.profile?.riskPref as RiskPref) || "vyvazeny",
+    modeUi: (v3ForDrift.profile?.modeUi as any) || "BASIC", // PR-12: režim UI
+  });
+
+  // PR-12 FIX: Stabilné kľúče pre auto-optimize dependencies (s rounded horizon)
+  const stableInvestKey = `${investParams.lumpSumEur}-${investParams.monthlyVklad}-${horizonYearsRounded}-${investParams.goalAssetsEur}`;
   const stableCashflowKey = `${cashflowData.monthlyIncome}-${cashflowData.fixedExp}-${cashflowData.varExp}`;
 
-  // PR-17.D: Reactive Mix Recalculation - auto-prepočítaj pri zmene vstupov
-  // PR-6 Task B: mixLocked NEBLOKUJE tento effect (blokuje len CTA v MixPanel)
-  // Výpočty (yield/risk/FV) sa robia vždy z v3.mix cez useProjection hook
+  // PR-13 FIX: Track posledného auto-optimize (zabráni zbytočným re-runs)
+  const lastAutoOptimizeRef = React.useRef<string>("");
+
+  // PR-12: BETA auto-optimize - automatický reapply ak je toggle ON
   React.useEffect(() => {
     const v3 = readV3();
-    const riskPref = v3.profile?.riskPref as RiskPref | undefined;
+    const autoOptEnabled = v3.profile?.autoOptimizeMix ?? true; // Default ON
     const modeUi = (v3.profile?.modeUi as any) || "BASIC";
 
-    // PR-6 Task B: mixLocked check REMOVED - lock affects only UI (normalize/recommend CTA), not calculations
+    // PR-15: Debug log v DEV (effect trigger)
+    if ((isDev() || isPreview()) && (projection.hasDrift || autoOptEnabled)) {
+      console.log("[AUTO-OPT] effect trigger", {
+        stableInvestKey,
+        stableCashflowKey,
+        hasDrift: projection.hasDrift,
+        canReapply: projection.canReapply,
+        driftFields: projection.driftFields,
+      });
+    }
 
-    // Skip ak nie je vybraný preset
-    if (!riskPref) return;
+    // Auto-optimize LEN v BASIC režime (PRO ochrana)
+    if (modeUi !== "BASIC") return;
 
-    // Skip ak sú vstupy prázdne
-    if (investParams.lumpSumEur === 0 && investParams.monthlyVklad === 0)
-      return;
+    // Skip ak toggle OFF
+    if (!autoOptEnabled) return;
 
-    console.log(
-      "[BasicLayout] PR-17.D: Investment params changed, recalculating mix..."
-    );
+    // PR-12 FIX: Early-return ak drift neexistuje (kontrola v tele, nie v deps)
+    if (!projection.hasDrift || !projection.canReapply) return;
 
-    // BASIC režim: vždy prepočítaj (override manual edits)
-    if (modeUi === "BASIC") {
-      const preset = PORTFOLIO_PRESETS.find((p) => p.id === riskPref);
+    // Skip ak presetId chýba
+    if (!v3.presetId) return;
+
+    // PR-13 FIX: Guard proti infinite loop - skip ak snapshot je čerstvý (< 3s)
+    const snapshot = v3.profileSnapshot as
+      | { lumpSum: number; monthly: number; horizon: number; ts: number }
+      | undefined;
+    if (snapshot && snapshot.ts) {
+      const age = Date.now() - snapshot.ts;
+      if (age < 3000) {
+        console.log(
+          "[BasicLayout] Auto-optimize skipped - snapshot too fresh (age:",
+          age,
+          "ms)"
+        );
+        return;
+      }
+    }
+
+    // Debounce 1s (čakaj kým používateľ dokončí zmeny)
+    const timer = setTimeout(() => {
+      // PR-13 FIX: Skip ak sme už spustili auto-optimize pre tieto hodnoty
+      const currentKey = `${stableInvestKey}-${stableCashflowKey}`;
+      if (lastAutoOptimizeRef.current === currentKey) {
+        console.log(
+          "[BasicLayout] Auto-optimize skipped - already processed:",
+          currentKey
+        );
+        return;
+      }
+
+      console.log("[BasicLayout] BETA auto-optimize triggered");
+
+      const preset = PORTFOLIO_PRESETS.find((p) => p.id === v3.presetId);
       if (!preset) return;
 
       const profile: ProfileForAdjustments = {
+        lumpSumEur: investParams.lumpSumEur,
+        monthlyEur: investParams.monthlyVklad,
+        horizonYears: investParams.horizonYears,
         monthlyIncome: cashflowData.monthlyIncome,
         fixedExpenses: cashflowData.fixedExp,
         variableExpenses: cashflowData.varExp,
         reserveEur: (v3.profile?.reserveEur as any) || 0,
         reserveMonths: (v3.profile?.reserveMonths as any) || 0,
-        lumpSumEur: investParams.lumpSumEur,
-        monthlyEur: investParams.monthlyVklad,
-        horizonYears: investParams.horizonYears,
         goalAssetsEur: investParams.goalAssetsEur,
-        riskPref: riskPref,
+        riskPref: v3.presetId as RiskPref,
       };
 
       const { preset: adjusted } = getAdjustedPreset(preset, profile);
 
-      // Update mix in persist
-      writeV3({ mix: adjusted.mix });
-      setMix(adjusted.mix);
+      // Aplikuj mix + update snapshot
+      writeV3({
+        mix: adjusted.mix,
+        mixOrigin: "presetAdjusted",
+        presetId: v3.presetId,
+        profileSnapshot: {
+          lumpSum: investParams.lumpSumEur,
+          monthly: investParams.monthlyVklad,
+          horizon: investParams.horizonYears,
+          ts: Date.now(),
+        },
+      });
 
-      console.log("[BasicLayout] PR-17.D: Mix auto-updated (BASIC mode)");
-    }
+      // Trigger mix change event (aby sa chip refresh)
+      emitMixChangeEvent();
 
-    // PRO režim: check mixDirty flag
-    // TODO: Implementovať mixDirty tracking + chip "Reaplikovať profil?"
-  }, [stableInvestKey, investParams.goalAssetsEur, stableCashflowKey]);
+      // PR-13 FIX: Označ že sme spracovali tieto hodnoty
+      lastAutoOptimizeRef.current = currentKey;
+
+      // Toast
+      WarningCenter.push({
+        type: "info",
+        message: "🔄 Mix prispôsobený novým vstupom (auto-optimize)",
+        scope: "global",
+        dedupeKey: "auto-optimize",
+      });
+    }, 1000); // Debounce 1s
+
+    return () => clearTimeout(timer);
+  }, [
+    // PR-12 FIX: Odstránené projection.hasDrift/canReapply z deps
+    // (kontrolujeme v tele effectu early-return, aby sme predišli slučkám)
+    stableInvestKey,
+    stableCashflowKey,
+  ]);
+
+  // PR-11: AUTO-APPLY PROFILU ODSTRÁNENÉ
+  // Dôvod: "Zamŕzajúci yield" bug - mix sa prepísal na profilové presety
+  // Riešenie: Mix = single source of truth, aplikuje sa LEN pri kliknutí na profil
+  // useProjection hook prepočítava yield/risk/FV live z aktuálneho mixu
+  //
+  // REMOVED useEffect: Auto-recalculation pri zmene vstupov (lumpSum, monthly, horizon, goal)
+  // IMPACT: Profil sa NEaplikuje automaticky, používateľ musí KLIKNÚŤ na profil
+  // UX: Jasnejšie - mix sa nemení "magic-om"
 
   React.useEffect(() => {
     // PR-14.D: Vyčisti cache pri zmene vstupov (aby sa prepočítali caps/mix s novými parametrami)
@@ -376,32 +666,14 @@ export default function BasicLayout() {
     // (aby sme neprepisovali jeho ručné zmeny)
   }, [stableInvestKey, stableCashflowKey]);
 
-  // Uncheck preset pri zmene vstupov (aby používateľ musel znovu vybrať)
-  React.useEffect(() => {
-    const v3 = readV3();
-    const currentRiskPref = v3.profile?.riskPref;
-
-    // Ak má vybratý profil, vymaž ho pri zmene vstupov
-    if (currentRiskPref) {
-      console.log(
-        "[BasicLayout] Vstupy sa zmenili, unchecking profil + clearing mix"
-      );
-      writeV3({
-        mix: [], // Vymaž aj mix, aby používateľ vedel, že musí znovu vybrať
-        profile: {
-          ...(v3.profile || {}),
-          riskPref: undefined, // Uncheck
-        } as any,
-      });
-    }
-  }, [
-    investParams.lumpSumEur,
-    investParams.monthlyVklad,
-    investParams.horizonYears,
-    cashflowData.monthlyIncome,
-    cashflowData.fixedExp,
-    cashflowData.varExp,
-  ]);
+  // PR-11: UNCHECK PROFILU PRI ZMENE VSTUPOV ODSTRÁNENÉ
+  // Dôvod: Mix by nemal byť vymazaný len preto, že používateľ zmení lumpSum/monthly/horizon
+  // Nové správanie: Profil ostáva vybraný (zelený marker), mix sa NEprepíše
+  // useProjection hook prepočítava výsledky live z aktuálneho mixu
+  //
+  // REMOVED useEffect: Clear mix + riskPref pri zmene investParams/cashflow
+  // IMPACT: Zelený marker profilu ostáva, mix sa nemení
+  // UX: Konzistentné - používateľ vie, že jeho mix je stabilný
 
   // Auto-open and scroll to Portfolio when investment is complete
   // 3-sekundový delay aby užívateľ stihol dokončiť písanie
@@ -448,9 +720,17 @@ export default function BasicLayout() {
   };
 
   const handleReset = () => {
+    // PR-12 Fix: Zachovaj onboarding flags pri resete (welcome + tour progress)
+    const welcomeSeen = localStorage.getItem("welcome-seen");
+    const tourSteps = localStorage.getItem("unotop:tour_steps"); // ← Opravený kľúč
+
     // Clear both localStorage keys
     localStorage.removeItem("unotop:v3");
     localStorage.removeItem("unotop_v3");
+
+    // Obnov onboarding flags (tour sa nereštartuje po resete)
+    if (welcomeSeen) localStorage.setItem("welcome-seen", welcomeSeen);
+    if (tourSteps) localStorage.setItem("unotop:tour_steps", tourSteps);
 
     // Reload page to reset state
     window.location.reload();
@@ -466,6 +746,18 @@ export default function BasicLayout() {
       // ⚡ Honeypot check - bot detection
       if (formData.honeypot !== "") {
         console.warn("[Security] Honeypot triggered - blocking submission");
+        setSubmitStatus("error");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // ⚡ PR-13: CAPTCHA check - simple math "1+3=?"
+      if (formData.captchaAnswer !== "4") {
+        console.warn("[Security] CAPTCHA failed - blocking submission");
+        setValidationErrors({
+          ...validationErrors,
+          captcha: "Nesprávna odpoveď na bezpečnostnú otázku",
+        });
         setSubmitStatus("error");
         setIsSubmitting(false);
         return;
@@ -524,6 +816,11 @@ export default function BasicLayout() {
       const surplus = monthlyIncome - expenses - debtPayments;
       const stage = detectStage(lump, monthly, years, goal);
 
+      // PR-13 HOTFIX: Formátované bonusy pre email
+      const formattedBonuses = formData.selectedBonuses.map((id) =>
+        formatBonusForStorage(id, formData.refiDeadline)
+      );
+
       // Prepare projection data
       const projectionData: ProjectionData = {
         user: {
@@ -542,6 +839,7 @@ export default function BasicLayout() {
           yieldAnnual: approx,
           mix: mix.filter((i) => i.pct > 0),
           deeplink,
+          bonuses: formattedBonuses, // PR-13 HOTFIX
         },
         metadata: {
           riskPref,
@@ -551,7 +849,6 @@ export default function BasicLayout() {
           utm_medium: utmMedium,
           utm_campaign: utmCampaign,
           referenceCode,
-          reserveHelp: formData.reserveHelp, // PR-13B
           // PR-13B: Reserve context
           expenses,
           reserveLow,
@@ -590,7 +887,9 @@ export default function BasicLayout() {
           email: "",
           gdprConsent: false,
           honeypot: "",
-          reserveHelp: false, // PR-13B
+          captchaAnswer: "", // PR-13
+          selectedBonuses: [], // PR-13 HOTFIX
+          refiDeadline: "7", // PR-13 HOTFIX
         });
         setSubmitStatus("idle");
         setValidationErrors({});
@@ -710,6 +1009,20 @@ export default function BasicLayout() {
         />
       </div>
 
+      {/* PR-12: Recalculate chip - premiestený DO PRAVÉHO PANELU (viditeľnejšie) */}
+      {projection.hasDrift && projection.canReapply && v3ForDrift.presetId && (
+        <div className="mb-4">
+          <RecalculateProfileChip
+            driftFields={projection.driftFields}
+            presetId={v3ForDrift.presetId}
+            onReapplied={() => {
+              // Refresh mix po reapply (mixEvents notifikuje)
+              console.log("[BasicLayout] Mix reapplied");
+            }}
+          />
+        </div>
+      )}
+
       {/* Share CTA */}
       <section
         id="share-section"
@@ -718,23 +1031,30 @@ export default function BasicLayout() {
         <button
           ref={shareBtnRef}
           type="button"
-          disabled={!validationState.canShare}
-          onClick={() => validationState.canShare && setShareOpen(true)}
+          disabled={
+            !validationState.canShare ||
+            (projection.hasDrift && !v3ForDrift.profile?.autoOptimizeMix)
+          }
+          onClick={() => validationState.canShare && setShareOpen(true)} // REVERTING: ShareModal je SPRÁVNY formulár
           className={`group relative w-full px-6 py-4 rounded-xl font-semibold text-lg shadow-lg transition-all duration-200 overflow-hidden ${
-            validationState.canShare
+            validationState.canShare &&
+            !(projection.hasDrift && !v3ForDrift.profile?.autoOptimizeMix)
               ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-[1.02] active:scale-[0.98]"
               : "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60"
           }`}
           aria-label="Odoslať projekciu"
           title={
-            validationState.canShare
-              ? ""
-              : validationMessage || "Dokončite všetky kroky"
+            projection.hasDrift && !v3ForDrift.profile?.autoOptimizeMix
+              ? "Najprv prepočítajte profil (zmeny v nastaveniach vyžadujú aktualizáciu mixu)"
+              : validationState.canShare
+                ? ""
+                : validationMessage || "Dokončite všetky kroky"
           }
         >
-          {validationState.canShare && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-          )}
+          {validationState.canShare &&
+            !(projection.hasDrift && !v3ForDrift.profile?.autoOptimizeMix) && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+            )}
           <div className="relative flex items-center justify-center gap-3">
             <svg
               className="w-6 h-6"
@@ -754,15 +1074,19 @@ export default function BasicLayout() {
         </button>
         <p className="mt-3 text-xs text-center text-slate-400">
           {validationState.canShare
-            ? "Zrealizujte svoj plán bohatstva"
+            ? "Zrealizujte svoj plán budovania majetku"
             : validationMessage || "Dokončite všetky kroky"}
         </p>
       </section>
     </div>
   );
 
+  // Drift blocking logic pre toolbar
+  const hasDriftBlocking =
+    projection.hasDrift && !v3ForDrift.profile?.autoOptimizeMix;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950 text-slate-100 pb-[60px]">
       <ToastStack />
       <Toolbar
         onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -770,18 +1094,15 @@ export default function BasicLayout() {
         onModeToggle={handleModeToggle}
         onReset={handleReset}
         onTourRestart={restartTour}
+        onContactClick={onAboutClick} // PR-14: Kontakt button
+        onAdminOpen={onAdminOpen} // PR-16: DEV admin button
         onShare={() => {
-          if (validationState.canShare && shareBtnRef.current) {
-            // Scroll to big green Share button
-            shareBtnRef.current.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-            // Wait for scroll animation, then open modal
-            setTimeout(() => setShareOpen(true), 500);
+          // REVERTING: ShareModal je správny formulár (meno, priezvisko, email, telefón)
+          if (validationState.canShare && !hasDriftBlocking) {
+            setShareOpen(true);
           }
         }}
-        canShare={validationState.canShare}
+        canShare={validationState.canShare && !hasDriftBlocking}
       />
       <Sidebar
         isOpen={sidebarOpen}
@@ -795,10 +1116,17 @@ export default function BasicLayout() {
         <div
           role="dialog"
           aria-label="Zdieľať nastavenie"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4"
         >
           <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold">📧 Zdieľať agentovi</h2>
+            <h2 className="text-lg font-semibold">📧 Odoslať projekciu</h2>
+
+            {/* PR-18: Pomocný text */}
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Po odoslaní projekcie vám na e-mail pošleme prehľadný súhrn a
+              jednoduchý návrh krokov, ako lepšie nastaviť vaše peniaze a
+              investície. Všetko je nezáväzné a zdarma.
+            </p>
 
             {/* Preview FV + Mix */}
             {(() => {
@@ -1032,20 +1360,151 @@ export default function BasicLayout() {
                 aria-hidden="true"
               />
 
-              {/* PR-13B: Reserve help checkbox */}
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.reserveHelp}
-                  onChange={(e) =>
-                    setFormData({ ...formData, reserveHelp: e.target.checked })
-                  }
-                  className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-2 focus:ring-blue-500/50"
-                />
-                <span className="text-xs text-slate-300 leading-relaxed">
-                  ✓ Chcem pomôcť nastaviť rezervu a investičný plán
+              {/* PR-13: Simple CAPTCHA */}
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-slate-300">
+                  Bezpečnostná otázka: Koľko je 1 + 3? *
                 </span>
+                <input
+                  type="text"
+                  value={formData.captchaAnswer}
+                  onChange={(e) =>
+                    setFormData({ ...formData, captchaAnswer: e.target.value })
+                  }
+                  placeholder="Zadajte odpoveď"
+                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm"
+                  required
+                />
+                {validationErrors.captcha && (
+                  <p className="text-xs text-red-400 mt-1">
+                    {validationErrors.captcha}
+                  </p>
+                )}
               </label>
+
+              {/* PR-13 HOTFIX + PR-17: Bonuses section (collapsible) */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setBonusesExpanded(!bonusesExpanded)}
+                  className="w-full flex items-center justify-between text-left group"
+                >
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-200 mb-1">
+                      Vyberte si bonusy, o ktoré máte záujem
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Budú súčasťou vašej požiadavky na projekciu. Neovplyvňujú
+                      výpočty.
+                    </p>
+                  </div>
+                  <svg
+                    className={`w-5 h-5 text-slate-400 transition-transform ${
+                      bonusesExpanded ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {bonusesExpanded && (
+                  <div className="space-y-2">
+                    {BONUS_OPTIONS.map((option) => {
+                      const isRefi = option.id === "refi";
+                      const isSelected = formData.selectedBonuses.includes(
+                        option.id
+                      );
+
+                      return (
+                        <div key={option.id}>
+                          <label
+                            className={`flex items-start gap-2 cursor-pointer ${
+                              option.disabled
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                if (option.disabled) return;
+                                const newBonuses = isSelected
+                                  ? formData.selectedBonuses.filter(
+                                      (id) => id !== option.id
+                                    )
+                                  : [...formData.selectedBonuses, option.id];
+                                setFormData({
+                                  ...formData,
+                                  selectedBonuses: newBonuses,
+                                });
+
+                                // Sync "income" bonus s v3.profile.collabOptIn
+                                if (option.id === "income") {
+                                  const v3 = readV3();
+                                  writeV3({
+                                    profile: {
+                                      ...v3.profile,
+                                      collabOptIn: !isSelected,
+                                    } as any,
+                                  });
+                                }
+                              }}
+                              disabled={option.disabled || isSubmitting}
+                              data-testid={option.testId}
+                              className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50 disabled:opacity-50"
+                            />
+                            <span className="text-xs text-slate-300 leading-relaxed">
+                              {option.label}
+                              {option.tooltip && (
+                                <span
+                                  className="ml-1 text-slate-500 cursor-help"
+                                  title={option.tooltip}
+                                >
+                                  ℹ️
+                                </span>
+                              )}
+                            </span>
+                          </label>
+
+                          {/* Refi deadline dropdown (conditional) */}
+                          {isRefi && isSelected && (
+                            <div className="ml-6 mt-2 flex items-center gap-2">
+                              <label className="text-xs text-slate-400">
+                                Mám záujem o ponuku do:
+                              </label>
+                              <select
+                                value={formData.refiDeadline}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    refiDeadline: e.target.value,
+                                  })
+                                }
+                                className="px-2 py-1 text-xs rounded bg-slate-800 border border-slate-600 text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                              >
+                                {REFI_DEADLINE_OPTIONS.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
@@ -1060,7 +1519,14 @@ export default function BasicLayout() {
                 <span className="text-xs text-slate-400 leading-relaxed">
                   Súhlasím so spracovaním osobných údajov za účelom zaslania
                   investičnej projekcie finančnému agentovi. Údaje nebudú
-                  uložené ani zdieľané s tretími stranami.
+                  uložené ani zdieľané s tretími stranami.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setPrivacyOpen(true)}
+                    className="text-blue-400 hover:text-blue-300 underline"
+                  >
+                    Zásady ochrany súkromia
+                  </button>
                 </span>
               </label>
             </div>
@@ -1155,7 +1621,9 @@ export default function BasicLayout() {
                     email: "",
                     gdprConsent: false,
                     honeypot: "",
-                    reserveHelp: false, // PR-13B
+                    captchaAnswer: "", // PR-13
+                    selectedBonuses: [], // PR-13 HOTFIX
+                    refiDeadline: "7", // PR-13 HOTFIX
                   });
                   setSubmitStatus("idle");
                   setConfirmationCode("");
@@ -1187,10 +1655,12 @@ export default function BasicLayout() {
       />
 
       {/* PR-7: Privacy Modal */}
-      <PrivacyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <PrivacyModal
+        isOpen={privacyOpen}
+        onClose={() => setPrivacyOpen(false)}
+      />
 
-      {/* PR-7 Task 7: Contact Modal */}
-      <ContactModal isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      {/* ContactModal REMOVED - ShareModal je správny formulár s meno/priezvisko/email/telefón */}
 
       {/* PR-7: StickyBottomBar */}
       <StickyBottomBar
@@ -1200,11 +1670,19 @@ export default function BasicLayout() {
         horizonYears={investParams.horizonYears}
         goalAssetsEur={investParams.goalAssetsEur}
         riskPref={(seed.profile?.riskPref as RiskPref) || "vyvazeny"}
-        onSubmitClick={() => setContactOpen(true)} // PR-7 Task 7: Open contact modal
+        onSubmitClick={() => setShareOpen(true)} // REVERTING: ShareModal je správny formulár
+        hasDriftBlocking={hasDriftBlocking} // PR-12: Blokuje odoslanie ak drift
       />
 
       {/* PR-7: Footer s GDPR linkom */}
-      <Footer onPrivacyClick={() => setPrivacyOpen(true)} />
+      {/* PR-13: Footer na spodku stránky s Kontakt tlačidlom */}
+      {/* PR-12: onAdminOpen už nie je potrebné - AdminShortcuts to riadi */}
+      <Footer
+        onPrivacyClick={() => setPrivacyOpen(true)}
+        onContactClick={() => setShareOpen(true)}
+      />
+
+      {/* PR-12: AdminConsole moved to RootLayout (global) */}
     </div>
   );
 }

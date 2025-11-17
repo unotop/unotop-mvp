@@ -102,3 +102,28 @@ input[type="range"].range-skin:focus-visible::-moz-range-thumb { box-shadow: 0 0
     transform: translateX(0);
   }
 }
+
+/* PR-8: Modal layering fix - z-index hierarchy, body lock, sticky bar dimming */
+body.modal-open {
+  overflow: hidden; /* Prevent scroll when modal is open */
+}
+
+/* Dim and disable clicks on sticky bottom bar when modal is open */
+body.modal-open .sticky-bottom-bar {
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 200ms ease;
+}
+
+/* Safe area for sticky bottom bar (iOS notch support) */
+.sticky-bottom-bar {
+  padding-bottom: max(env(safe-area-inset-bottom), 12px);
+}
+
+/* PR-12: No-select class for logo (prevent text selection on triple-click) */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

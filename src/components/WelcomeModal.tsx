@@ -3,9 +3,13 @@ import { readV3, writeV3 } from "../persist/v3";
 
 interface WelcomeModalProps {
   onClose: () => void;
+  onOpenPrivacy?: () => void; // PR-8: Open privacy modal
 }
 
-export default function WelcomeModal({ onClose }: WelcomeModalProps) {
+export default function WelcomeModal({
+  onClose,
+  onOpenPrivacy,
+}: WelcomeModalProps) {
   const [hideNext, setHideNext] = React.useState(false);
 
   React.useEffect(() => {
@@ -22,7 +26,26 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
       const cur = readV3();
       writeV3({ profile: { ...(cur.profile || {}), hideTour: true } as any });
     }
+
+    // PR-13: Set flag pre BasicLayout aby spustil onboarding tour
+    sessionStorage.setItem("unotop_startTourAfterWelcome", "true");
+
+    // Emit event pre prípad že listener už existuje
+    window.dispatchEvent(new CustomEvent("welcomeClosed"));
+
     onClose();
+  };
+
+  // PR-12 Fix: GDPR link v Intro NEUZATVÁRA Intro (zostáva v pozadí)
+  // - Keď používateľ klikne "Zásady ochrany súkromia" v Intro
+  // - GDPR modal sa otvorí PRED intro (vyšší z-index)
+  // - Po zatvorení GDPR → Intro ostáva viditeľný (neštartuje tour)
+  // - Tour sa nespúšťa kým je GDPR otvorený (tourBlocked flag v RootLayout)
+  const handleGdprClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Otvor GDPR modal BEZ zatvorenia intro
+    // RootLayout nastaví tourBlocked=true
+    onOpenPrivacy?.();
   };
 
   return (
@@ -72,14 +95,13 @@ export default function WelcomeModal({ onClose }: WelcomeModalProps) {
               description="Dáta ostávajú len v tvojom prehliadači. Iba pri odoslaní projekcie odošleme kontaktné údaje bezpečne cez EmailJS na účel spätného kontaktu."
             />
             <div className="mt-2 pl-12">
-              <a
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-blue-400 hover:text-blue-300 underline"
+              <button
+                type="button"
+                onClick={handleGdprClick}
+                className="text-xs text-blue-400 hover:text-blue-300 underline cursor-pointer"
               >
                 Zásady ochrany súkromia
-              </a>
+              </button>
             </div>
           </div>
 

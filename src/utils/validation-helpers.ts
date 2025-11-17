@@ -23,6 +23,7 @@ export function formatPhone(phone: string): string {
 export interface ValidationErrors {
   email?: string;
   phone?: string;
+  captcha?: string; // PR-13
 }
 
 export function validateFormData(data: {

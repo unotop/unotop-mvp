@@ -4,3 +4,16 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Force HTTPS redirect
+[[redirects]]
+  from = "http://unotop.netlify.app/*"
+  to = "https://unotop.netlify.app/:splat"
+  status = 301
+  force = true
+
+# SPA fallback (all routes → index.html)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

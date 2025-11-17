@@ -1,6 +1,6 @@
 import React from "react";
 import { ProjectionChart } from "../projection/ProjectionChart";
-import { DebtVsInvestmentChart } from "../projection/DebtVsInvestmentChart"; // PR-4 Task 8
+// PR-8: DebtVsInvestmentChart odstránený - ProjectionChart má debt support
 import { useProjection } from "../projection/useProjection"; // PR-6 Task A: centralizovaná reaktivita
 import type { RiskPref } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
@@ -8,6 +8,7 @@ import { getCashReserveInfo } from "../portfolio/cashReserve";
 import { readV3, writeV3 } from "../../persist/v3";
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
+import { getDynamicDefaultMix } from "../portfolio/presets"; // PR-9 Task A
 import {
   getUnutilizedReserveCopy,
   getCollabOptInCopy,
@@ -18,6 +19,7 @@ import {
   shouldShowYieldRisk,
   shouldShowConcreteAdvice,
 } from "./rightPanelState";
+// PR-13 FIX: BonusesModal removed - bonuses now in ContactModal
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -72,17 +74,14 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   riskPref,
   mode = "BASIC", // PR-4: Default to BASIC
 }) => {
-  // PR-14: If mix is empty, use default fallback (vyvazeny preset) for projection continuity
-  const defaultMix: MixItem[] = [
-    { key: "gold", pct: 13 },
-    { key: "etf", pct: 32 },
-    { key: "bonds", pct: 10 },
-    { key: "bond3y9", pct: 10 },
-    { key: "dyn", pct: 18 },
-    { key: "cash", pct: 9 },
-    { key: "crypto", pct: 4 },
-    { key: "real", pct: 4 },
-  ];
+  // PR-9 Task A: Validate riskPref PRED defaultMix
+  const validRiskPref: RiskPref =
+    riskPref === "konzervativny" || riskPref === "rastovy"
+      ? (riskPref as RiskPref)
+      : "vyvazeny";
+
+  // PR-9 Task A: Dynamický default mix podľa profilu (nie hard-coded vyvážený)
+  const defaultMix = getDynamicDefaultMix(validRiskPref);
 
   const effectiveMix =
     Array.isArray(mix) && mix.length > 0 && mix.some((i) => i.pct > 0)
@@ -92,14 +91,16 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const hasMix = true; // Always show projection with effective mix
   const isUsingFallback = effectiveMix === defaultMix;
 
-  // Validate riskPref
-  const validRiskPref: RiskPref =
-    riskPref === "konzervativny" || riskPref === "rastovy"
-      ? (riskPref as RiskPref)
-      : "vyvazeny";
-
   // PR-6 Task A: useProjection hook - instant reactivity, no snapshot
   const v3 = readV3();
+
+  // PR-13 FIX: Bonuses state removed - bonuses now in ContactModal
+
+  // Check if user has selected profile + has basic data filled
+  const hasProfileSelected = !!v3.profile?.selected;
+  const hasBasicData = lumpSumEur > 0 || monthlyVklad > 0 || horizonYears > 0;
+  const shouldShowRecommendations = hasProfileSelected && hasBasicData;
+
   const projection = useProjection({
     lumpSumEur,
     monthlyVklad,
@@ -205,6 +206,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
     validRiskPref === "konzervativny" || surplusIncome > monthlyVklad;
 
   // PR-14: Always render projection (with fallback if needed), no empty state
+
+  // PR-13 FIX: formatBonusLabel & handleApplyBonuses removed - bonuses now in ContactModal
+
   return (
     <div className="space-y-4">
       {/* PR-16.A: State badge (ZERO/PARTIAL) */}
@@ -388,16 +392,16 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         )}
         <ProjectionChart
           mix={effectiveMix}
-          debts={[]} // BASIC nemá dlhy v grafe
+          debts={readV3().debts || []} // PR-8: Zobraz dlhy v grafe (ak existujú)
           lumpSumEur={lumpSumEur} // PR-6: live values (instant reaktivita)
           monthlyVklad={monthlyVklad} // PR-6: live values
           horizonYears={horizonYears} // PR-6: live values
           goalAssetsEur={goalAssetsEur} // PR-6: live values
           riskPref={validRiskPref}
-          hideDebts={true}
+          hideDebts={false} // PR-8: Zobraz debt line (unified graph)
         />
         {/* Risk Gauge (pod grafom) - 6 úrovní */}
-        <div className="mt-2 pt-3 border-t border-white/5">
+        <div className="-mt-2 pt-2 border-t border-white/5">
           <div className="flex items-center justify-center gap-4">
             <span className="text-sm font-medium text-slate-300">Riziko:</span>
             <div className="flex items-center gap-3">
@@ -432,7 +436,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                 })}
               </div>
               <span className="text-base font-bold tabular-nums text-white">
-                {riskScore.toFixed(1)}/{riskCap.toFixed(1)}
+                {riskScore.toFixed(1)}/10
               </span>
             </div>
             <span
@@ -464,179 +468,174 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             </span>
           </div>
         </div>
-
-        {/* PR-4 Task 8: Debt vs Investment Chart (ak sú dlhy) */}
-        {(() => {
-          const currentDebts = readV3().debts || [];
-          if (currentDebts.length === 0) return null;
-
-          return (
-            <div className="mt-4 pt-4 border-t border-white/5">
-              <DebtVsInvestmentChart
-                fvSeries={fvSeries} // PR-6 Task D: series z useProjection hook
-                debtSeries={debtSeries} // PR-6 Task D: series z useProjection hook
-                crossoverIndex={crossoverIndex} // PR-6 Task D: priesečník z useProjection hook
-              />
-            </div>
-          );
-        })()}
       </div>
 
       {/* Odporúčania - kompaktné, edukatívne */}
-      <div className="rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-          <span>💡</span>
-          <span>Čo ďalej?</span>
-        </h3>
+      {shouldShowRecommendations && (
+        <div className="rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <span>💡</span>
+            <span>Čo ďalej?</span>
+          </h3>
 
-        <div className="space-y-2">
-          {/* PR-13B: Priorita -1: Rezerva najprv hint */}
-          {showReserveHint && expenses > 0 && (
-            <div className="flex items-start gap-2 text-sm bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-              <span className="text-blue-400 shrink-0 text-lg">🛡️</span>
-              <div className="text-slate-300">
-                <strong className="text-blue-300">
-                  Najprv si vybudujte rezervu 3–6 mesiacov.
-                </strong>{" "}
-                Vaše mesačné výdavky sú ~{formatNumber(expenses)} €, odporúčaná
-                rezerva {formatNumber(reserveLow)}–{formatNumber(reserveHigh)}{" "}
-                €. Keď bude rezerva hotová, vieme ju investovať a zvýšiť
-                dlhodobé zhodnotenie. Rád vám to vysvetlím osobne.
-              </div>
-            </div>
-          )}
-
-          {/* Priorita 0: Unutilized reserve (ak existuje, zobraz info) */}
-          {hasUnutilizedReserve && unutilizedReserveCopy && (
-            <div className="flex items-start gap-2 text-sm">
-              <span className="text-blue-500 shrink-0">💵</span>
-              <div className="text-slate-300">{unutilizedReserveCopy}</div>
-            </div>
-          )}
-
-          {/* Priorita 1: Vysoké riziko (VŽDY prvé ak existuje) */}
-          {isOverRisk && (
-            <div className="flex items-start gap-2 text-sm">
-              <span className="text-amber-500 shrink-0">⚠️</span>
-              <div className="text-slate-300">
-                <strong>Pozor!</strong> Portfólio rizikové (
-                {riskScore.toFixed(1)}/{riskCap.toFixed(1)}). Znížte dyn.
-                riadenie alebo krypto.
-              </div>
-            </div>
-          )}
-
-          {/* Priorita 2: Cieľ splnený (ak nie je riziko) */}
-          {!isOverRisk && progressPercent >= 100 && (
-            <div className="flex items-start gap-2 text-sm">
-              <span className="text-emerald-500 shrink-0">🎉</span>
-              <div className="text-slate-300">
-                <strong>Gratulujeme!</strong> Váš cieľ bude splnený.
-              </div>
-            </div>
-          )}
-
-          {/* Priorita 3: Edukatívne odporúčania (ak cieľ nie je splnený) */}
-          {!isOverRisk &&
-            goalAssetsEur > 0 &&
-            progressPercent < 100 &&
-            remaining > 0 && (
-              <div className="flex items-start gap-2 text-sm">
-                <span className="text-blue-500 shrink-0">💡</span>
+          <div className="space-y-2">
+            {/* PR-13B: Priorita -1: Rezerva najprv hint */}
+            {showReserveHint && expenses > 0 && (
+              <div className="flex items-start gap-2 text-sm bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <span className="text-blue-400 shrink-0 text-lg">🛡️</span>
                 <div className="text-slate-300">
-                  <strong>Ako dosiahnuť cieľ?</strong> Chýba vám{" "}
-                  {formatLargeNumber(remaining)} €. Možnosti:
-                  <ul className="mt-1 ml-4 text-xs space-y-0.5 text-slate-400">
-                    {/* Smart odporúčanie vkladu - len ak je realistické */}
-                    {monthlyVklad > 0 &&
-                      horizonYears > 0 &&
-                      (() => {
-                        const requiredMonthly = Math.ceil(
-                          monthlyVklad + remaining / (horizonYears * 12)
-                        );
-                        const currentIncome =
-                          (v3.profile?.monthlyIncome as any) || 0;
-                        const increaseRatio =
-                          requiredMonthly / Math.max(monthlyVklad, 1);
-                        const incomeRatio =
-                          currentIncome > 0
-                            ? requiredMonthly / currentIncome
-                            : 999;
-
-                        // Zobraz len ak je realistické (<2× súčasný vklad ALEBO <40% príjmu)
-                        const isRealistic =
-                          increaseRatio < 2 && incomeRatio < 0.4;
-
-                        if (isRealistic) {
-                          return (
-                            <li>
-                              ✅ Zvýšte mesačný vklad na{" "}
-                              <strong className="text-blue-400">
-                                {requiredMonthly} €
-                              </strong>
-                            </li>
-                          );
-                        }
-                        return null;
-                      })()}
-                    <li>✅ Optimalizujte výdavky (fixné/variabilné)</li>
-                    {horizonYears < 15 && (
-                      <li>✅ Predĺžte horizont na {horizonYears + 5} rokov</li>
-                    )}
-                  </ul>
+                  <strong className="text-blue-300">
+                    Najprv si vybudujte rezervu 3–6 mesiacov.
+                  </strong>{" "}
+                  Vaše mesačné výdavky sú ~{formatNumber(expenses)} €,
+                  odporúčaná rezerva {formatNumber(reserveLow)}–
+                  {formatNumber(reserveHigh)} €. Keď bude rezerva hotová, vieme
+                  ju investovať a zvýšiť dlhodobé zhodnotenie. Rád vám to
+                  vysvetlím osobne.
                 </div>
               </div>
             )}
 
-          {/* Priorita 4: Pozitívna spätná väzba (default - ak nie sú iné odporúčania) */}
-          {!isOverRisk && (progressPercent >= 100 || progressPercent === 0) && (
-            <div className="flex items-start gap-2 text-sm">
-              <span className="text-emerald-500 shrink-0">✓</span>
-              <div className="text-slate-300">
-                <strong>Skvelé!</strong> Portfólio vyvážené a zodpovedá profilu.
+            {/* Priorita 0: Unutilized reserve (ak existuje, zobraz info) */}
+            {hasUnutilizedReserve && unutilizedReserveCopy && (
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-blue-500 shrink-0">💵</span>
+                <div className="text-slate-300">{unutilizedReserveCopy}</div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* CTA: VŽDY viditeľný */}
-          <div className="mt-3 pt-2 border-t border-white/5">
-            <div className="flex items-start gap-2 text-sm">
-              <span className="text-emerald-500 shrink-0">📧</span>
-              <div className="text-slate-300">
-                <strong>Odoslať agentovi</strong> → nezáväzne pomôžeme dosiahnuť
-                ciele.
+            {/* Priorita 1: Vysoké riziko (VŽDY prvé ak existuje) */}
+            {isOverRisk && (
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-amber-500 shrink-0">⚠️</span>
+                <div className="text-slate-300">
+                  <strong>Pozor!</strong> Portfólio rizikové (
+                  {riskScore.toFixed(1)}/{riskCap.toFixed(1)}). Znížte dyn.
+                  riadenie alebo krypto.
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* PR-11: Collab opt-in checkbox */}
-            <label className="flex items-center gap-2 mt-2 text-xs text-slate-400 cursor-pointer hover:text-slate-300 transition-colors">
-              <input
-                type="checkbox"
-                checked={!!(v3.profile as any)?.collabOptIn}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  writeV3({
-                    profile: { ...v3.profile, collabOptIn: checked } as any,
-                  });
-                  // Track telemetry (PR-10)
-                  import("../../services/telemetry").then((t) =>
-                    t.trackCollabInterest({
-                      checked,
-                      stage,
-                      riskPref: validRiskPref,
-                      monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
-                      monthlyVklad,
-                    })
-                  );
-                }}
-                aria-label="Zvýšiť príjem (collab opt-in)"
-                className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50"
-              />
-              <span>{getCollabOptInCopy()}</span>
-            </label>
+            {/* Priorita 2: Cieľ splnený (ak nie je riziko) */}
+            {!isOverRisk && progressPercent >= 100 && (
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-emerald-500 shrink-0">🎉</span>
+                <div className="text-slate-300">
+                  <strong>Gratulujeme!</strong> Váš cieľ bude splnený.
+                </div>
+              </div>
+            )}
+
+            {/* Priorita 3: Edukatívne odporúčania (ak cieľ nie je splnený) */}
+            {!isOverRisk &&
+              goalAssetsEur > 0 &&
+              progressPercent < 100 &&
+              remaining > 0 && (
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-blue-500 shrink-0">💡</span>
+                  <div className="text-slate-300">
+                    <strong>Ako dosiahnuť cieľ?</strong> Chýba vám{" "}
+                    {formatLargeNumber(remaining)} €. Možnosti:
+                    <ul className="mt-1 ml-4 text-xs space-y-0.5 text-slate-400">
+                      {/* Smart odporúčanie vkladu - len ak je realistické */}
+                      {monthlyVklad > 0 &&
+                        horizonYears > 0 &&
+                        (() => {
+                          const requiredMonthly = Math.ceil(
+                            monthlyVklad + remaining / (horizonYears * 12)
+                          );
+                          const currentIncome =
+                            (v3.profile?.monthlyIncome as any) || 0;
+                          const increaseRatio =
+                            requiredMonthly / Math.max(monthlyVklad, 1);
+                          const incomeRatio =
+                            currentIncome > 0
+                              ? requiredMonthly / currentIncome
+                              : 999;
+
+                          // Zobraz len ak je realistické (<2× súčasný vklad ALEBO <40% príjmu)
+                          const isRealistic =
+                            increaseRatio < 2 && incomeRatio < 0.4;
+
+                          if (isRealistic) {
+                            return (
+                              <li>
+                                ✅ Zvýšte mesačný vklad na{" "}
+                                <strong className="text-blue-400">
+                                  {requiredMonthly} €
+                                </strong>
+                              </li>
+                            );
+                          }
+                          return null;
+                        })()}
+                      <li>✅ Optimalizujte výdavky (fixné/variabilné)</li>
+                      {horizonYears < 15 && (
+                        <li>
+                          ✅ Predĺžte horizont na {horizonYears + 5} rokov
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+            {/* Priorita 4: Pozitívna spätná väzba (default - ak nie sú iné odporúčania) */}
+            {!isOverRisk &&
+              (progressPercent >= 100 || progressPercent === 0) && (
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-emerald-500 shrink-0">✓</span>
+                  <div className="text-slate-300">
+                    <strong>Skvelé!</strong> Portfólio vyvážené a zodpovedá
+                    profilu.
+                  </div>
+                </div>
+              )}
+
+            {/* CTA: VŽDY viditeľný */}
+            <div className="mt-3 pt-2 border-t border-white/5">
+              <div className="flex items-start gap-2 text-sm">
+                <span className="text-emerald-500 shrink-0">📧</span>
+                <div className="text-slate-300">
+                  <strong>Odoslať agentovi</strong> → nezáväzne pomôžeme
+                  dosiahnuť ciele.
+                </div>
+              </div>
+
+              {/* PR-11: Collab opt-in checkbox */}
+              <label
+                htmlFor="collab-opt-in-checkbox"
+                className="flex items-center gap-2 mt-2 text-xs text-slate-400 cursor-pointer hover:text-slate-300 transition-colors"
+              >
+                <input
+                  id="collab-opt-in-checkbox"
+                  type="checkbox"
+                  checked={!!(v3.profile as any)?.collabOptIn}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    writeV3({
+                      profile: { ...v3.profile, collabOptIn: checked } as any,
+                    });
+                    // Track telemetry (PR-10)
+                    import("../../services/telemetry").then((t) =>
+                      t.trackCollabInterest({
+                        checked,
+                        stage,
+                        riskPref: validRiskPref,
+                        monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+                        monthlyVklad,
+                      })
+                    );
+                  }}
+                  aria-label="Zvýšiť príjem (collab opt-in)"
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50 cursor-pointer flex-shrink-0"
+                />
+                <span className="select-none">{getCollabOptInCopy()}</span>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

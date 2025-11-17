@@ -3,7 +3,7 @@ import { formatPercentPa, formatMoneySk } from "../../utils/format";
 
 export type KPIPillsProps = {
   erPa: number; // expected return per annum as fraction e.g. 0.075
-  fv: number; // projected future value in euros
+  fv: number; // PR-8: Očakávaný majetok (projected future value in euros)
   riskRaw: number; // 0..10
   onClickEr?: () => void;
   onClickFv?: () => void;
@@ -42,21 +42,21 @@ export const KPIPills: React.FC<KPIPillsProps> = ({
         type="button"
         onClick={onClickEr}
         className={`${pillBase} ${neutral}`}
-        aria-label="KPI: Výnos p. a."
-        title="Výnos p. a. – očakávaný ročný výnos"
+        aria-label="KPI: Ročný výnos"
+        title="Ročný výnos (odhad) – očakávaný ročný výnos"
       >
         <span aria-hidden>📈</span>
-        <span className="font-medium">Výnos p. a. {pctSk(erPa, 2)}</span>
+        <span className="font-medium">Ročný výnos {pctSk(erPa, 2)}</span>
       </button>
       <button
         type="button"
         onClick={onClickFv}
         className={`${pillBase} ${neutral}`}
-        aria-label="KPI: FV (projekcia)"
-        title="FV – odhad budúcej hodnoty po horizonte"
+        aria-label="KPI: Očakávaný majetok"
+        title="Očakávaný majetok – odhad budúcej hodnoty po horizonte"
       >
         <span aria-hidden>🎯</span>
-        <span className="font-medium">FV {euroSk(fv)}</span>
+        <span className="font-medium">Očakávaný majetok {euroSk(fv)}</span>
       </button>
       <button
         type="button"

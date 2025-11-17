@@ -3,14 +3,10 @@ import { readV3 } from "../../persist/v3";
 import { createMixListener } from "../../persist/mixEvents";
 import type { MixItem } from "../mix/mix.service";
 import { RiskGauge } from "../../components/RiskGauge";
-import { calculateFutureValue } from "../../engine/calculations";
-import {
-  approxYieldAnnualFromMix,
-  riskScore0to10,
-  type RiskPref,
-} from "../mix/assetModel";
+import { type RiskPref } from "../mix/assetModel";
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
+import { useProjection } from "../projection/useProjection"; // PR-10: Use centralized hook
 
 interface MetricsSectionProps {
   riskPref: string;
@@ -66,21 +62,25 @@ export function MetricsSection({
 
   // Use adaptive risk cap based on stage
   const cap = getAdaptiveRiskCap(validRiskPref, stage);
-  const risk =
-    Array.isArray(mix) && mix.length > 0
-      ? riskScore0to10(mix, validRiskPref, 0)
-      : 0;
-  const approxYield =
-    Array.isArray(mix) && mix.length > 0
-      ? approxYieldAnnualFromMix(mix, validRiskPref)
-      : 0.04;
-  const fv = calculateFutureValue(
+
+  // PR-10: Use useProjection hook for all metrics (single source of truth)
+  const v3 = readV3();
+  const projection = useProjection({
     lumpSumEur,
     monthlyVklad,
     horizonYears,
-    approxYield
-  );
-  const progress = goalAssetsEur > 0 ? (fv / goalAssetsEur) * 100 : 0;
+    goalAssetsEur,
+    mix: Array.isArray(mix) && mix.length > 0 ? mix : [],
+    debts: v3.debts || [],
+    riskPref: validRiskPref,
+  });
+
+  const {
+    approxYield,
+    riskScore: risk,
+    fvFinal: fv,
+    goalProgress: progress,
+  } = projection;
 
   return (
     <section

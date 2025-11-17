@@ -1,5 +1,6 @@
 import React from "react";
 import { writeV3, readV3 } from "../../persist/v3";
+import type { Debt } from "../../persist/v3";
 import { useUncontrolledValueInput } from "../_hooks/useUncontrolledValueInput";
 import { calculateFutureValue } from "../../engine/calculations";
 import { approxYieldAnnualFromMix, type RiskPref } from "../mix/assetModel";
@@ -9,6 +10,8 @@ import { WarningCenter } from "../ui/warnings/WarningCenter";
 import { getClientLimits, type ClientType } from "../../config/clientLimits";
 import { TEST_IDS } from "../../testIds"; // PR-4
 import { AddDebtModal } from "../debts/AddDebtModal";
+import { DebtSummaryCard } from "../debt/DebtSummaryCard"; // PR-10 Task G
+import { EditDebtModal } from "../../components/EditDebtModal"; // PR-13
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -93,8 +96,14 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     () => (seed.profile?.goalAssetsEur as any) || 0
   );
 
+  // PR-13: Debts state (reactive)
+  const [debts, setDebts] = React.useState<Debt[]>(() => seed.debts || []);
+
   // PR-4: Debt modal state
   const [isDebtModalOpen, setIsDebtModalOpen] = React.useState(false);
+
+  // PR-13: Edit debt modal
+  const [editingDebt, setEditingDebt] = React.useState<Debt | null>(null);
 
   // Persist helpers
   const persistClientType = (value: "individual" | "family" | "company") => {
@@ -238,7 +247,13 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     commit: (n) => {
       setLumpSumEur(n);
       const cur = readV3();
-      writeV3({ profile: { ...(cur.profile || {}), lumpSumEur: n } as any });
+      // PR-11: Nemazať profil - mix ostáva stabilný
+      writeV3({
+        profile: {
+          ...(cur.profile || {}),
+          lumpSumEur: n,
+        } as any,
+      });
     },
   });
 
@@ -265,7 +280,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     },
     commit: (n) => {
       setMonthlyVklad(n);
-      writeV3({ monthly: n });
+      // PR-11: Nemazať profil - mix ostáva stabilný
+      const cur = readV3();
+      writeV3({
+        monthly: n,
+        profile: { ...(cur.profile || {}) } as any,
+      });
     },
   });
 
@@ -276,7 +296,13 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
     commit: (n) => {
       setHorizonYears(n);
       const cur = readV3();
-      writeV3({ profile: { ...(cur.profile || {}), horizonYears: n } as any });
+      // PR-11: Nemazať profil - mix ostáva stabilný
+      writeV3({
+        profile: {
+          ...(cur.profile || {}),
+          horizonYears: n,
+        } as any,
+      });
     },
   });
 
@@ -319,6 +345,33 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
       approxYield
     );
   }, [lumpSumEur, monthlyVklad, horizonYears, mix, riskPref]);
+
+  const handleEditDebt = (debt: Debt) => {
+    setEditingDebt(debt);
+  };
+
+  const handleDeleteDebt = (debtId: string) => {
+    if (confirm("Naozaj chcete zmazať tento dlh?")) {
+      const v3 = readV3();
+      const updatedDebts = (v3.debts || []).filter((d) => d.id !== debtId);
+      writeV3({ debts: updatedDebts });
+      setDebts(updatedDebts); // PR-13: Update local state
+    }
+  };
+
+  const handleSaveDebt = (updatedDebt: Debt) => {
+    const v3 = readV3();
+    const debts = v3.debts || [];
+    const index = debts.findIndex((d) => d.id === updatedDebt.id);
+    if (index >= 0) {
+      debts[index] = updatedDebt;
+    } else {
+      debts.push(updatedDebt);
+    }
+    writeV3({ debts });
+    setDebts([...debts]); // PR-13: Update local state
+    setEditingDebt(null);
+  };
 
   return (
     <>
@@ -397,11 +450,16 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
             </div>
           </div>
 
-          {/* 2. Cashflow + Investície (2-column grid na desktop) */}
+          {/* 2. Finančná situácia + Investície (2-column grid na desktop) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Ľavý stĺpec: Cashflow */}
+            {/* Ľavý stĺpec: Finančná situácia */}
             <div id="sec1" className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-300">Cashflow</h3>
+              <h3 className="text-sm font-semibold text-slate-300">
+                Finančná situácia{" "}
+                <span className="text-slate-500 text-xs font-normal">
+                  (cashflow)
+                </span>
+              </h3>
               <div className="grid grid-cols-1 gap-3">
                 {/* Mesačný príjem: textbox + slider */}
                 <div className="space-y-2">
@@ -572,10 +630,6 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 </div>
 
                 {/* Spacer pre zarovnanie s Cieľ majetku v pravom stĺpci */}
-                <div className="space-y-2">
-                  <div style={{ height: "40px" }}></div>
-                </div>
-
                 {/* Pridať dlh button */}
                 <div className="space-y-2">
                   <button
@@ -585,39 +639,16 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 transition-colors text-sm font-medium text-slate-200"
                   >
                     <span>💳</span>
-                    <span>Pridať dlh alebo hypotéku</span>
+                    <span>Mám úver alebo hypotéku</span>
                   </button>
                 </div>
 
-                {/* PR-4: Debt KPI bar */}
-                {(() => {
-                  const currentDebts = readV3().debts || [];
-                  const totalMonthly = currentDebts.reduce(
-                    (sum, d) => sum + d.monthly,
-                    0
-                  );
-
-                  if (currentDebts.length === 0) return null;
-
-                  return (
-                    <div className="px-3 py-2 rounded-lg bg-slate-800/50 ring-1 ring-white/5">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-400">
-                          Dlhy:{" "}
-                          <span className="font-semibold text-slate-200">
-                            {currentDebts.length}
-                          </span>
-                        </span>
-                        <span className="text-slate-400">
-                          Splátky:{" "}
-                          <span className="font-semibold text-amber-400">
-                            {totalMonthly.toLocaleString("sk-SK")} €
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })()}
+                {/* PR-10 Task G: DebtSummaryCard (nahradenie pôvodného Debt KPI bar) */}
+                <DebtSummaryCard
+                  debts={debts}
+                  onEdit={handleEditDebt}
+                  onDelete={handleDeleteDebt}
+                />
 
                 {/* Voľné prostriedky - kompaktný box (zarovnaný s Konečná hodnota) */}
                 <div>
@@ -929,6 +960,39 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
             </div>
           </div>
           {/* Koniec 2-column grid */}
+
+          {/* PR-12: BETA Auto-optimize toggle */}
+          <div className="pt-4 border-t border-slate-700/50">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={seed.profile?.autoOptimizeMix ?? true}
+                onChange={(e) => {
+                  const cur = readV3();
+                  writeV3({
+                    profile: {
+                      ...(cur.profile || {}),
+                      autoOptimizeMix: e.target.checked,
+                    } as any,
+                  });
+                }}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 
+                           focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
+                  Auto-optimalizovať mix po veľkej zmene
+                  <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-blue-900/40 text-blue-300 font-semibold">
+                    BETA
+                  </span>
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">
+                  Automaticky prepočíta profil pri výraznej zmene vstupov (lump
+                  sum, mesačný vklad, horizont)
+                </div>
+              </div>
+            </label>
+          </div>
         </section>
       )}
 
@@ -993,8 +1057,17 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
         isOpen={isDebtModalOpen}
         onClose={() => setIsDebtModalOpen(false)}
         onSuccess={() => {
-          // Refresh potrebné? State je v persist, komponenty by mali reagovať
+          // PR-13: Refresh debts state po pridaní
+          const v3 = readV3();
+          setDebts(v3.debts || []);
         }}
+      />
+
+      {/* PR-13: Edit Debt modal */}
+      <EditDebtModal
+        debt={editingDebt}
+        onClose={() => setEditingDebt(null)}
+        onSave={handleSaveDebt}
       />
     </>
   );

@@ -1,6 +1,6 @@
 # CALCULATION LOGIC – PR-13 ULTIMATE HYBRID+
 
-**Dokument pre finančného poradcu**  
+**Dokument pre finančného makléra**  
 **Dátum:** 26. október 2025  
 **Verzia:** PR-13 ULTIMATE HYBRID+ (v0.7.0)
 
@@ -779,7 +779,7 @@ Rastový        8.0   98%       7.84         8.00
 ---
 
 **Dokument pripravil:** GitHub Copilot (AI Assistant)  
-**Pre:** Finančný poradca UNOTOP MVP  
+**Pre:** Finančný maklér UNOTOP MVP  
 **Kontakt:** `unotop-mvp` repository, main branch
 
 **Verzia:** v0.7.0 (PR-13 ULTIMATE HYBRID+)  

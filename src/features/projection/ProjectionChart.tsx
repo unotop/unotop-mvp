@@ -12,9 +12,9 @@ import {
 } from "recharts";
 import type { MixItem } from "../mix/mix.service";
 import type { Debt } from "../../persist/v3";
-import { simulateProjection, monthsToYears, formatCurrency } from "./engine";
-import type { DebtInput, InvestInput } from "./types";
-import { approxYieldAnnualFromMix, type RiskPref } from "../mix/assetModel";
+import { monthsToYears, formatCurrency } from "./engine";
+import { useProjection } from "./useProjection";
+import type { RiskPref } from "../mix/assetModel";
 
 interface ProjectionChartProps {
   // Investičné vstupy
@@ -31,31 +31,8 @@ interface ProjectionChartProps {
 }
 
 /**
- * Konverzia Debt → DebtInput (pridaj kind detection + extra payments)
- */
-function mapDebtToInput(debt: Debt): DebtInput {
-  // Heuristic: ak úrok > 6%, pravdepodobne spotrebák, inak hypotéka
-  const kind = debt.ratePa > 6 ? "consumer" : "mortgage";
-
-  // Extra mesačná splátka (ide od mesiaca 1)
-  const recurringExtra =
-    debt.extraMonthly && debt.extraMonthly > 0
-      ? { startMonth: 1, amount: debt.extraMonthly }
-      : undefined;
-
-  return {
-    id: debt.id,
-    kind,
-    principal: debt.principal,
-    annualRate: debt.ratePa,
-    termMonths: debt.monthsLeft || 360, // default 30 rokov ak nie je zadané
-    oneOffExtras: [], // Zatiaľ žiadne jednorazové (UI môžeme pridať neskôr)
-    recurringExtra,
-  };
-}
-
-/**
  * Komponent pre projekčný graf
+ * PR-11: Unifikovaný na useProjection() hook (single source of truth)
  */
 export function ProjectionChart({
   lumpSumEur,
@@ -65,68 +42,54 @@ export function ProjectionChart({
   riskPref,
   debts,
   goalAssetsEur,
-  hideDebts = false, // default: zobraz všetko
+  hideDebts = false,
 }: ProjectionChartProps) {
-  const horizonMonths = Math.max(1, Math.round(horizonYears * 12));
-
   // Validate riskPref
   const validRiskPref: RiskPref =
     riskPref === "konzervativny" || riskPref === "rastovy"
       ? (riskPref as RiskPref)
       : "vyvazeny";
 
-  const annualYield = approxYieldAnnualFromMix(mix, validRiskPref);
+  // PR-11: Použiť useProjection hook namiesto simulateProjection
+  const projection = useProjection({
+    lumpSumEur,
+    monthlyVklad,
+    horizonYears,
+    goalAssetsEur: goalAssetsEur || 0,
+    mix: Array.isArray(mix) && mix.length > 0 ? mix : [],
+    debts: debts || [],
+    riskPref: validRiskPref,
+  });
 
-  // Investičné vstupy
-  const investInput: InvestInput = {
-    startLumpSum: lumpSumEur || 0,
-    monthly: monthlyVklad || 0,
-    annualYieldPct: annualYield * 100,
-  };
+  const {
+    fvSeries,
+    debtSeries,
+    investedSeries,
+    crossoverIndex,
+    effectiveHorizonYears,
+  } = projection;
 
-  // Dlhové vstupy
-  const debtInputs: DebtInput[] = debts
-    .filter((d) => d.principal > 0)
-    .map(mapDebtToInput);
-
-  // Dependency key pre debts (aby useMemo správne reagoval na zmeny)
-  const debtsKey = JSON.stringify(
-    debts.map((d) => ({
-      id: d.id,
-      principal: d.principal,
-      ratePa: d.ratePa,
-      monthsLeft: d.monthsLeft,
-      extraMonthly: d.extraMonthly,
-    }))
-  );
-
-  // Dependency key pre mix (aby useMemo reagoval na zmeny mixu)
-  const mixKey = JSON.stringify(
-    Array.isArray(mix) ? mix.map((m) => ({ key: m.key, pct: m.pct })) : []
-  );
-
-  // Simulácia
-  const result = React.useMemo(() => {
-    return simulateProjection({
-      horizonMonths,
-      debts: debtInputs,
-      invest: investInput,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [horizonMonths, lumpSumEur, monthlyVklad, mixKey, debtsKey, riskPref]);
-
-  // Príprava dát pre Recharts (konvertuj mesiace → roky, zaokrúhli hodnoty)
-  // WRAPPNUTÉ v useMemo aby sa chartData nevytvárala pri každom renderi
+  // PR-11: Príprava dát pre Recharts (ročné vzorky)
   const chartData = React.useMemo(() => {
-    return result.series
-      .filter((_, idx) => idx % 12 === 0 || idx === result.series.length - 1) // sample každý 12. mesiac (ročne) + posledný bod
-      .map((p) => ({
-        year: monthsToYears(p.month),
-        investície: Math.round(p.investValue),
-        dlhy: Math.round(p.totalDebtBalance),
-        čistý: Math.round(p.investValue - p.totalDebtBalance), // Net Worth = investície - dlhy
-      }));
-  }, [result.series]);
+    const data = [];
+    for (let year = 0; year <= effectiveHorizonYears; year++) {
+      const wealth = fvSeries[year] || 0;
+      const debt = debtSeries[year] || 0;
+      const invested = investedSeries[year] || 0;
+
+      // PR-11: Profit = wealth - invested (NIE wealth - debt!)
+      const profit = wealth - invested;
+
+      data.push({
+        year,
+        majetok: Math.max(0, Math.round(wealth)), // Clamp ≥ 0
+        dlhy: Math.max(0, Math.round(debt)), // Clamp ≥ 0
+        vložené: Math.round(invested),
+        zisk: Math.round(profit), // Môže byť záporný
+      });
+    }
+    return data;
+  }, [fvSeries, debtSeries, investedSeries, effectiveHorizonYears]);
 
   // Debug: skontroluj chartData (dočasné) - ODSTRÁNENÉ aby nevypisovalo do konzoly
   // React.useEffect(() => {
@@ -140,11 +103,8 @@ export function ProjectionChart({
   //   }
   // }, [chartData]);
 
-  // Crossover marker (ak existuje)
-  const crossoverYear =
-    result.crossoverMonth !== null
-      ? monthsToYears(result.crossoverMonth)
-      : null;
+  // PR-11: Crossover marker (používa crossoverIndex z useProjection)
+  const crossoverYear = crossoverIndex !== null ? crossoverIndex : null;
   const currentYear = new Date().getFullYear();
   const crossoverCalendarYear =
     crossoverYear !== null ? Math.round(currentYear + crossoverYear) : null;
@@ -160,6 +120,11 @@ export function ProjectionChart({
 
   return (
     <div className="space-y-3">
+      {/* Titulok grafu */}
+      <h3 className="text-lg font-semibold text-slate-200">
+        Projekcia majetku (investícia vs. dlh)
+      </h3>
+
       {/* Crossover info */}
       {crossoverYear !== null && (
         <div className="p-3 rounded-lg bg-emerald-900/20 ring-1 ring-emerald-500/30 text-sm">
@@ -167,11 +132,22 @@ export function ProjectionChart({
             ✅ Bod prelomu dosiahnutý
           </div>
           <div className="text-slate-300">
-            Investície prekročia zostatok dlhov po{" "}
-            <span className="font-bold tabular-nums">
-              {crossoverYear.toFixed(1)} rokoch
-            </span>{" "}
-            (cca {crossoverCalendarYear}).
+            {crossoverYear === 0 ? (
+              <>
+                Investície už teraz prekračujú zostatok dlhov{" "}
+                <span className="font-bold text-emerald-400">
+                  (prelomenie: Štart)
+                </span>
+              </>
+            ) : (
+              <>
+                Investície prekročia zostatok dlhov po{" "}
+                <span className="font-bold tabular-nums">
+                  {crossoverYear.toFixed(1)} rokoch
+                </span>{" "}
+                (cca {crossoverCalendarYear}).
+              </>
+            )}
           </div>
         </div>
       )}
@@ -181,7 +157,7 @@ export function ProjectionChart({
         <ResponsiveContainer width="100%" height={320}>
           <LineChart
             data={chartData}
-            margin={{ top: 10, right: 20, bottom: 45, left: 10 }}
+            margin={{ top: 20, right: 20, bottom: 30, left: 10 }}
           >
             <CartesianGrid stroke="#334155" strokeDasharray="3 3" />
             <XAxis
@@ -199,25 +175,27 @@ export function ProjectionChart({
             <YAxis
               stroke="#94a3b8"
               tick={{ fill: "#94a3b8", fontSize: 12 }}
-              domain={[0, "auto"]}
-              padding={{ top: 20, bottom: 0 }}
-              tickFormatter={(val: number) =>
-                val >= 1000 ? `${(val / 1000).toFixed(0)}k €` : `${val} €`
-              }
+              domain={["auto", "auto"]} // PR-10 Fix: Support negative values (dlhy > investície na začiatku)
+              padding={{ top: 20, bottom: 20 }}
+              tickFormatter={(val: number) => {
+                const absVal = Math.abs(val);
+                if (absVal >= 1000) {
+                  return `${(val / 1000).toFixed(0)}k €`;
+                }
+                return `${val} €`;
+              }}
               width={60}
             />
             <Tooltip
               content={(props) => {
-                const { active, payload, label } = props;
+                const { active, payload } = props;
                 if (!active || !payload || !payload.length) return null;
 
                 const data = payload[0].payload;
                 const rok = data.year;
-                const očakávanýMajetok = data.čistý;
-
-                // Vypočítaj celkový vklad (lump sum + mesačné vklady * roky * 12)
-                const celkovýVklad = lumpSumEur + monthlyVklad * rok * 12;
-                const zisk = očakávanýMajetok - celkovýVklad;
+                const majetok = data.majetok;
+                const vložené = data.vložené;
+                const zisk = data.zisk;
 
                 return (
                   <div
@@ -230,17 +208,33 @@ export function ProjectionChart({
                     }}
                   >
                     <div style={{ fontWeight: "bold", marginBottom: "4px" }}>
-                      Rok {rok.toFixed(1)}
-                    </div>
-                    <div style={{ color: "#10b981", marginBottom: "2px" }}>
-                      Zisk: {formatCurrency(zisk)}
+                      {rok === 0 ? "Štart" : `Rok ${rok}`}
                     </div>
                     <div style={{ color: "#34d399" }}>
-                      Očakávaný majetok: {formatCurrency(očakávanýMajetok)}
+                      Očakávaný majetok: {formatCurrency(Math.max(0, majetok))}
                     </div>
+                    <div style={{ color: "#60a5fa", marginTop: "2px" }}>
+                      Vložené celkom: {formatCurrency(Math.max(0, vložené))}
+                    </div>
+                    {/* PR-12: Rok 0 zobrazí len "Investované", nie zisk */}
+                    {rok === 0 ? (
+                      <div style={{ color: "#60a5fa", marginTop: "2px" }}>
+                        Investované: {formatCurrency(Math.max(0, vložené))}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          color: zisk >= 0 ? "#10b981" : "#fb923c",
+                          marginTop: "2px",
+                        }}
+                      >
+                        {zisk >= 0 ? "Zisk" : "Strata"}:{" "}
+                        {formatCurrency(Math.max(0, Math.abs(zisk)))}
+                      </div>
+                    )}
                     {!hideDebts && data.dlhy > 0 && (
                       <div style={{ color: "#ef4444", marginTop: "2px" }}>
-                        Dlhy: {formatCurrency(data.dlhy)}
+                        Dlhy: {formatCurrency(Math.max(0, data.dlhy))}
                       </div>
                     )}
                   </div>
@@ -248,25 +242,28 @@ export function ProjectionChart({
               }}
             />
             <Legend
-              wrapperStyle={{ fontSize: "12px", paddingTop: "10px" }}
+              wrapperStyle={{
+                fontSize: "12px",
+                paddingTop: "12px",
+                paddingLeft: "70px", // YAxis width (60) + left margin (10)
+                paddingRight: "20px", // right margin
+              }}
               verticalAlign="bottom"
             />
 
-            {/* Investičná krivka (modrá - úplne skrytá aj z legendy) */}
+            {/* Majetková krivka (zelená - rast od 0) */}
             <Line
               type="monotone"
-              dataKey="investície"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              name="Investície (rast)"
+              dataKey="majetok"
+              stroke="#10b981"
+              strokeWidth={2.5}
+              name="Majetok (očakávaný)"
               dot={false}
               isAnimationActive={false}
-              hide={true}
-              legendType="none"
             />
 
-            {/* Dlhová krivka (červená) - skryť v BASIC režime */}
-            {!hideDebts && debtInputs.length > 0 && (
+            {/* Dlhová krivka (červená - pokles od sumy dlhu) - skryť v BASIC režime alebo ak nie sú dlhy */}
+            {!hideDebts && (debts || []).length > 0 && (
               <Line
                 type="monotone"
                 dataKey="dlhy"
@@ -277,18 +274,6 @@ export function ProjectionChart({
                 isAnimationActive={false}
               />
             )}
-
-            {/* Očakávaný majetok (zelená) */}
-            <Line
-              type="monotone"
-              dataKey="čistý"
-              stroke="#10b981"
-              strokeWidth={2.5}
-              name="Očakávaný majetok"
-              dot={false}
-              isAnimationActive={false}
-              strokeDasharray="0"
-            />
 
             {/* Cieľ (referenceline) */}
             {goalAssetsEur && goalAssetsEur > 0 && (
@@ -315,9 +300,10 @@ export function ProjectionChart({
                 strokeDasharray="3 3"
                 label={{
                   value: `Prelom (${crossoverCalendarYear})`,
-                  position: "top",
+                  position: "insideTopRight",
                   fill: "#22d3ee",
                   fontSize: 11,
+                  offset: 5,
                 }}
               />
             )}

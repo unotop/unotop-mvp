@@ -26,6 +26,7 @@ interface ProjectionPayload {
     mix: Array<{ key: string; pct: number }>;
     deeplink: string;
   };
+  bonuses?: string[]; // PR-13: Selected bonuses
   recipients: string[];
 }
 
@@ -92,6 +93,25 @@ export default async function handler(
     const mixText = payload.projection.mix
       .map((item) => `${mixLabels[item.key] || item.key}: ${item.pct.toFixed(1)}%`)
       .join("\n");
+
+    // PR-13: Format bonuses for email
+    const formatBonusLabel = (bonusId: string): string => {
+      if (bonusId.startsWith("refi_")) {
+        const days = bonusId.split("_")[1];
+        return `Refinancovanie úverov (${days})`;
+      }
+      const labels: Record<string, string> = {
+        ufo: "UFO rozhovory (2× ročne zdarma)",
+        audit: "Audit portfólia",
+        pdf: "PDF kalkulátor (offline)",
+        ebook: "E-book: Investovanie pre začiatočníkov",
+      };
+      return labels[bonusId] || bonusId;
+    };
+
+    const bonusesText = payload.bonuses && payload.bonuses.length > 0
+      ? payload.bonuses.map(id => `• ${formatBonusLabel(id)}`).join("\n")
+      : "";
 
     // Email HTML template
     const htmlContent = `
@@ -173,6 +193,17 @@ export default async function handler(
     `).join('')}
   </div>
 
+  ${payload.bonuses && payload.bonuses.length > 0 ? `
+  <div class="section" style="background: linear-gradient(to right, rgba(139, 92, 246, 0.1), rgba(217, 70, 239, 0.1)); border-left: 3px solid #8b5cf6;">
+    <h3>🎁 Vybrané bonusy (${payload.bonuses.length})</h3>
+    ${payload.bonuses.map(id => `
+      <div class="mix-item">
+        <span>✓ ${formatBonusLabel(id)}</span>
+      </div>
+    `).join('')}
+  </div>
+  ` : ''}
+
   <div style="text-align: center;">
     <a href="${payload.projection.deeplink}" class="cta">
       🔗 Otvoriť interaktívnu projekciu
@@ -214,6 +245,12 @@ Odhad výnosu p.a.: ${(payload.projection.yieldAnnual * 100).toFixed(1)}%
 ZLOŽENIE PORTFÓLIA
 ------------------
 ${mixText}
+
+${bonusesText ? `
+VYBRANÉ BONUSY (${payload.bonuses?.length})
+------------------
+${bonusesText}
+` : ''}
 
 Interaktívna projekcia: ${payload.projection.deeplink}
 

@@ -3,6 +3,10 @@ import { readV3 } from "./persist/v3";
 import LegacyApp from "./LegacyApp";
 import BasicLayout from "./BasicLayout";
 import WelcomeModal from "./components/WelcomeModal";
+import { PrivacyModal } from "./components/PrivacyModal"; // PR-8: GDPR modal
+import { AdminShortcuts } from "./features/admin/AdminShortcuts"; // PR-12: Global admin shortcuts
+import { AdminConsole } from "./features/admin/AdminConsole"; // PR-12: Admin console
+import { AboutAuthorModal } from "./components/AboutAuthorModal"; // PR-14: O autorovi
 
 const WELCOME_STORAGE_KEY = "unotop:welcome-seen";
 
@@ -36,6 +40,18 @@ export default function RootLayout() {
       return false; // If localStorage fails, don't show modal
     }
   });
+
+  // PR-8: Privacy modal state
+  const [showPrivacy, setShowPrivacy] = React.useState(false);
+
+  // PR-12: Tour blocked flag (GDPR otvorený = tour nespúšťať)
+  const [tourBlocked, setTourBlocked] = React.useState(false);
+
+  // PR-12: Admin console state (riadi AdminShortcuts)
+  const [adminOpen, setAdminOpen] = React.useState(false);
+
+  // PR-14: About author modal state
+  const [aboutOpen, setAboutOpen] = React.useState(false);
 
   // Allow manual reopening of welcome modal
   React.useEffect(() => {
@@ -84,8 +100,54 @@ export default function RootLayout() {
 
   return (
     <>
-      {showWelcome && <WelcomeModal onClose={handleCloseWelcome} />}
-      {modeUi === "BASIC" ? <BasicLayout /> : <LegacyApp />}
+      {/* PR-12: Global admin shortcuts listener */}
+      <AdminShortcuts
+        onOpenAdmin={() => setAdminOpen(true)}
+        isPrivacyOpen={showPrivacy}
+      />
+
+      {showWelcome && (
+        <WelcomeModal
+          onClose={handleCloseWelcome}
+          onOpenPrivacy={() => {
+            // PR-12 FIX: GDPR nad Introm, tour nespúšťať
+            setShowPrivacy(true);
+            setTourBlocked(true);
+            // Nastav flag pre BasicLayout aby vedel že tour má preskočiť
+            sessionStorage.setItem("unotop_skipTourAfterIntro", "true");
+            // NEUZATVÁRAME showWelcome - Intro zostáva v pozadí
+          }}
+        />
+      )}
+      {/* PR-12 FIX: PrivacyModal overlay nad všetkým (z-[10000]) */}
+      <PrivacyModal
+        isOpen={showPrivacy}
+        onClose={() => {
+          setShowPrivacy(false);
+          setTourBlocked(false); // Odblokuj tour
+          // Vymaž skip flag - užívateľ sa môže vrátiť k Intro a spustiť tour
+          sessionStorage.removeItem("unotop_skipTourAfterIntro");
+          // Intro ostáva otvorené (showWelcome = true)
+        }}
+      />
+
+      {/* PR-12: Admin console (global, riadi AdminShortcuts) */}
+      <AdminConsole visible={adminOpen} onClose={() => setAdminOpen(false)} />
+
+      {/* PR-14: About Author modal */}
+      <AboutAuthorModal
+        isOpen={aboutOpen}
+        onClose={() => setAboutOpen(false)}
+      />
+
+      {modeUi === "BASIC" ? (
+        <BasicLayout
+          onAboutClick={() => setAboutOpen(true)}
+          onAdminOpen={() => setAdminOpen(true)} // PR-16: DEV admin button
+        />
+      ) : (
+        <LegacyApp onAboutClick={() => setAboutOpen(true)} />
+      )}
     </>
   );
 }

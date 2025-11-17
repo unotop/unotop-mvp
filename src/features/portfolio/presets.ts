@@ -455,3 +455,17 @@ export function validatePresetRisk(
 
 export type { ProfileForAdjustments, AdjustmentWarning, AdjustmentResult } from "./mixAdjustments";
 export { getAdjustedPreset, getAdjustedMix } from "./mixAdjustments";
+
+/**
+ * PR-9 Task A: Dynamický default mix podľa riskPref
+ * 
+ * Vracia preset mix pre daný profil namiesto hard-coded vyvážený mix.
+ * Používa sa ako fallback keď používateľ ešte nevybral portfólio.
+ * 
+ * @param riskPref - Rizikový profil (konzervativny|vyvazeny|rastovy)
+ * @returns MixItem[] - Preset mix pre daný profil
+ */
+export function getDynamicDefaultMix(riskPref: RiskPref): MixItem[] {
+  const preset = PORTFOLIO_PRESETS.find((p) => p.id === riskPref);
+  return preset ? [...preset.mix] : PORTFOLIO_PRESETS[1].mix; // fallback na vyvážený
+}

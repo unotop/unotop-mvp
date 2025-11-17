@@ -235,7 +235,7 @@ dist/assets/index-DyuQDWjP.js   230.89 kB │ gzip: 69.70 kB
 - Dual-line chart (rast investícií + klesanie dlhu)
 - Crossover marker ("Rok vyplatenia: 2032")
 
-### Phase 2D: Share modal upgrade (CTA pre finančného poradcu)
+### Phase 2D: Share modal upgrade (CTA pre finančného makléra)
 
 - "Odoslať plán poradcovi" button
 - Email template s deeplinkom

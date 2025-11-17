@@ -2,7 +2,8 @@
 import { emitMixChangeEvent } from "./mixEvents";
 
 export type Debt = { 
-  id: string; 
+  id: string;
+  type?: "mortgage" | "consumer"; // PR-13: Typ dlhu pre validácie
   name: string; 
   principal: number; 
   ratePa: number; 
@@ -12,6 +13,24 @@ export type Debt = {
   extraMonthly?: number; // mimoriadna splátka (mesačná, ide na istinu)
 };
 export type MixItem = { key: string; pct: number };
+
+// PR-13: Contact info pre lead capture (bonusy)
+export type ContactInfo = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  bonuses?: string[]; // UFO, refi_7d, audit, pdf, ebook
+};
+
+// PR-12: Mix origin tracking pre lazy reapply
+export type MixOrigin = 'presetAdjusted' | 'manual';
+export type ProfileSnapshot = {
+  lumpSum: number;
+  monthly: number;
+  horizon: number;
+  ts: number; // timestamp
+};
+
 export type Profile = { 
   monthlyIncome?: number; 
   reserveEur?: number; 
@@ -30,13 +49,20 @@ export type Profile = {
   emergencyMonths?: number;
   hideTour?: boolean; // Nezobrazovať welcome modal
   selected?: 'konzervativny' | 'vyvazeny' | 'rastovy'; // PR-7: sticky profil po výbere
+  // PR-12: Beta auto-optimize
+  autoOptimizeMix?: boolean; // default false
 };
 
 export type V3 = Partial<{
   debts: Debt[];
   mix: MixItem[];
   profile: Profile;
+  contact: ContactInfo; // PR-13: Contact info + bonuses
   mixLocked?: boolean; // PR-4: Po výbere profilu/manuálnom ťahu → žiadne auto-prepisy
+  // PR-12: Mix origin tracking
+  mixOrigin?: MixOrigin;
+  presetId?: 'konzervativny' | 'vyvazeny' | 'rastovy';
+  profileSnapshot?: ProfileSnapshot;
   // back-compat top-level mirrors (tests may read these directly)
   monthlyIncome: number;
   monthly: number; // mirror for monthlyVklad

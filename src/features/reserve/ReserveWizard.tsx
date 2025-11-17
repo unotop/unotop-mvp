@@ -24,7 +24,7 @@ export function ReserveWizard({
       aria-modal="true"
       aria-label="Mini-wizard odporúčania"
       data-testid={TEST_IDS.WIZARD_DIALOG}
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000]"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1100]"
     >
       <div className="bg-slate-900 rounded-xl p-5 w-[320px] space-y-4 ring-1 ring-white/10">
         <h2 className="text-sm font-semibold">Mini-wizard odporúčania</h2>

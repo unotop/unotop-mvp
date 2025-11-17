@@ -17,6 +17,18 @@ import { WarningChips } from "../ui/warnings/WarningChips";
 import { MixLockChip } from "./MixLockChip"; // PR-4
 import { lockMix, isMixLocked } from "./mix-lock"; // PR-4 + PR-6 Task B
 
+// PR-12: Helper pre zápis mixu + nastavenie mixOrigin='manual' (PRO ochrana)
+function writeMixManual(mix: MixItem[]) {
+  const v3 = readV3();
+  writeV3({
+    mix: mix.map((m) => ({ key: m.key, pct: m.pct })),
+    // PR-12: Manuálna zmena → mixOrigin='manual', chip nikdy nezobrazovať
+    mixOrigin: "manual",
+    presetId: undefined, // Clear preset tracking
+    profileSnapshot: undefined, // Clear snapshot
+  });
+}
+
 type AssetKey = MixItem["key"];
 interface AssetDef {
   key: AssetKey;
@@ -108,8 +120,8 @@ export const MixPanel: React.FC<{
 
   // handlers commit update then persist once per action
   const commitAsset = (key: AssetKey, pct: number) => {
-    // Zaokrúhli na celé čísla (odstráni desatinné miesta)
-    const rounded = Math.round(pct);
+    // Zaokrúhli na 2 desatinné miesta pre presnosť
+    const rounded = +pct.toFixed(2);
     setMix((prev) =>
       prev.map((i) => (i.key === key ? { ...i, pct: rounded } : i))
     );
@@ -120,7 +132,7 @@ export const MixPanel: React.FC<{
 
   // Persist after any slider/text commit (debounced by input hook already)
   React.useEffect(() => {
-    writeV3({ mix: mix.map((m) => ({ key: m.key, pct: m.pct })) });
+    writeMixManual(mix);
   }, [mix]);
 
   // CRITICAL: Polling sync from localStorage (same pattern as MetricsSection)
@@ -251,7 +263,7 @@ export const MixPanel: React.FC<{
   const applyGold12 = () => {
     const next = setGoldTarget(mix, 12);
     setMix(next);
-    writeV3({ mix: next });
+    writeMixManual(next);
     // focus slider
     setTimeout(() => {
       const el = document.querySelector<HTMLInputElement>(
@@ -263,15 +275,10 @@ export const MixPanel: React.FC<{
     }, 0);
   };
   const normalizeAll = () => {
-    // PR-6 Task B: Blokuj ak je mix locked
-    if (isMixLocked()) {
-      setToast("⚠️ Mix je zamknutý");
-      setTimeout(() => setToast(null), 1400);
-      return;
-    }
+    // Normalizácia je vždy povolená (manuálna akcia)
     const n = normalize(mix);
     setMix(n);
-    writeV3({ mix: n });
+    writeMixManual(n);
   };
   const optimizeRisk = () => {
     // PR-6 Task B: Blokuj ak je mix locked
@@ -282,7 +289,7 @@ export const MixPanel: React.FC<{
     }
     const constrained = applyRiskConstrainedMix(mix, cap);
     setMix(constrained);
-    writeV3({ mix: constrained });
+    writeMixManual(constrained);
   };
   const applyRecommended = () => {
     // PR-6 Task B: Blokuj ak je mix locked
@@ -297,7 +304,7 @@ export const MixPanel: React.FC<{
     next = normalize(next);
     if (JSON.stringify(next) !== JSON.stringify(mix)) {
       setMix(next);
-      writeV3({ mix: next });
+      writeMixManual(next);
       setToast("Odporúčaný mix aplikovaný");
     } else {
       setToast("Žiadne úpravy");
@@ -316,7 +323,7 @@ export const MixPanel: React.FC<{
       setToast("Žiadne úpravy");
     } else {
       setMix(constrained);
-      writeV3({ mix: constrained });
+      writeMixManual(constrained);
       setToast("Mix upravený");
     }
     setTimeout(() => setToast(null), 1400);
@@ -572,11 +579,11 @@ export const MixPanel: React.FC<{
             aria-label="Súčet mixu"
           >
             <span>Súčet</span>
-            <span className="tabular-nums">{Math.round(sum)}%</span>
+            <span className="tabular-nums">{sum.toFixed(0)}%</span>
           </div>
           <button
             onClick={normalizeAll}
-            disabled={Math.round(sum) === 100}
+            disabled={Math.abs(sum - 100) < 0.01}
             className="px-3 py-1.5 rounded bg-emerald-600/20 ring-1 ring-emerald-500/40 text-xs font-medium disabled:opacity-50 hover:bg-emerald-600/30 hover:scale-105 active:scale-95 transition-all duration-200 disabled:hover:scale-100"
             title="Normalizuj mix na presne 100 %"
           >
@@ -650,7 +657,7 @@ export const MixPanel: React.FC<{
                       );
                       if (valid) {
                         setMix(parsed as MixItem[]);
-                        writeV3({ mix: parsed });
+                        writeMixManual(parsed);
                         setToast("✓ Mix importovaný");
                         setTimeout(() => setToast(null), 2000);
                       } else {
@@ -684,7 +691,7 @@ export const MixPanel: React.FC<{
                     { key: "real", pct: 5 },
                   ];
                   setMix(seed);
-                  writeV3({ mix: seed });
+                  writeMixManual(seed);
                   setToast("✓ Mix resetovaný");
                   setTimeout(() => setToast(null), 2000);
                 }}
@@ -740,7 +747,7 @@ export const MixPanel: React.FC<{
                 });
                 const normalized = normalize(adjusted);
                 setMix(normalized);
-                writeV3({ mix: normalized as any });
+                writeMixManual(normalized);
                 setToast("Dyn+Krypto dorovnané na 22%");
                 setTimeout(() => setToast(null), 2000);
               }}
