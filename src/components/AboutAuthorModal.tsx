@@ -112,7 +112,7 @@ export const AboutAuthorModal: React.FC<AboutAuthorModalProps> = ({
                 </div>
                 <div className="flex items-center gap-2 text-slate-300">
                   <span className="text-slate-500">📞</span>
-                  <span>+421 905 123 456</span>
+                  <span>+421 915 637 495</span>
                 </div>
               </div>
 
