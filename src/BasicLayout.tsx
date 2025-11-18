@@ -4,6 +4,7 @@ import Toolbar from "./components/Toolbar";
 import Sidebar from "./components/Sidebar";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { PrivacyModal } from "./components/PrivacyModal"; // PR-7: GDPR
+import { ShareSuccessModal } from "./features/share/ShareSuccessModal"; // PR-21: Thank-you modal
 import { Footer } from "./components/layout/Footer"; // PR-7: Footer s GDPR linkom
 import { StickyBottomBar } from "./components/StickyBottomBar"; // PR-7: Bottom bar s CTA
 // PR-12: AdminConsole moved to RootLayout (global)
@@ -43,6 +44,7 @@ import {
 } from "./utils/validation-helpers";
 import {
   sendProjectionEmail,
+  sendClientConfirmationEmail,
   sendViaMailto,
   type ProjectionData,
 } from "./services/email.service";
@@ -150,6 +152,7 @@ export default function BasicLayout({
   const [open0, setOpen0] = React.useState(true); // Settings panel
   const [open3, setOpen3] = React.useState(true); // Portfolio panel
   const [shareOpen, setShareOpen] = React.useState(false);
+  const [shareSuccessOpen, setShareSuccessOpen] = React.useState(false); // PR-21: Thank-you modal
   const [bonusesExpanded, setBonusesExpanded] = React.useState(false); // PR-17: Collapsible bonuses
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
@@ -864,37 +867,69 @@ export default function BasicLayout({
         await sendProjectionEmail(projectionData);
         console.log("✅ Email sent via EmailJS");
 
+        // PR-21: Send confirmation email to client (non-blocking)
+        try {
+          await sendClientConfirmationEmail(
+            projectionData.user.email,
+            projectionData.user.firstName
+          );
+          console.log("✅ Client confirmation email sent");
+        } catch (confirmError) {
+          console.warn("⚠️ Client confirmation email failed (non-critical):", confirmError);
+          // Don't block flow - internal email is priority
+        }
+
         // Record successful submission
         recordSubmission();
 
         // Store confirmation code
         setConfirmationCode(referenceCode);
+
+        // PR-21: Close share modal, open thank-you modal
+        setSubmitStatus("success");
+        setTimeout(() => {
+          setShareOpen(false);
+          setShareSuccessOpen(true); // Show thank-you modal
+          setFormData({
+            firstName: "",
+            lastName: "",
+            phone: "",
+            email: "",
+            gdprConsent: false,
+            honeypot: "",
+            captchaAnswer: "",
+            selectedBonuses: [],
+            refiDeadline: "7",
+          });
+          setSubmitStatus("idle");
+        }, 500);
       } catch (emailError) {
         console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
         sendViaMailto(projectionData);
 
         // Still record submission (mailto was used)
         recordSubmission();
-      }
 
-      setSubmitStatus("success");
-      setTimeout(() => {
-        setShareOpen(false);
-        setFormData({
-          firstName: "",
-          lastName: "",
-          phone: "",
-          email: "",
-          gdprConsent: false,
-          honeypot: "",
-          captchaAnswer: "", // PR-13
-          selectedBonuses: [], // PR-13 HOTFIX
-          refiDeadline: "7", // PR-13 HOTFIX
-        });
-        setSubmitStatus("idle");
-        setValidationErrors({});
-        shareBtnRef.current?.focus();
-      }, 2000);
+        // Close modal and reset form (no thank-you modal for mailto fallback)
+        setSubmitStatus("success");
+        setTimeout(() => {
+          setShareOpen(false);
+          setFormData({
+            firstName: "",
+            lastName: "",
+            phone: "",
+            email: "",
+            gdprConsent: false,
+            honeypot: "",
+            captchaAnswer: "",
+            selectedBonuses: [],
+            refiDeadline: "7",
+          });
+          setSubmitStatus("idle");
+          setValidationErrors({});
+          shareBtnRef.current?.focus();
+        }, 2000);
+      }
     } catch (error) {
       console.error("Error sending projection:", error);
       setSubmitStatus("error");
@@ -1660,6 +1695,12 @@ export default function BasicLayout({
         onClose={() => setPrivacyOpen(false)}
       />
 
+      {/* PR-21: Share Success Modal (Thank-you window) */}
+      <ShareSuccessModal
+        visible={shareSuccessOpen}
+        onClose={() => setShareSuccessOpen(false)}
+      />
+
       {/* ContactModal REMOVED - ShareModal je správny formulár s meno/priezvisko/email/telefón */}
 
       {/* PR-7: StickyBottomBar */}
@@ -1679,7 +1720,7 @@ export default function BasicLayout({
       {/* PR-12: onAdminOpen už nie je potrebné - AdminShortcuts to riadi */}
       <Footer
         onPrivacyClick={() => setPrivacyOpen(true)}
-        onContactClick={() => setShareOpen(true)}
+        onContactClick={onAboutClick}
       />
 
       {/* PR-12: AdminConsole moved to RootLayout (global) */}

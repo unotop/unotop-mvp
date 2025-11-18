@@ -20,6 +20,7 @@ import emailjs from '@emailjs/browser';
 // PR-13: Load from environment variables (NOT hardcoded)
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+const EMAILJS_CONFIRMATION_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE_ID || '';
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
 
 // Validate credentials on load
@@ -131,6 +132,43 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
   } catch (error) {
     console.error('[EmailService] Failed to send projection:', error);
     throw error;
+  }
+}
+
+/**
+ * PR-21: Send confirmation email to client
+ * Simple text confirmation that projection was received
+ */
+export async function sendClientConfirmationEmail(
+  clientEmail: string,
+  firstName: string
+): Promise<void> {
+  if (!clientEmail || !EMAILJS_CONFIRMATION_TEMPLATE_ID) {
+    console.warn('[EmailService] Client confirmation email skipped - missing email or template ID');
+    return;
+  }
+
+  const templateParams = {
+    client_email: clientEmail,
+    first_name: firstName,
+  };
+
+  try {
+    const response = await emailjs.send(
+      EMAILJS_SERVICE_ID,
+      EMAILJS_CONFIRMATION_TEMPLATE_ID,
+      templateParams,
+      EMAILJS_PUBLIC_KEY
+    );
+
+    if (response.status !== 200) {
+      throw new Error(`EmailJS confirmation failed with status ${response.status}`);
+    }
+
+    console.log('[EmailService] Client confirmation sent successfully', response);
+  } catch (error) {
+    console.error('[EmailService] Failed to send client confirmation:', error);
+    // Don't throw - client confirmation is not critical
   }
 }
 
