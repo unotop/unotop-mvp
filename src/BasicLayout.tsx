@@ -279,7 +279,7 @@ export default function BasicLayout({
   const [formData, setFormData] = React.useState(() => {
     const v3 = readV3();
     const contact = v3.contact || {};
-    
+
     // Split name into firstName + lastName
     const nameParts = (contact.name || "").trim().split(" ");
     const firstName = nameParts[0] || "";
@@ -1600,7 +1600,7 @@ export default function BasicLayout({
                   onClick={() => {
                     // Clear contact from v3
                     writeV3({ contact: undefined });
-                    
+
                     // Reset form to empty
                     setFormData({
                       firstName: "",
@@ -1712,7 +1712,7 @@ export default function BasicLayout({
                 className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
                 onClick={() => {
                   setShareOpen(false);
-                  
+
                   // PR-22: Reset to saved contact data (prefill on next open)
                   const v3 = readV3();
                   const contact = v3.contact || {};
