@@ -3,7 +3,7 @@
  *
  * Modal načítava privacy-policy.sk.md a zobrazuje obsah.
  * Spúšťa sa z Intro (OnboardingTour) aj z Footer.
- * 
+ *
  * PR-23: DOMPurify sanitization pre XSS prevention
  */
 

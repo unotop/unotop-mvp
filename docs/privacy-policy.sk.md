@@ -54,6 +54,7 @@ Výlučne od vás pri vypĺňaní formulára.
 Na ochranu formulárov pred automatizovanými útokmi (spam, boty) používame **Google reCAPTCHA v3**.
 
 **Čo to znamená:**
+
 - reCAPTCHA analyzuje vaše správanie na stránke (bez vyrušovania) a posiela anonymné údaje spoločnosti Google.
 - Spracúvané údaje: IP adresa, cookies, interakcie so stránkou, technické údaje prehliadača.
 - Google tieto údaje využíva na vyhodnotenie, či ste človek alebo robot.
@@ -61,6 +62,7 @@ Na ochranu formulárov pred automatizovanými útokmi (spam, boty) používame *
 **Právny základ:** čl. 6 ods. 1 písm. f) GDPR (oprávnený záujem na prevencii zneužitia služby).
 
 **Ďalšie informácie:**
+
 - [Google Privacy Policy](https://policies.google.com/privacy)
 - [Google Terms of Service](https://policies.google.com/terms)
 

@@ -19,6 +19,7 @@ UNOTOP MVP je finančná kalkulačka s dôrazom na ochranu osobných údajov a p
 **Čo:** Google reCAPTCHA v3 – invisible AI ochrana pred botmi  
 **Kde:** Formulár "Odoslať projekciu agentovi"  
 **Ako funguje:**
+
 - Analyzuje správanie používateľa na pozadí (bez vyrušovania)
 - Generuje token pred každým odoslaním formulára
 - Server-side verifikácia: SKIP (EmailJS rollback – plánovaná migrácia na Resend.com)
@@ -28,14 +29,16 @@ UNOTOP MVP je finančná kalkulačka s dôrazom na ochranu osobných údajov a p
 **Badge:** Skrytý (allowed ak je "Protected by reCAPTCHA" text v privacy policy)
 
 **Súbory:**
+
 - `src/hooks/useReCaptcha.ts` – React hook pre token generation
 - `index.html` – reCAPTCHA script tag
 - `src/BasicLayout.tsx` – integrácia pred submit
 
 **Príklad:**
+
 ```typescript
 const { execute } = useReCaptcha();
-const token = await execute('submit_projection');
+const token = await execute("submit_projection");
 // Token sa posiela v ProjectionData.metadata.recaptchaToken
 ```
 
@@ -46,11 +49,13 @@ const token = await execute('submit_projection');
 **Čo:** Neviditeľné pole v formulári  
 **Kde:** ShareModal (formulár na odoslanie projekcie)  
 **Ako funguje:**
+
 - Pole je skryté CSS (`position: absolute; left: -9999px`)
 - Ľudskí používatelia ho nevidia a nevypĺňajú
 - Boty ho automaticky vyplnia → submission je blokovaný
 
 **Kód:**
+
 ```tsx
 // Honeypot field (hidden from humans, visible to bots)
 <input
@@ -60,9 +65,9 @@ const token = await execute('submit_projection');
   onChange={(e) => setFormData({ ...formData, honeypot: e.target.value })}
   tabIndex={-1}
   autoComplete="off"
-  style={{ position: 'absolute', left: '-9999px' }}
+  style={{ position: "absolute", left: "-9999px" }}
   aria-hidden="true"
-/>
+/>;
 
 // Validation
 if (formData.honeypot !== "") {
@@ -78,16 +83,18 @@ if (formData.honeypot !== "") {
 **Čo:** Obmedzenie počtu odoslaní formulára z jednej IP/browsera  
 **Kde:** `src/utils/rate-limiter.ts`  
 **Limity:**
+
 - **3 submissions** za hodinu
 - In-memory tracking (localStorage)
 - Reset: každú hodinu (rolling window)
 
 **API:**
+
 ```typescript
-import { canSubmit, recordSubmission } from './utils/rate-limiter';
+import { canSubmit, recordSubmission } from "./utils/rate-limiter";
 
 if (!canSubmit()) {
-  alert('Presiahli ste limit 3 odoslaní za hodinu. Skúste neskôr.');
+  alert("Presiahli ste limit 3 odoslaní za hodinu. Skúste neskôr.");
   return;
 }
 
@@ -104,12 +111,14 @@ recordSubmission();
 **Čo:** Automatická validácia a korekcia dát z localStorage  
 **Kde:** `src/persist/v3.ts` – funkcia `validateV3Data()`  
 **Limity:**
+
 - `lumpSumEur` ≤ 10M (clamp to 10M)
 - `monthly` ≤ 100k (clamp to 100k)
 - `horizonYears`: 1–50 (clamp to range)
 - `mix sum` ≈ 100% (normalize alebo reset na default)
 
 **Správanie:**
+
 ```typescript
 // Tampered localStorage (útočník zmenili hodnotu):
 { lumpSumEur: 999999999, monthly: 500000, horizonYears: 150 }
@@ -136,20 +145,23 @@ recordSubmission();
 **Použité nástroje:** DOMPurify v3.2.2
 
 **Riziko (pred opravou):**
+
 ```tsx
 // VULNERABLE CODE:
 <li dangerouslySetInnerHTML={{ __html: content }} />
 ```
 
 **Riešenie:**
+
 ```tsx
-import DOMPurify from 'dompurify';
+import DOMPurify from "dompurify";
 
 const sanitized = DOMPurify.sanitize(content);
-<li dangerouslySetInnerHTML={{ __html: sanitized }} />
+<li dangerouslySetInnerHTML={{ __html: sanitized }} />;
 ```
 
 **Čo DOMPurify blokuje:**
+
 - `<script>` tagy
 - `onclick`, `onerror` handlery
 - `javascript:` URLs
@@ -157,6 +169,7 @@ const sanitized = DOMPurify.sanitize(content);
 - Všetky potenciálne XSS vektory
 
 **Testovanie:**
+
 ```bash
 # Pridaj do privacy-policy.sk.md:
 <script>alert('XSS')</script>
@@ -171,6 +184,7 @@ const sanitized = DOMPurify.sanitize(content);
 **Čo:** Whitelist povolených origins pre email odosielanie  
 **Kde:** Netlify Function `send-projection.ts` (INACTIVE – EmailJS rollback)  
 **Povolené domény:**
+
 - `http://localhost:*` (DEV)
 - `https://unotop.netlify.app` (Netlify preview)
 - `https://unotop.sk` (produkcia)
@@ -186,6 +200,7 @@ const sanitized = DOMPurify.sanitize(content);
 **Certifikát:** Let's Encrypt (auto-renewal)
 
 **Prínos:**
+
 - Ochrana pred Man-in-the-Middle útokmi
 - Dátová integrita
 - Browser security features (autocomplete, reCAPTCHA fungujú len cez HTTPS)
@@ -196,6 +211,7 @@ const sanitized = DOMPurify.sanitize(content);
 
 **Čo:** V localStorage neuchovávame citlivé údaje  
 **Uložené dáta:**
+
 - ✅ Investičné parametre (lumpSum, monthly, horizon)
 - ✅ Portfolio mix (percentá)
 - ✅ Kontaktné údaje (meno, email) – len pre prefill, GDPR súhlas
@@ -212,6 +228,7 @@ const sanitized = DOMPurify.sanitize(content);
 **Problém:** EmailJS credentials sú exponované v client-side kóde  
 **Riziko:** Útočník môže získať public key a odosielať spam/abuse emails  
 **Mitigation:**
+
 - Rate limiting (3 req/hour)
 - reCAPTCHA v3
 - Honeypot
@@ -250,16 +267,19 @@ const sanitized = DOMPurify.sanitize(content);
 Ak objavíte bezpečnostnú zraniteľnosť, prosím **NEOTVÁRAJTE** verejný GitHub issue.
 
 **Kontakt pre bezpečnostné hlásenia:**
+
 - **Email:** info.unotop@gmail.com
 - **Subject:** `[SECURITY] Vulnerability Report`
 
 **Prosíme uveďte:**
+
 1. Popis zraniteľnosti
 2. Kroky na reprodukciu
 3. Potenciálny dopad
 4. Ak je možné, návrh riešenia
 
 **Reakcie:**
+
 - **Critical:** < 24 hodín
 - **High:** < 48 hodín
 - **Medium/Low:** < 7 dní
@@ -287,11 +307,13 @@ Pred nasadením novej verzie overte:
 ### 1. **Nikdy nevkladať tajomstvá do kódu**
 
 ❌ **ZLÉ:**
+
 ```typescript
-const API_KEY = 'sk_live_123456789';
+const API_KEY = "sk_live_123456789";
 ```
 
 ✅ **DOBRÉ:**
+
 ```typescript
 const API_KEY = import.meta.env.VITE_API_KEY; // .env.local
 ```
@@ -299,14 +321,16 @@ const API_KEY = import.meta.env.VITE_API_KEY; // .env.local
 ### 2. **Vždy sanitizovať user input**
 
 ❌ **ZLÉ:**
+
 ```tsx
 <div dangerouslySetInnerHTML={{ __html: userInput }} />
 ```
 
 ✅ **DOBRÉ:**
+
 ```tsx
-import DOMPurify from 'dompurify';
-<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />
+import DOMPurify from "dompurify";
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(userInput) }} />;
 ```
 
 ### 3. **Validovať všetky vstupy (client + server)**
@@ -314,13 +338,13 @@ import DOMPurify from 'dompurify';
 ```typescript
 // Client-side (UX)
 if (lumpSum > 10_000_000) {
-  alert('Maximálna jednorazová investícia je 10M €');
+  alert("Maximálna jednorazová investícia je 10M €");
   return;
 }
 
 // Server-side (security)
 if (body.lumpSum > 10_000_000) {
-  return new Response('Invalid input', { status: 400 });
+  return new Response("Invalid input", { status: 400 });
 }
 ```
 
@@ -349,16 +373,19 @@ npm update
 ## 🔮 Budúce vylepšenia (Roadmap)
 
 ### Priorita 1 (Q1 2026)
+
 - [ ] Migrácia na Resend.com/SendGrid (server-side email)
 - [ ] Server-side reCAPTCHA verification
 - [ ] Server-side rate limiting (Netlify Functions + Upstash Redis)
 
 ### Priorita 2 (Q2 2026)
+
 - [ ] Content Security Policy (CSP) headers
 - [ ] Subresource Integrity (SRI) pre external scripts
 - [ ] Security headers audit (HSTS, X-Frame-Options, atď.)
 
 ### Priorita 3 (Q3 2026)
+
 - [ ] Penetration testing (externý audit)
 - [ ] Bug bounty program
 - [ ] WAF (Web Application Firewall) – Cloudflare/Netlify

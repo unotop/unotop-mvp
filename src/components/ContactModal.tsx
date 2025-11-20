@@ -483,7 +483,7 @@ export function ContactModal({
                   onOpenPrivacy?.();
                 }}
                 className="text-blue-400 hover:text-blue-300 underline cursor-pointer"
-                >
+              >
                 Zásady ochrany osobných údajov
               </button>
             </label>
