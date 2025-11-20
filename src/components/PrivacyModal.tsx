@@ -3,9 +3,12 @@
  *
  * Modal načítava privacy-policy.sk.md a zobrazuje obsah.
  * Spúšťa sa z Intro (OnboardingTour) aj z Footer.
+ * 
+ * PR-23: DOMPurify sanitization pre XSS prevention
  */
 
 import React from "react";
+import DOMPurify from "dompurify";
 import { TEST_IDS } from "../testIds";
 
 interface PrivacyModalProps {
@@ -84,22 +87,26 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
         let content = line.slice(2);
         // Convert markdown bold to HTML if present
         content = content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        // PR-23: Sanitize HTML to prevent XSS
+        const sanitized = DOMPurify.sanitize(content);
         return (
           <li
             key={i}
             className="text-sm text-slate-300 ml-4 mb-1"
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
           />
         );
       }
       // Bold text or HTML tags (support both ** and <strong>)
       if (line.includes("**") || line.includes("<strong>")) {
         let html = line.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        // PR-23: Sanitize HTML to prevent XSS
+        const sanitized = DOMPurify.sanitize(html);
         return (
           <p
             key={i}
             className="text-sm text-slate-300 mb-2"
-            dangerouslySetInnerHTML={{ __html: html }}
+            dangerouslySetInnerHTML={{ __html: sanitized }}
           />
         );
       }
