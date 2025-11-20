@@ -275,17 +275,27 @@ export default function BasicLayout({
     setCurrentTourStep(1);
   };
 
-  // Form state for share modal
-  const [formData, setFormData] = React.useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    gdprConsent: false,
-    honeypot: "", // Bot trap - must stay empty
-    captchaAnswer: "", // PR-13: Simple CAPTCHA "1+3=?"
-    selectedBonuses: [] as string[], // PR-13 HOTFIX: Bonusy vo formulári
-    refiDeadline: "7", // PR-13 HOTFIX: Default 7 dní pre refi
+  // Form state for share modal - PR-22: Prefill from v3.contact
+  const [formData, setFormData] = React.useState(() => {
+    const v3 = readV3();
+    const contact = v3.contact || {};
+    
+    // Split name into firstName + lastName
+    const nameParts = (contact.name || "").trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    return {
+      firstName,
+      lastName,
+      phone: contact.phone || "",
+      email: contact.email || "",
+      gdprConsent: false, // Never prefill consent
+      honeypot: "",
+      captchaAnswer: "",
+      selectedBonuses: (contact.bonuses || []) as string[],
+      refiDeadline: "7",
+    };
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitStatus, setSubmitStatus] = React.useState<
@@ -894,16 +904,28 @@ export default function BasicLayout({
         setTimeout(() => {
           setShareOpen(false);
           setShareSuccessOpen(true); // Show thank-you modal
+
+          // PR-22: Save contact info to v3 for prefill (don't clear)
+          writeV3({
+            contact: {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              phone: formData.phone,
+              bonuses: formData.selectedBonuses,
+            },
+          });
+
+          // Reset form but keep contact data for prefill
           setFormData({
-            firstName: "",
-            lastName: "",
-            phone: "",
-            email: "",
-            gdprConsent: false,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+            email: formData.email,
+            gdprConsent: false, // Always reset consent (GDPR)
             honeypot: "",
             captchaAnswer: "",
-            selectedBonuses: [],
-            refiDeadline: "7",
+            selectedBonuses: formData.selectedBonuses,
+            refiDeadline: formData.refiDeadline,
           });
           setSubmitStatus("idle");
         }, 500);
@@ -1570,6 +1592,43 @@ export default function BasicLayout({
               </label>
             </div>
 
+            {/* PR-22: Clear saved contact data */}
+            {(formData.firstName || formData.email || formData.phone) && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Clear contact from v3
+                    writeV3({ contact: undefined });
+                    
+                    // Reset form to empty
+                    setFormData({
+                      firstName: "",
+                      lastName: "",
+                      phone: "",
+                      email: "",
+                      gdprConsent: false,
+                      honeypot: "",
+                      captchaAnswer: "",
+                      selectedBonuses: [],
+                      refiDeadline: "7",
+                    });
+
+                    // Show toast
+                    WarningCenter.push({
+                      type: "info",
+                      message: "🗑️ Uložené údaje boli vymazané",
+                      scope: "global",
+                      dedupeKey: "contact-cleared",
+                    });
+                  }}
+                  className="text-xs text-slate-500 hover:text-slate-400 underline transition-colors"
+                >
+                  Vymazať uložené údaje
+                </button>
+              </div>
+            )}
+
             {/* Status messages */}
             {submitStatus === "success" && (
               <div className="p-3 rounded-lg bg-emerald-900/30 ring-1 ring-emerald-500/30 text-sm text-emerald-300 space-y-2">
@@ -1653,16 +1712,24 @@ export default function BasicLayout({
                 className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
                 onClick={() => {
                   setShareOpen(false);
+                  
+                  // PR-22: Reset to saved contact data (prefill on next open)
+                  const v3 = readV3();
+                  const contact = v3.contact || {};
+                  const nameParts = (contact.name || "").trim().split(" ");
+                  const firstName = nameParts[0] || "";
+                  const lastName = nameParts.slice(1).join(" ") || "";
+
                   setFormData({
-                    firstName: "",
-                    lastName: "",
-                    phone: "",
-                    email: "",
+                    firstName,
+                    lastName,
+                    phone: contact.phone || "",
+                    email: contact.email || "",
                     gdprConsent: false,
                     honeypot: "",
-                    captchaAnswer: "", // PR-13
-                    selectedBonuses: [], // PR-13 HOTFIX
-                    refiDeadline: "7", // PR-13 HOTFIX
+                    captchaAnswer: "",
+                    selectedBonuses: (contact.bonuses || []) as string[],
+                    refiDeadline: "7",
                   });
                   setSubmitStatus("idle");
                   setConfirmationCode("");
