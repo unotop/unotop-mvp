@@ -1574,7 +1574,7 @@ export default function BasicLayout({
                     onClick={() => setPrivacyOpen(true)}
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    Zásady ochrany súkromia
+                    Zásady ochrany osobných údajov
                   </button>
                 </span>
               </label>

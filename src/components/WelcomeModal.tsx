@@ -37,7 +37,7 @@ export default function WelcomeModal({
   };
 
   // PR-12 Fix: GDPR link v Intro NEUZATVÁRA Intro (zostáva v pozadí)
-  // - Keď používateľ klikne "Zásady ochrany súkromia" v Intro
+  // - Keď používateľ klikne "Zásady ochrany osobných údajov" v Intro
   // - GDPR modal sa otvorí PRED intro (vyšší z-index)
   // - Po zatvorení GDPR → Intro ostáva viditeľný (neštartuje tour)
   // - Tour sa nespúšťa kým je GDPR otvorený (tourBlocked flag v RootLayout)
@@ -100,7 +100,7 @@ export default function WelcomeModal({
                 onClick={handleGdprClick}
                 className="text-xs text-blue-400 hover:text-blue-300 underline cursor-pointer"
               >
-                Zásady ochrany súkromia
+                Zásady ochrany osobných údajov
               </button>
             </div>
           </div>

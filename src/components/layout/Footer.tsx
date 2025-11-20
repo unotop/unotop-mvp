@@ -58,7 +58,7 @@ export const Footer: React.FC<FooterProps> = ({
             data-testid={TEST_IDS.FOOTER_PRIVACY}
             className="hover:text-slate-200 underline transition-colors"
           >
-            Zásady ochrany súkromia
+            Zásady ochrany osobných údajov
           </button>
           {onContactClick && (
             <>

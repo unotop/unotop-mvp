@@ -1,5 +1,5 @@
 /**
- * PR-7: PrivacyModal - GDPR zásady ochrany súkromia
+ * PR-7: PrivacyModal - GDPR zásady ochrany osobných údajov
  *
  * Modal načítava privacy-policy.sk.md a zobrazuje obsah.
  * Spúšťa sa z Intro (OnboardingTour) aj z Footer.

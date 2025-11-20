@@ -1,4 +1,4 @@
-# Zásady ochrany súkromia – UNOTOP – majetkový plánovač (účinné od 12.11.2025)
+# Zásady ochrany osobných údajov – UNOTOP – majetkový plánovač (účinné od 12.11.2025)
 
 ## Autor a vlastníctvo aplikácie
 
@@ -48,6 +48,23 @@ Výlučne od vás pri vypĺňaní formulára.
 - **Lokálne vstupy do simulácie:** uložené len vo vašom prehliadači, nie na našich serveroch. Zostávajú až do vymazania/resetu.
 
 - **Kontaktné údaje (z formulára „Odoslať projekciu"):** max. 12 mesiacov od poslednej komunikácie.
+
+## Ochrana pred robotmi (reCAPTCHA)
+
+Na ochranu formulárov pred automatizovanými útokmi (spam, boty) používame **Google reCAPTCHA v3**.
+
+**Čo to znamená:**
+- reCAPTCHA analyzuje vaše správanie na stránke (bez vyrušovania) a posiela anonymné údaje spoločnosti Google.
+- Spracúvané údaje: IP adresa, cookies, interakcie so stránkou, technické údaje prehliadača.
+- Google tieto údaje využíva na vyhodnotenie, či ste človek alebo robot.
+
+**Právny základ:** čl. 6 ods. 1 písm. f) GDPR (oprávnený záujem na prevencii zneužitia služby).
+
+**Ďalšie informácie:**
+- [Google Privacy Policy](https://policies.google.com/privacy)
+- [Google Terms of Service](https://policies.google.com/terms)
+
+Táto stránka je chránená službou reCAPTCHA. Platia [Zásady ochrany osobných údajov](https://policies.google.com/privacy) a [Podmienky používania](https://policies.google.com/terms) spoločnosti Google.
 
 ## Vaše práva
 
