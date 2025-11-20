@@ -1,5 +1,4 @@
 import type { Handler, HandlerEvent, HandlerContext, HandlerResponse } from "@netlify/functions";
-import emailjs from "@emailjs/browser";
 
 /**
  * Netlify Function - Send Projection Email (Server-Side)
@@ -9,6 +8,8 @@ import emailjs from "@emailjs/browser";
  * - Rate limiting per IP address (5 requests/hour)
  * - Input validation & sanitization
  * - CORS protection (only unotop.sk, unotop.netlify.app)
+ * 
+ * Uses EmailJS REST API (Node.js compatible, no browser globals)
  */
 
 const ALLOWED_ORIGINS = [
@@ -43,6 +44,51 @@ function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
 
   record.count++;
   return { allowed: true, remaining: 5 - record.count };
+}
+
+/**
+ * Send email via EmailJS REST API (Node.js compatible)
+ * Docs: https://www.emailjs.com/docs/rest-api/send/
+ * 
+ * For server-side calls, EmailJS requires a Private Key (accessToken)
+ * Get it from: https://dashboard.emailjs.com/admin/account
+ */
+async function sendEmailViaEmailJS(
+  serviceId: string,
+  templateId: string,
+  templateParams: Record<string, any>,
+  publicKey: string,
+  privateKey?: string
+): Promise<{ status: number; text: string }> {
+  const url = "https://api.emailjs.com/api/v1.0/email/send";
+  
+  const payload: any = {
+    service_id: serviceId,
+    template_id: templateId,
+    user_id: publicKey,
+    template_params: templateParams,
+  };
+
+  // Add private key for server-side authentication (if available)
+  if (privateKey) {
+    payload.accessToken = privateKey;
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`EmailJS API failed: ${response.status} ${text}`);
+  }
+
+  return { status: response.status, text };
 }
 
 function validateProjectionData(data: any): { valid: boolean; errors: string[] } {
@@ -170,6 +216,7 @@ export const handler: Handler = async (
     const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
     const EMAILJS_CONFIRMATION_TEMPLATE_ID = process.env.EMAILJS_CONFIRMATION_TEMPLATE_ID;
     const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
+    const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY; // For server-side auth
 
     if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
       console.error("[Netlify Function] Missing EmailJS credentials");
@@ -223,12 +270,13 @@ export const handler: Handler = async (
       bonuses_formatted: bonusesFormatted,
     };
 
-    // Send internal email (to agents)
-    const internalResponse = await emailjs.send(
+    // Send internal email (to agents) - using REST API with private key
+    const internalResponse = await sendEmailViaEmailJS(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams,
-      EMAILJS_PUBLIC_KEY
+      EMAILJS_PUBLIC_KEY,
+      EMAILJS_PRIVATE_KEY
     );
 
     if (internalResponse.status !== 200) {
@@ -238,7 +286,7 @@ export const handler: Handler = async (
     // Send confirmation email to client (non-blocking)
     if (data.user.email && EMAILJS_CONFIRMATION_TEMPLATE_ID) {
       try {
-        await emailjs.send(
+        await sendEmailViaEmailJS(
           EMAILJS_SERVICE_ID,
           EMAILJS_CONFIRMATION_TEMPLATE_ID,
           {
@@ -246,7 +294,8 @@ export const handler: Handler = async (
             first_name: data.user.firstName,
             bonuses_formatted: bonusesFormatted,
           },
-          EMAILJS_PUBLIC_KEY
+          EMAILJS_PUBLIC_KEY,
+          EMAILJS_PRIVATE_KEY
         );
       } catch (confirmError) {
         console.warn("[Netlify Function] Client confirmation failed:", confirmError);
