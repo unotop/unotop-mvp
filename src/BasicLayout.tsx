@@ -1315,6 +1315,8 @@ export default function BasicLayout({
                   </span>
                   <input
                     type="text"
+                    name="firstName"
+                    autoComplete="given-name"
                     required
                     value={formData.firstName}
                     onChange={(e) =>
@@ -1330,6 +1332,8 @@ export default function BasicLayout({
                   </span>
                   <input
                     type="text"
+                    name="lastName"
+                    autoComplete="family-name"
                     required
                     value={formData.lastName}
                     onChange={(e) =>
@@ -1347,6 +1351,8 @@ export default function BasicLayout({
                 </span>
                 <input
                   type="email"
+                  name="email"
+                  autoComplete="email"
                   required
                   value={formData.email}
                   onChange={(e) => {
@@ -1382,6 +1388,8 @@ export default function BasicLayout({
                 </span>
                 <input
                   type="tel"
+                  name="tel"
+                  autoComplete="tel"
                   required
                   value={formData.phone}
                   onChange={(e) => {
