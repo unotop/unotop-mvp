@@ -54,8 +54,18 @@ export interface ProjectionData {
  */
 export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
   // PR-23: Call Netlify Function (server-side email handling)
+  // In dev mode, use VITE_NETLIFY_DEV_URL to connect to Netlify Dev server
+  const netlifyDevUrl = import.meta.env.VITE_NETLIFY_DEV_URL || 'http://localhost:8888';
+  const isDev = import.meta.env.DEV;
+  
+  const functionUrl = isDev 
+    ? `${netlifyDevUrl}/.netlify/functions/send-projection`
+    : '/.netlify/functions/send-projection';
+  
+  console.log('[EmailService] Calling Netlify Function:', functionUrl);
+  
   try {
-    const response = await fetch('/.netlify/functions/send-projection', {
+    const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
