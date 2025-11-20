@@ -6,6 +6,13 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# PR-23: Dev server configuration (fixed port)
+[dev]
+  port = 9999
+  targetPort = 5173  # Vite dev server port
+  framework = "#custom"
+  command = "npm run dev:vite"
+
 # PR-23: EmailJS credentials for server-side Functions
 # These are loaded from Netlify Environment Variables (not committed to git)
 [context.production.environment]
