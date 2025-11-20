@@ -58,6 +58,7 @@ import SubmissionWarningModal from "./components/SubmissionWarningModal";
 import { WarningCenter } from "./features/ui/warnings/WarningCenter"; // PR-12
 import { ToastStack } from "./features/ui/warnings/ToastStack";
 import { isDev, isPreview } from "./shared/env"; // PR-15: Debug logy v DEV mode
+import { useReCaptcha } from "./hooks/useReCaptcha"; // PR-23: reCAPTCHA v3
 
 // PR-13 HOTFIX: Bonusy pre BasicLayout formulár (identické s ContactModal)
 const BONUS_OPTIONS = [
@@ -313,6 +314,9 @@ export default function BasicLayout({
 
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
+
+  // PR-23: reCAPTCHA v3 hook
+  const { execute: executeRecaptcha, isReady: isRecaptchaReady } = useReCaptcha();
 
   // Track collabOptIn for real-time sync
   const [collabOptInState, setCollabOptInState] = React.useState(
@@ -755,6 +759,20 @@ export default function BasicLayout({
     setSubmitStatus("idle");
 
     try {
+      // ⚡ PR-23: reCAPTCHA v3 - invisible bot detection
+      let recaptchaToken = "";
+      if (isRecaptchaReady) {
+        try {
+          recaptchaToken = await executeRecaptcha("submit_projection");
+          console.log("[reCAPTCHA] Token generated:", recaptchaToken.slice(0, 20) + "...");
+        } catch (error) {
+          console.warn("[reCAPTCHA] Token generation failed:", error);
+          // Continue without token (server-side verification disabled for now)
+        }
+      } else {
+        console.warn("[reCAPTCHA] Not ready, proceeding without token");
+      }
+
       // ⚡ Honeypot check - bot detection
       if (formData.honeypot !== "") {
         console.warn("[Security] Honeypot triggered - blocking submission");
@@ -867,6 +885,8 @@ export default function BasicLayout({
           reserveHigh,
           surplus,
           stage,
+          // PR-23: reCAPTCHA v3 token
+          recaptchaToken,
         },
         recipients: ["info.unotop@gmail.com", "adam.belohorec@universal.sk"],
       };
@@ -916,11 +936,11 @@ export default function BasicLayout({
         }, 500);
       } catch (emailError) {
         console.error("❌ Netlify Function failed:", emailError);
-        
+
         // PR-23: Disable mailto fallback in production (security requirement)
         // Show user-friendly error instead of opening Outlook
         const isDev = import.meta.env.DEV;
-        
+
         if (isDev) {
           // Dev only: allow mailto fallback for debugging
           console.warn("⚠️ DEV MODE: Using mailto fallback");
@@ -931,9 +951,9 @@ export default function BasicLayout({
           setSubmitStatus("error");
           alert(
             "Ospravedlňujeme sa, odoslanie projekcie zlyhalo.\n\n" +
-            "Prosím skúste to znova o chvíľu, alebo nás kontaktujte priamo na:\n" +
-            "info.unotop@gmail.com\n" +
-            "+421 915 637 495"
+              "Prosím skúste to znova o chvíľu, alebo nás kontaktujte priamo na:\n" +
+              "info.unotop@gmail.com\n" +
+              "+421 915 637 495"
           );
         }
 

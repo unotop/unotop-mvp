@@ -45,6 +45,8 @@ export interface ProjectionData {
     reserveHigh?: number;
     surplus?: number;
     stage?: string;
+    // PR-23: reCAPTCHA v3
+    recaptchaToken?: string;
   };
   recipients: string[];
 }
