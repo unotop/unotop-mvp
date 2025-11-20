@@ -44,7 +44,6 @@ import {
 } from "./utils/validation-helpers";
 import {
   sendProjectionEmail,
-  sendClientConfirmationEmail,
   sendViaMailto,
   type ProjectionData,
 } from "./services/email.service";
@@ -872,26 +871,10 @@ export default function BasicLayout({
         recipients: ["info.unotop@gmail.com", "adam.belohorec@universal.sk"],
       };
 
-      // Try EmailJS first, fallback to mailto
+      // PR-23: Send via Netlify Function (server sends both internal + confirmation emails)
       try {
         await sendProjectionEmail(projectionData);
-        console.log("✅ Email sent via EmailJS");
-
-        // PR-21: Send confirmation email to client (non-blocking)
-        try {
-          await sendClientConfirmationEmail(
-            projectionData.user.email,
-            projectionData.user.firstName,
-            projectionData.projection.bonuses
-          );
-          console.log("✅ Client confirmation email sent");
-        } catch (confirmError) {
-          console.warn(
-            "⚠️ Client confirmation email failed (non-critical):",
-            confirmError
-          );
-          // Don't block flow - internal email is priority
-        }
+        console.log("✅ Emails sent via Netlify Function (internal + confirmation)");
 
         // Record successful submission
         recordSubmission();

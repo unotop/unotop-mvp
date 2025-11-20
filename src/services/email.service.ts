@@ -1,32 +1,13 @@
-import emailjs from '@emailjs/browser';
-
 /**
  * Email service for sending projections
- * Uses EmailJS for client-side sending
+ * PR-23 SECURITY: Uses Netlify Function (server-side) instead of client-side EmailJS
  * 
- * Setup:
- * 1. Create account at https://www.emailjs.com/
- * 2. Create email service (Gmail/Outlook)
- * 3. Create email template
- * 4. Get Service ID, Template ID, Public Key
- * 5. Create .env.local file with credentials (see .env.local.example)
- * 
- * Security:
- * - Credentials are loaded from environment variables
- * - Enable rate limiting in EmailJS dashboard (max 200/day)
- * - Whitelist only your domains (unotop.sk, unotop.netlify.app)
+ * Security improvements:
+ * - EmailJS credentials hidden from client (server-side only)
+ * - Rate limiting per IP (5 requests/hour)
+ * - Input validation on server
+ * - CORS protection
  */
-
-// PR-13: Load from environment variables (NOT hardcoded)
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
-const EMAILJS_CONFIRMATION_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE_ID || '';
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
-
-// Validate credentials on load
-if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
-  console.error('[EmailJS] ⚠️ Missing credentials - email service disabled. Check .env.local file.');
-}
 
 export interface ProjectionData {
   user: {
@@ -68,67 +49,36 @@ export interface ProjectionData {
 }
 
 /**
- * Send projection email via EmailJS
+ * Send projection email via Netlify Function (server-side)
+ * PR-23: EmailJS credentials now hidden on server, rate limiting + validation applied
  */
 export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
-  // Format mix for email
-  const mixFormatted = data.projection.mix
-    .map(item => `${item.key}: ${item.pct.toFixed(1)}%`)
-    .join(', ');
-
-  // PR-13 HOTFIX: Format bonuses for email
-  const bonusesFormatted = data.projection.bonuses && data.projection.bonuses.length > 0
-    ? data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join('\n')
-    : '';
-
-  // Prepare template params for EmailJS
-  const templateParams = {
-    user_name: `${data.user.firstName} ${data.user.lastName}`,
-    first_name: data.user.firstName,
-    last_name: data.user.lastName,
-    user_email: data.user.email,
-    user_phone: data.user.phone,
-    lump_sum: data.projection.lumpSumEur.toLocaleString('sk-SK'),
-    monthly: data.projection.monthlyVklad.toLocaleString('sk-SK'),
-    years: data.projection.horizonYears,
-    goal: data.projection.goalAssetsEur.toLocaleString('sk-SK'),
-    future_value: Math.round(data.projection.futureValue).toLocaleString('sk-SK'),
-    progress: data.projection.progressPercent,
-    yield: (data.projection.yieldAnnual * 100).toFixed(1),
-    deeplink: data.projection.deeplink,
-    // Metadata (PR-7 Task 10)
-    risk_pref: data.metadata?.riskPref || 'N/A',
-    client_type: data.metadata?.clientType || 'N/A',
-    version: data.metadata?.version || 'N/A',
-    utm_source: data.metadata?.utm_source || '',
-    utm_medium: data.metadata?.utm_medium || '',
-    utm_campaign: data.metadata?.utm_campaign || '',
-    reference_code: data.metadata?.referenceCode || '',
-    // PR-13B: Reserve context
-    reserve_help: data.metadata?.reserveHelp ? 'Áno' : 'Nie',
-    expenses: data.metadata?.expenses ? data.metadata.expenses.toLocaleString('sk-SK') : 'N/A',
-    reserve_low: data.metadata?.reserveLow ? data.metadata.reserveLow.toLocaleString('sk-SK') : 'N/A',
-    reserve_high: data.metadata?.reserveHigh ? data.metadata.reserveHigh.toLocaleString('sk-SK') : 'N/A',
-    surplus: data.metadata?.surplus ? data.metadata.surplus.toLocaleString('sk-SK') : 'N/A',
-    stage: data.metadata?.stage || 'N/A',
-    mix_formatted: mixFormatted,
-    // PR-13 HOTFIX: Bonuses
-    bonuses_formatted: bonusesFormatted,
-  };
-
+  // PR-23: Call Netlify Function (server-side email handling)
   try {
-    const response = await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
-      templateParams,
-      EMAILJS_PUBLIC_KEY
-    );
+    const response = await fetch('/.netlify/functions/send-projection', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-    if (response.status !== 200) {
-      throw new Error(`EmailJS failed with status ${response.status}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again later.');
+      } else if (response.status === 400) {
+        throw new Error(`Validation failed: ${errorData.errors?.join(', ') || 'Invalid data'}`);
+      } else if (response.status === 403) {
+        throw new Error('Access denied. Please contact support.');
+      } else {
+        throw new Error(`Server error (${response.status}): ${errorData.error || 'Failed to send email'}`);
+      }
     }
 
-    console.log('[EmailService] Projection sent successfully', response);
+    const result = await response.json();
+    console.log('[EmailService] Projection sent successfully via Netlify Function', result);
   } catch (error) {
     console.error('[EmailService] Failed to send projection:', error);
     throw error;
@@ -136,47 +86,17 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
 }
 
 /**
- * PR-21: Send confirmation email to client
- * Simple text confirmation that projection was received
+ * PR-23: Client confirmation email now handled server-side by Netlify Function
+ * This function is deprecated - confirmation is sent automatically when sendProjectionEmail() succeeds
+ * @deprecated Use sendProjectionEmail() instead - it sends both internal and client confirmation emails
  */
 export async function sendClientConfirmationEmail(
   clientEmail: string,
   firstName: string,
   bonuses?: string[]
 ): Promise<void> {
-  if (!clientEmail || !EMAILJS_CONFIRMATION_TEMPLATE_ID) {
-    console.warn('[EmailService] Client confirmation email skipped - missing email or template ID');
-    return;
-  }
-
-  // Format bonuses for email
-  const bonusesFormatted = bonuses && bonuses.length > 0
-    ? bonuses.map((b, i) => `${i + 1}. ${b}`).join('\n')
-    : '';
-
-  const templateParams = {
-    client_email: clientEmail,
-    first_name: firstName,
-    bonuses_formatted: bonusesFormatted,
-  };
-
-  try {
-    const response = await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_CONFIRMATION_TEMPLATE_ID,
-      templateParams,
-      EMAILJS_PUBLIC_KEY
-    );
-
-    if (response.status !== 200) {
-      throw new Error(`EmailJS confirmation failed with status ${response.status}`);
-    }
-
-    console.log('[EmailService] Client confirmation sent successfully', response);
-  } catch (error) {
-    console.error('[EmailService] Failed to send client confirmation:', error);
-    // Don't throw - client confirmation is not critical
-  }
+  // No-op: Server-side Netlify Function handles confirmation automatically
+  console.log('[EmailService] Client confirmation handled by Netlify Function (server-side)');
 }
 
 /**
