@@ -6,7 +6,7 @@
  */
 
 const STORAGE_KEY = 'unotop:submission-tracker';
-const MAX_SUBMISSIONS_PER_MONTH = 999; // TEMP: unlimited for testing (restore to 2 before production)
+const MAX_SUBMISSIONS_PER_MONTH = 3; // PR-23: Production limit - 3 submissions per month
 const COOLDOWN_SECONDS = 60; // 60s between submissions
 
 interface SubmissionTracker {
