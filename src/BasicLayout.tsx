@@ -874,7 +874,9 @@ export default function BasicLayout({
       // PR-23: Send via Netlify Function (server sends both internal + confirmation emails)
       try {
         await sendProjectionEmail(projectionData);
-        console.log("✅ Emails sent via Netlify Function (internal + confirmation)");
+        console.log(
+          "✅ Emails sent via Netlify Function (internal + confirmation)"
+        );
 
         // Record successful submission
         recordSubmission();
@@ -913,11 +915,27 @@ export default function BasicLayout({
           setSubmitStatus("idle");
         }, 500);
       } catch (emailError) {
-        console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
-        sendViaMailto(projectionData);
-
-        // Still record submission (mailto was used)
-        recordSubmission();
+        console.error("❌ Netlify Function failed:", emailError);
+        
+        // PR-23: Disable mailto fallback in production (security requirement)
+        // Show user-friendly error instead of opening Outlook
+        const isDev = import.meta.env.DEV;
+        
+        if (isDev) {
+          // Dev only: allow mailto fallback for debugging
+          console.warn("⚠️ DEV MODE: Using mailto fallback");
+          sendViaMailto(projectionData);
+          recordSubmission();
+        } else {
+          // Production: show error message, do NOT open mailto
+          setSubmitStatus("error");
+          alert(
+            "Ospravedlňujeme sa, odoslanie projekcie zlyhalo.\n\n" +
+            "Prosím skúste to znova o chvíľu, alebo nás kontaktujte priamo na:\n" +
+            "info.unotop@gmail.com\n" +
+            "+421 915 637 495"
+          );
+        }
 
         // Close modal and reset form (no thank-you modal for mailto fallback)
         setSubmitStatus("success");

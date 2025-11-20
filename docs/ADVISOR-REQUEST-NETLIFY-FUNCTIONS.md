@@ -13,6 +13,7 @@ Netlify Function for server-side email handling is implemented and loaded, but *
 ## Current Implementation
 
 ### Backend (Netlify Function) ✅ WORKING
+
 **File:** `netlify/functions/send-projection.ts`
 
 ```typescript
@@ -25,9 +26,9 @@ export const handler: Handler = async (event, context): Promise<HandlerResponse>
 
   // CORS check
   const origin = event.headers.origin || "";
-  const isOriginAllowed = ALLOWED_ORIGINS.includes(origin) || 
+  const isOriginAllowed = ALLOWED_ORIGINS.includes(origin) ||
     (isDevelopment && origin.startsWith("http://localhost:"));
-  
+
   if (!isOriginAllowed) {
     console.error('[Netlify Function] Forbidden origin:', origin);
     return { statusCode: 403, ... };
@@ -57,7 +58,7 @@ export const handler: Handler = async (event, context): Promise<HandlerResponse>
 
   // Send emails (internal + confirmation) via EmailJS
   await emailjs.send(...);
-  
+
   return {
     statusCode: 200,
     headers: {
@@ -70,6 +71,7 @@ export const handler: Handler = async (event, context): Promise<HandlerResponse>
 ```
 
 **Status:**
+
 - ✅ Function compiles without errors
 - ✅ Netlify Dev loads function: `⬥ Loaded function send-projection`
 - ✅ Env vars injected: `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, etc.
@@ -78,34 +80,37 @@ export const handler: Handler = async (event, context): Promise<HandlerResponse>
 ---
 
 ### Frontend (Fetch) ❌ FAILING
+
 **File:** `src/services/email.service.ts`
 
 ```typescript
 export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
-  const netlifyDevUrl = import.meta.env.VITE_NETLIFY_DEV_URL || 'http://localhost:8888';
+  const netlifyDevUrl =
+    import.meta.env.VITE_NETLIFY_DEV_URL || "http://localhost:8888";
   const isDev = import.meta.env.DEV;
-  
-  const functionUrl = isDev 
+
+  const functionUrl = isDev
     ? `${netlifyDevUrl}/.netlify/functions/send-projection`
-    : '/.netlify/functions/send-projection';
-  
-  console.log('[EmailService] Calling Netlify Function:', functionUrl);
-  
+    : "/.netlify/functions/send-projection";
+
+  console.log("[EmailService] Calling Netlify Function:", functionUrl);
+
   try {
     const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     // ...
   } catch (error) {
-    console.error('[EmailService] Failed to send projection:', error);
+    console.error("[EmailService] Failed to send projection:", error);
     throw error;
   }
 }
 ```
 
 **Status:**
+
 - ✅ Code compiles without errors
 - ✅ Console shows correct URL: `http://localhost:9999/.netlify/functions/send-projection`
 - ❌ **fetch() fails with ERR_CONNECTION_REFUSED**
@@ -116,6 +121,7 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
 ### Development Environment
 
 **Netlify Dev Config (`netlify.toml`):**
+
 ```toml
 [dev]
   port = 9999
@@ -125,11 +131,13 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
 ```
 
 **Environment Variables (`.env.local`):**
+
 ```bash
 VITE_NETLIFY_DEV_URL=http://localhost:9999
 ```
 
 **Terminal Output:**
+
 ```
 ⬥ Injected .env file env vars: EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, ...
 ⬥ Injected .env.local file env vars: VITE_EMAILJS_*, VITE_NETLIFY_DEV_URL
@@ -144,6 +152,7 @@ VITE_NETLIFY_DEV_URL=http://localhost:9999
 ```
 
 **Browser Console Error:**
+
 ```
 [EmailService] Calling Netlify Function: http://localhost:9999/.netlify/functions/send-projection
 :9999/.netlify/functions/send-projection:1  Failed to load resource: net::ERR_CONNECTION_REFUSED
@@ -154,25 +163,32 @@ VITE_NETLIFY_DEV_URL=http://localhost:9999
 ## What We've Tried
 
 ### Attempt 1: Relative Path
+
 ```typescript
 fetch('/.netlify/functions/send-projection', ...)
 ```
+
 ❌ Result: 404 (path not found on Vite server port 5175)
 
 ### Attempt 2: Full URL with Dynamic Port
+
 ```typescript
 const functionUrl = `http://localhost:${dynamicPort}/.netlify/functions/send-projection`;
 ```
+
 ❌ Result: Port changes on every restart (53755 → 54218 → 54897)
 
 ### Attempt 3: Fixed Port in netlify.toml
+
 ```toml
 [dev]
   port = 9999
 ```
+
 ❌ Result: ERR_CONNECTION_REFUSED (current state)
 
 ### Attempt 4: CORS Headers
+
 Added comprehensive CORS headers to all responses + OPTIONS preflight handler.
 ❌ Result: No change (request never reaches function)
 
@@ -181,12 +197,14 @@ Added comprehensive CORS headers to all responses + OPTIONS preflight handler.
 ## Diagnostics
 
 ### Network Tab Analysis
+
 - **Request URL:** `http://localhost:9999/.netlify/functions/send-projection`
 - **Status:** `(failed)` - net::ERR_CONNECTION_REFUSED
 - **Type:** `fetch`
 - **No request is actually sent** (fails before network layer)
 
 ### Key Observations
+
 1. ✅ Netlify Dev IS running on port 9999
 2. ✅ Function IS loaded by Netlify CLI
 3. ✅ Frontend CAN reach http://localhost:9999 (page loads)
@@ -194,9 +212,11 @@ Added comprehensive CORS headers to all responses + OPTIONS preflight handler.
 5. ❌ **Function handler logs NEVER appear** (no requests reach backend)
 
 ### Hypothesis
+
 **Netlify Dev proxy is not forwarding `/.netlify/functions/*` requests to the function runtime.**
 
 Possible causes:
+
 - `targetPort = 5173` might be incorrect (Vite restarts on 5177 due to port conflicts)
 - `framework = "#custom"` might not enable function proxying
 - Vite HMR server (5177) is not connected to Netlify Dev (9999)
@@ -207,35 +227,43 @@ Possible causes:
 ## Questions for Advisor
 
 ### Q1: Correct Netlify Dev Setup for Vite + Functions
+
 **What is the proper `netlify.toml` config for:**
+
 - Vite dev server (runs on dynamic port due to conflicts)
 - Netlify Functions (must be accessible via `/.netlify/functions/*`)
 - Fixed Netlify Dev port (9999)
 
 Should we:
+
 - A) Use `framework = "vite"` instead of `#custom`?
 - B) Remove `targetPort` and let Netlify Dev start Vite directly?
 - C) Use a different approach (e.g., `vite.config.ts` proxy)?
 
 ### Q2: Development vs Production URL Strategy
+
 **Current approach:**
+
 ```typescript
-const functionUrl = isDev 
+const functionUrl = isDev
   ? `${process.env.VITE_NETLIFY_DEV_URL}/.netlify/functions/send-projection`
-  : '/.netlify/functions/send-projection';
+  : "/.netlify/functions/send-projection";
 ```
 
 Is this correct, or should we:
+
 - Use Vite proxy config to forward `/.netlify/functions/*` to Netlify Dev?
 - Always use relative paths and fix the dev server routing?
 - Use a different env var pattern?
 
 ### Q3: Function Proxying in Netlify Dev
+
 **Expected behavior:**
 When I visit `http://localhost:9999` → Netlify Dev proxies to Vite (5173/5177)
 When I POST to `http://localhost:9999/.netlify/functions/send-projection` → Netlify Dev routes to function handler
 
 **Current behavior:**
+
 - Page load works ✅
 - Function route fails ❌ (ERR_CONNECTION_REFUSED)
 
@@ -246,12 +274,14 @@ When I POST to `http://localhost:9999/.netlify/functions/send-projection` → Ne
 ## Desired Outcome
 
 **Development:**
+
 ```
 http://localhost:9999                              → Vite dev server (React app)
 http://localhost:9999/.netlify/functions/*         → Netlify Functions runtime
 ```
 
 **Production:**
+
 ```
 https://unotop.netlify.app                         → Static build (dist/)
 https://unotop.netlify.app/.netlify/functions/*    → Netlify Functions (serverless)
@@ -264,12 +294,14 @@ https://unotop.netlify.app/.netlify/functions/*    → Netlify Functions (server
 **Repository:** unotop/unotop-mvp  
 **Branch:** feat/security-hardening  
 **Files:**
+
 - `netlify/functions/send-projection.ts` (function implementation)
 - `src/services/email.service.ts` (frontend fetch)
 - `netlify.toml` (dev config)
 - `.env.local` (VITE_NETLIFY_DEV_URL=http://localhost:9999)
 
 **Commits:**
+
 - `e91c2d3` - Initial Netlify Function implementation
 - `4bca882` - CORS headers fix
 - `bb7f2b0` - Dev URL with env var
@@ -282,6 +314,7 @@ https://unotop.netlify.app/.netlify/functions/*    → Netlify Functions (server
 This is **Task 1 of 8** in PR-23 (Security Hardening). Remaining tasks are blocked until Netlify Function works:
 
 **Blocked Tasks:**
+
 - Task 2: ReCAPTCHA v3 (needs function endpoint)
 - Task 3: LocalStorage validation (independent)
 - Task 4: Deeplink encryption (independent)
@@ -291,6 +324,7 @@ This is **Task 1 of 8** in PR-23 (Security Hardening). Remaining tasks are block
 - Task 8: Commit & push (needs all tasks complete)
 
 **Impact:**
+
 - EmailJS credentials currently exposed in client bundle (security risk)
 - Cannot implement server-side rate limiting
 - Cannot validate inputs on server
@@ -301,6 +335,7 @@ This is **Task 1 of 8** in PR-23 (Security Hardening). Remaining tasks are block
 ## Request
 
 Please provide guidance on:
+
 1. Correct `netlify.toml` configuration for Vite + Functions dev environment
 2. Proper URL/proxy strategy for development vs production
 3. Any missing setup steps for Netlify Dev function proxying
