@@ -34,7 +34,7 @@ export const PrivacyModal: React.FC<PrivacyModalProps> = ({
   // Load privacy policy markdown
   React.useEffect(() => {
     if (isOpen) {
-      fetch("/docs/privacy-policy.sk.md")
+      fetch("/privacy-policy.sk.md")
         .then((res) => res.text())
         .then((text) => setContent(text))
         .catch(() =>
