@@ -1,13 +1,14 @@
 /**
  * Email service for sending projections
- * PR-23 SECURITY: Uses Netlify Function (server-side) instead of client-side EmailJS
  * 
- * Security improvements:
- * - EmailJS credentials hidden from client (server-side only)
- * - Rate limiting per IP (5 requests/hour)
- * - Input validation on server
- * - CORS protection
+ * TEMPORARY ROLLBACK (PR-23):
+ * EmailJS blokuje server-side API calls (403 error).
+ * Vraciam client-side volanie až kým nenájdeme iné riešenie (Resend.com, SendGrid, atď).
+ * 
+ * TODO: Migrovať na Resend.com alebo SendGrid pre skutočný server-side email
  */
+
+import emailjs from "@emailjs/browser";
 
 export interface ProjectionData {
   user: {
@@ -49,42 +50,76 @@ export interface ProjectionData {
 }
 
 /**
- * Send projection email via Netlify Function (server-side)
- * PR-23: EmailJS credentials now hidden on server, rate limiting + validation applied
+ * Send projection email via EmailJS (CLIENT-SIDE - temporary rollback)
+ * 
+ * ROLLBACK REASON: EmailJS blokuje server-side API (403 error)
+ * Next: Migrovať na Resend.com alebo SendGrid
  */
 export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
-  // PR-23: Always use relative path - Netlify Dev proxies this in dev, Netlify handles in prod
-  const functionUrl = '/.netlify/functions/send-projection';
-  
-  console.log('[EmailService] Calling Netlify Function:', functionUrl);
-  
-  try {
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+  // Get client-side credentials from env
+  const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+  const confirmTemplateId = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE_ID;
+  const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again later.');
-      } else if (response.status === 400) {
-        throw new Error(`Validation failed: ${errorData.errors?.join(', ') || 'Invalid data'}`);
-      } else if (response.status === 403) {
-        throw new Error('Access denied. Please contact support.');
-      } else {
-        throw new Error(`Server error (${response.status}): ${errorData.error || 'Failed to send email'}`);
+  if (!serviceId || !templateId || !publicKey) {
+    throw new Error("Missing EmailJS credentials in environment");
+  }
+
+  // Format mix for email template
+  const mixFormatted = data.projection.mix
+    .map((item) => `${item.key}: ${item.pct.toFixed(1)}%`)
+    .join("\n");
+
+  const bonusesFormatted = data.projection.bonuses
+    ? data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join("\n")
+    : "Žiadne bonusy";
+
+  const templateParams = {
+    first_name: data.user.firstName,
+    last_name: data.user.lastName,
+    client_email: data.user.email,
+    phone: data.user.phone,
+    lump_sum: data.projection.lumpSumEur.toLocaleString("sk-SK"),
+    monthly_vklad: data.projection.monthlyVklad.toLocaleString("sk-SK"),
+    horizon_years: data.projection.horizonYears,
+    goal_assets: data.projection.goalAssetsEur.toLocaleString("sk-SK"),
+    future_value: Math.round(data.projection.futureValue).toLocaleString("sk-SK"),
+    progress_percent: data.projection.progressPercent.toFixed(0),
+    yield_annual: data.projection.yieldAnnual.toFixed(1),
+    mix_formatted: mixFormatted,
+    bonuses_formatted: bonusesFormatted,
+    deeplink: data.projection.deeplink,
+    to_emails: data.recipients.join(", "),
+  };
+
+  console.log("[EmailService] Sending via client-side EmailJS...");
+
+  try {
+    // Send internal email (to agents)
+    await emailjs.send(serviceId, templateId, templateParams, publicKey);
+    console.log("✅ Internal email sent");
+
+    // Send confirmation email to client
+    if (data.user.email && confirmTemplateId) {
+      try {
+        await emailjs.send(
+          serviceId,
+          confirmTemplateId,
+          {
+            client_email: data.user.email,
+            first_name: data.user.firstName,
+            bonuses_formatted: bonusesFormatted,
+          },
+          publicKey
+        );
+        console.log("✅ Confirmation email sent");
+      } catch (confirmError) {
+        console.warn("⚠️ Confirmation email failed (non-critical):", confirmError);
       }
     }
-
-    const result = await response.json();
-    console.log('[EmailService] Projection sent successfully via Netlify Function', result);
   } catch (error) {
-    console.error('[EmailService] Failed to send projection:', error);
+    console.error("[EmailService] Failed to send emails:", error);
     throw error;
   }
 }
