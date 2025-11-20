@@ -292,7 +292,6 @@ export default function BasicLayout({
       email: contact.email || "",
       gdprConsent: false, // Never prefill consent
       honeypot: "",
-      captchaAnswer: "",
       selectedBonuses: (contact.bonuses || []) as string[],
       refiDeadline: "7",
     };
@@ -316,7 +315,8 @@ export default function BasicLayout({
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
 
   // PR-23: reCAPTCHA v3 hook
-  const { execute: executeRecaptcha, isReady: isRecaptchaReady } = useReCaptcha();
+  const { execute: executeRecaptcha, isReady: isRecaptchaReady } =
+    useReCaptcha();
 
   // Track collabOptIn for real-time sync
   const [collabOptInState, setCollabOptInState] = React.useState(
@@ -764,7 +764,10 @@ export default function BasicLayout({
       if (isRecaptchaReady) {
         try {
           recaptchaToken = await executeRecaptcha("submit_projection");
-          console.log("[reCAPTCHA] Token generated:", recaptchaToken.slice(0, 20) + "...");
+          console.log(
+            "[reCAPTCHA] Token generated:",
+            recaptchaToken.slice(0, 20) + "..."
+          );
         } catch (error) {
           console.warn("[reCAPTCHA] Token generation failed:", error);
           // Continue without token (server-side verification disabled for now)
@@ -776,18 +779,6 @@ export default function BasicLayout({
       // ⚡ Honeypot check - bot detection
       if (formData.honeypot !== "") {
         console.warn("[Security] Honeypot triggered - blocking submission");
-        setSubmitStatus("error");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // ⚡ PR-13: CAPTCHA check - simple math "1+3=?"
-      if (formData.captchaAnswer !== "4") {
-        console.warn("[Security] CAPTCHA failed - blocking submission");
-        setValidationErrors({
-          ...validationErrors,
-          captcha: "Nesprávna odpoveď na bezpečnostnú otázku",
-        });
         setSubmitStatus("error");
         setIsSubmitting(false);
         return;
@@ -928,7 +919,6 @@ export default function BasicLayout({
             email: formData.email,
             gdprConsent: false, // Always reset consent (GDPR)
             honeypot: "",
-            captchaAnswer: "",
             selectedBonuses: formData.selectedBonuses,
             refiDeadline: formData.refiDeadline,
           });
@@ -968,7 +958,6 @@ export default function BasicLayout({
             email: "",
             gdprConsent: false,
             honeypot: "",
-            captchaAnswer: "",
             selectedBonuses: [],
             refiDeadline: "7",
           });
@@ -1442,28 +1431,6 @@ export default function BasicLayout({
                 aria-hidden="true"
               />
 
-              {/* PR-13: Simple CAPTCHA */}
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-slate-300">
-                  Bezpečnostná otázka: Koľko je 1 + 3? *
-                </span>
-                <input
-                  type="text"
-                  value={formData.captchaAnswer}
-                  onChange={(e) =>
-                    setFormData({ ...formData, captchaAnswer: e.target.value })
-                  }
-                  placeholder="Zadajte odpoveď"
-                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm"
-                  required
-                />
-                {validationErrors.captcha && (
-                  <p className="text-xs text-red-400 mt-1">
-                    {validationErrors.captcha}
-                  </p>
-                )}
-              </label>
-
               {/* PR-13 HOTFIX + PR-17: Bonuses section (collapsible) */}
               <div className="pt-4 border-t border-white/10 space-y-3">
                 <button
@@ -1630,7 +1597,6 @@ export default function BasicLayout({
                       email: "",
                       gdprConsent: false,
                       honeypot: "",
-                      captchaAnswer: "",
                       selectedBonuses: [],
                       refiDeadline: "7",
                     });
@@ -1748,7 +1714,6 @@ export default function BasicLayout({
                     email: contact.email || "",
                     gdprConsent: false,
                     honeypot: "",
-                    captchaAnswer: "",
                     selectedBonuses: (contact.bonuses || []) as string[],
                     refiDeadline: "7",
                   });

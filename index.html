@@ -16,6 +16,12 @@
     
     <!-- PR-23: reCAPTCHA v3 - invisible bot protection -->
     <script src="https://www.google.com/recaptcha/api.js?render=6Ld6ORMsAAAAAL2GcN5sTGUVUw9o_6FSb_9DxQ67" async defer></script>
+    <style>
+      /* PR-23: Hide reCAPTCHA badge (allowed if "Protected by reCAPTCHA" text is in privacy policy) */
+      .grecaptcha-badge {
+        visibility: hidden;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
