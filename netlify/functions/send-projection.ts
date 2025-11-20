@@ -13,9 +13,14 @@ import emailjs from "@emailjs/browser";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:8888",  // Netlify Dev default
   "https://unotop.netlify.app",
   "https://unotop.sk",
 ];
+
+// Allow any localhost port in development
+const isDevelopment = process.env.NETLIFY_DEV === "true";
 
 // Rate limiting storage (in-memory, reset on function cold start)
 // For production: use Redis/KV store
@@ -75,13 +80,40 @@ export const handler: Handler = async (
   event: HandlerEvent,
   context: HandlerContext
 ): Promise<HandlerResponse> => {
+  console.log('[Netlify Function] Request received:', {
+    method: event.httpMethod,
+    origin: event.headers.origin,
+    isDev: isDevelopment,
+  });
+
   // CORS check
   const origin = event.headers.origin || "";
-  if (!ALLOWED_ORIGINS.includes(origin)) {
+  const isOriginAllowed = ALLOWED_ORIGINS.includes(origin) || 
+    (isDevelopment && origin.startsWith("http://localhost:"));
+  
+  if (!isOriginAllowed) {
+    console.error('[Netlify Function] Forbidden origin:', origin);
     return {
       statusCode: 403,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "Forbidden origin" }),
+      body: JSON.stringify({ 
+        error: "Forbidden origin",
+        received: origin,
+        allowed: ALLOWED_ORIGINS,
+      }),
+    };
+  }
+
+  // Handle CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+      body: "",
     };
   }
 
@@ -102,6 +134,8 @@ export const handler: Handler = async (
     return {
       statusCode: 429,
       headers: {
+        "Access-Control-Allow-Origin": origin,
+        "Content-Type": "application/json",
         "Retry-After": "3600",
         "X-RateLimit-Remaining": "0",
       },
@@ -120,7 +154,10 @@ export const handler: Handler = async (
     if (!validation.valid) {
       return {
         statusCode: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Access-Control-Allow-Origin": origin,
+          "Content-Type": "application/json" 
+        },
         body: JSON.stringify({ 
           error: "Validation failed", 
           details: validation.errors 
@@ -138,6 +175,10 @@ export const handler: Handler = async (
       console.error("[Netlify Function] Missing EmailJS credentials");
       return {
         statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": origin,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ error: "Server configuration error" }),
       };
     }
@@ -217,6 +258,9 @@ export const handler: Handler = async (
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": origin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
         "X-RateLimit-Remaining": rateLimit.remaining.toString(),
       },
       body: JSON.stringify({
@@ -229,7 +273,10 @@ export const handler: Handler = async (
     console.error("[Netlify Function] Error:", error);
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Access-Control-Allow-Origin": origin,
+        "Content-Type": "application/json" 
+      },
       body: JSON.stringify({ 
         error: "Internal server error",
         message: error instanceof Error ? error.message : "Unknown error"
