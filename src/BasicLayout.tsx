@@ -871,11 +871,15 @@ export default function BasicLayout({
         try {
           await sendClientConfirmationEmail(
             projectionData.user.email,
-            projectionData.user.firstName
+            projectionData.user.firstName,
+            projectionData.projection.bonuses
           );
           console.log("✅ Client confirmation email sent");
         } catch (confirmError) {
-          console.warn("⚠️ Client confirmation email failed (non-critical):", confirmError);
+          console.warn(
+            "⚠️ Client confirmation email failed (non-critical):",
+            confirmError
+          );
           // Don't block flow - internal email is priority
         }
 

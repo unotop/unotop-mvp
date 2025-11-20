@@ -66,19 +66,22 @@ export function ShareSuccessModal({
 
         {/* Text */}
         <div className="text-gray-700 space-y-3 mb-6">
+          <p>Vašu projekciu sme úspešne prijali.</p>
           <p>
-            Vašu projekciu sme úspešne prijali.
-          </p>
-          <p>
-            Do <strong>24 hodín</strong> sa vám ozve náš finančný maklér, ktorý s vami:
+            Do <strong>24 hodín</strong> sa vám ozve náš finančný maklér, ktorý
+            s vami:
           </p>
           <ul className="list-disc list-inside pl-2 space-y-1">
             <li>prejde výsledky vašej projekcie,</li>
             <li>vysvetlí jednotlivé možnosti,</li>
-            <li>pomôže nastaviť portfólio a znížiť zbytočné náklady podľa vašej situácie.</li>
+            <li>
+              pomôže nastaviť portfólio a znížiť zbytočné náklady podľa vašej
+              situácie.
+            </li>
           </ul>
           <p className="text-sm text-gray-600 mt-4">
-            Na váš e-mail sme poslali aj krátke potvrdenie s ďalšími informáciami.
+            Na váš e-mail sme poslali aj krátke potvrdenie s ďalšími
+            informáciami.
           </p>
         </div>
 

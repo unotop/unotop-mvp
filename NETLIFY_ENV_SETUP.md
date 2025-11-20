@@ -38,7 +38,7 @@ Netlify nemá EmailJS credentials v environment variables.
 **Premenná 3:**
 
 - Key: `VITE_EMAILJS_CONFIRMATION_TEMPLATE_ID`
-- Value: `template_xxxxx` *(vytvor nový template v EmailJS pre klientov - PR-21)*
+- Value: `template_xxxxx` _(vytvor nový template v EmailJS pre klientov - PR-21)_
 - Klikni **Add variable**
 
 **Premenná 4:**

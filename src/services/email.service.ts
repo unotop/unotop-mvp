@@ -141,16 +141,23 @@ export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
  */
 export async function sendClientConfirmationEmail(
   clientEmail: string,
-  firstName: string
+  firstName: string,
+  bonuses?: string[]
 ): Promise<void> {
   if (!clientEmail || !EMAILJS_CONFIRMATION_TEMPLATE_ID) {
     console.warn('[EmailService] Client confirmation email skipped - missing email or template ID');
     return;
   }
 
+  // Format bonuses for email
+  const bonusesFormatted = bonuses && bonuses.length > 0
+    ? bonuses.map((b, i) => `${i + 1}. ${b}`).join('\n')
+    : '';
+
   const templateParams = {
     client_email: clientEmail,
     first_name: firstName,
+    bonuses_formatted: bonusesFormatted,
   };
 
   try {
