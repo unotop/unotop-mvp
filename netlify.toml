@@ -1,9 +1,23 @@
 [build]
   command = "npm install --legacy-peer-deps && npm run build"
   publish = "dist"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
+
+# PR-23: Netlify Dev configuration (standard Vite setup)
+[dev]
+  framework = "vite"
+  port = 8000
+
+# PR-23: EmailJS credentials for server-side Functions
+# These are loaded from Netlify Environment Variables (not committed to git)
+[context.production.environment]
+  EMAILJS_SERVICE_ID = ""  # Set in Netlify UI
+  EMAILJS_TEMPLATE_ID = ""  # Set in Netlify UI
+  EMAILJS_CONFIRMATION_TEMPLATE_ID = ""  # Set in Netlify UI
+  EMAILJS_PUBLIC_KEY = ""  # Set in Netlify UI
 
 # Force HTTPS redirect
 [[redirects]]

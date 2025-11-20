@@ -4,6 +4,7 @@ import Toolbar from "./components/Toolbar";
 import Sidebar from "./components/Sidebar";
 import { OnboardingTour } from "./components/OnboardingTour";
 import { PrivacyModal } from "./components/PrivacyModal"; // PR-7: GDPR
+import { ShareSuccessModal } from "./features/share/ShareSuccessModal"; // PR-21: Thank-you modal
 import { Footer } from "./components/layout/Footer"; // PR-7: Footer s GDPR linkom
 import { StickyBottomBar } from "./components/StickyBottomBar"; // PR-7: Bottom bar s CTA
 // PR-12: AdminConsole moved to RootLayout (global)
@@ -57,6 +58,7 @@ import SubmissionWarningModal from "./components/SubmissionWarningModal";
 import { WarningCenter } from "./features/ui/warnings/WarningCenter"; // PR-12
 import { ToastStack } from "./features/ui/warnings/ToastStack";
 import { isDev, isPreview } from "./shared/env"; // PR-15: Debug logy v DEV mode
+import { useReCaptcha } from "./hooks/useReCaptcha"; // PR-23: reCAPTCHA v3
 
 // PR-13 HOTFIX: Bonusy pre BasicLayout formulár (identické s ContactModal)
 const BONUS_OPTIONS = [
@@ -150,6 +152,7 @@ export default function BasicLayout({
   const [open0, setOpen0] = React.useState(true); // Settings panel
   const [open3, setOpen3] = React.useState(true); // Portfolio panel
   const [shareOpen, setShareOpen] = React.useState(false);
+  const [shareSuccessOpen, setShareSuccessOpen] = React.useState(false); // PR-21: Thank-you modal
   const [bonusesExpanded, setBonusesExpanded] = React.useState(false); // PR-17: Collapsible bonuses
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
@@ -272,17 +275,26 @@ export default function BasicLayout({
     setCurrentTourStep(1);
   };
 
-  // Form state for share modal
-  const [formData, setFormData] = React.useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    gdprConsent: false,
-    honeypot: "", // Bot trap - must stay empty
-    captchaAnswer: "", // PR-13: Simple CAPTCHA "1+3=?"
-    selectedBonuses: [] as string[], // PR-13 HOTFIX: Bonusy vo formulári
-    refiDeadline: "7", // PR-13 HOTFIX: Default 7 dní pre refi
+  // Form state for share modal - PR-22: Prefill from v3.contact
+  const [formData, setFormData] = React.useState(() => {
+    const v3 = readV3();
+    const contact = v3.contact || {};
+
+    // Split name into firstName + lastName
+    const nameParts = (contact.name || "").trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    return {
+      firstName,
+      lastName,
+      phone: contact.phone || "",
+      email: contact.email || "",
+      gdprConsent: false, // Never prefill consent
+      honeypot: "",
+      selectedBonuses: (contact.bonuses || []) as string[],
+      refiDeadline: "7",
+    };
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitStatus, setSubmitStatus] = React.useState<
@@ -301,6 +313,10 @@ export default function BasicLayout({
 
   const seed = readV3();
   const modeUi = (seed.profile?.modeUi as any) || "BASIC";
+
+  // PR-23: reCAPTCHA v3 hook
+  const { execute: executeRecaptcha, isReady: isRecaptchaReady } =
+    useReCaptcha();
 
   // Track collabOptIn for real-time sync
   const [collabOptInState, setCollabOptInState] = React.useState(
@@ -743,21 +759,26 @@ export default function BasicLayout({
     setSubmitStatus("idle");
 
     try {
+      // ⚡ PR-23: reCAPTCHA v3 - invisible bot detection
+      let recaptchaToken = "";
+      if (isRecaptchaReady) {
+        try {
+          recaptchaToken = await executeRecaptcha("submit_projection");
+          console.log(
+            "[reCAPTCHA] Token generated:",
+            recaptchaToken.slice(0, 20) + "..."
+          );
+        } catch (error) {
+          console.warn("[reCAPTCHA] Token generation failed:", error);
+          // Continue without token (server-side verification disabled for now)
+        }
+      } else {
+        console.warn("[reCAPTCHA] Not ready, proceeding without token");
+      }
+
       // ⚡ Honeypot check - bot detection
       if (formData.honeypot !== "") {
         console.warn("[Security] Honeypot triggered - blocking submission");
-        setSubmitStatus("error");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // ⚡ PR-13: CAPTCHA check - simple math "1+3=?"
-      if (formData.captchaAnswer !== "4") {
-        console.warn("[Security] CAPTCHA failed - blocking submission");
-        setValidationErrors({
-          ...validationErrors,
-          captcha: "Nesprávna odpoveď na bezpečnostnú otázku",
-        });
         setSubmitStatus("error");
         setIsSubmitting(false);
         return;
@@ -855,46 +876,96 @@ export default function BasicLayout({
           reserveHigh,
           surplus,
           stage,
+          // PR-23: reCAPTCHA v3 token
+          recaptchaToken,
         },
         recipients: ["info.unotop@gmail.com", "adam.belohorec@universal.sk"],
       };
 
-      // Try EmailJS first, fallback to mailto
+      // PR-23: Send via Netlify Function (server sends both internal + confirmation emails)
       try {
         await sendProjectionEmail(projectionData);
-        console.log("✅ Email sent via EmailJS");
+        console.log(
+          "✅ Emails sent via Netlify Function (internal + confirmation)"
+        );
 
         // Record successful submission
         recordSubmission();
 
         // Store confirmation code
         setConfirmationCode(referenceCode);
+
+        // PR-21: Close share modal, open thank-you modal
+        setSubmitStatus("success");
+        setTimeout(() => {
+          setShareOpen(false);
+          setShareSuccessOpen(true); // Show thank-you modal
+
+          // PR-22: Save contact info to v3 for prefill (don't clear)
+          writeV3({
+            contact: {
+              name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              phone: formData.phone,
+              bonuses: formData.selectedBonuses,
+            },
+          });
+
+          // Reset form but keep contact data for prefill
+          setFormData({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+            email: formData.email,
+            gdprConsent: false, // Always reset consent (GDPR)
+            honeypot: "",
+            selectedBonuses: formData.selectedBonuses,
+            refiDeadline: formData.refiDeadline,
+          });
+          setSubmitStatus("idle");
+        }, 500);
       } catch (emailError) {
-        console.warn("⚠️ EmailJS failed, using mailto fallback:", emailError);
-        sendViaMailto(projectionData);
+        console.error("❌ Netlify Function failed:", emailError);
 
-        // Still record submission (mailto was used)
-        recordSubmission();
+        // PR-23: Disable mailto fallback in production (security requirement)
+        // Show user-friendly error instead of opening Outlook
+        const isDev = import.meta.env.DEV;
+
+        if (isDev) {
+          // Dev only: allow mailto fallback for debugging
+          console.warn("⚠️ DEV MODE: Using mailto fallback");
+          sendViaMailto(projectionData);
+          recordSubmission();
+        } else {
+          // Production: show error message, do NOT open mailto
+          setSubmitStatus("error");
+          alert(
+            "Ospravedlňujeme sa, odoslanie projekcie zlyhalo.\n\n" +
+              "Prosím skúste to znova o chvíľu, alebo nás kontaktujte priamo na:\n" +
+              "info.unotop@gmail.com\n" +
+              "+421 915 637 495"
+          );
+        }
+
+        // Close modal and reset form (no thank-you modal for mailto fallback)
+        setSubmitStatus("success");
+        setTimeout(() => {
+          setShareOpen(false);
+          setFormData({
+            firstName: "",
+            lastName: "",
+            phone: "",
+            email: "",
+            gdprConsent: false,
+            honeypot: "",
+            selectedBonuses: [],
+            refiDeadline: "7",
+          });
+          setSubmitStatus("idle");
+          setValidationErrors({});
+          shareBtnRef.current?.focus();
+        }, 2000);
       }
-
-      setSubmitStatus("success");
-      setTimeout(() => {
-        setShareOpen(false);
-        setFormData({
-          firstName: "",
-          lastName: "",
-          phone: "",
-          email: "",
-          gdprConsent: false,
-          honeypot: "",
-          captchaAnswer: "", // PR-13
-          selectedBonuses: [], // PR-13 HOTFIX
-          refiDeadline: "7", // PR-13 HOTFIX
-        });
-        setSubmitStatus("idle");
-        setValidationErrors({});
-        shareBtnRef.current?.focus();
-      }, 2000);
     } catch (error) {
       console.error("Error sending projection:", error);
       setSubmitStatus("error");
@@ -1360,28 +1431,6 @@ export default function BasicLayout({
                 aria-hidden="true"
               />
 
-              {/* PR-13: Simple CAPTCHA */}
-              <label className="flex flex-col gap-1">
-                <span className="text-xs font-medium text-slate-300">
-                  Bezpečnostná otázka: Koľko je 1 + 3? *
-                </span>
-                <input
-                  type="text"
-                  value={formData.captchaAnswer}
-                  onChange={(e) =>
-                    setFormData({ ...formData, captchaAnswer: e.target.value })
-                  }
-                  placeholder="Zadajte odpoveď"
-                  className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 text-sm"
-                  required
-                />
-                {validationErrors.captcha && (
-                  <p className="text-xs text-red-400 mt-1">
-                    {validationErrors.captcha}
-                  </p>
-                )}
-              </label>
-
               {/* PR-13 HOTFIX + PR-17: Bonuses section (collapsible) */}
               <div className="pt-4 border-t border-white/10 space-y-3">
                 <button
@@ -1525,11 +1574,47 @@ export default function BasicLayout({
                     onClick={() => setPrivacyOpen(true)}
                     className="text-blue-400 hover:text-blue-300 underline"
                   >
-                    Zásady ochrany súkromia
+                    Zásady ochrany osobných údajov
                   </button>
                 </span>
               </label>
             </div>
+
+            {/* PR-22: Clear saved contact data */}
+            {(formData.firstName || formData.email || formData.phone) && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Clear contact from v3
+                    writeV3({ contact: undefined });
+
+                    // Reset form to empty
+                    setFormData({
+                      firstName: "",
+                      lastName: "",
+                      phone: "",
+                      email: "",
+                      gdprConsent: false,
+                      honeypot: "",
+                      selectedBonuses: [],
+                      refiDeadline: "7",
+                    });
+
+                    // Show toast
+                    WarningCenter.push({
+                      type: "info",
+                      message: "🗑️ Uložené údaje boli vymazané",
+                      scope: "global",
+                      dedupeKey: "contact-cleared",
+                    });
+                  }}
+                  className="text-xs text-slate-500 hover:text-slate-400 underline transition-colors"
+                >
+                  Vymazať uložené údaje
+                </button>
+              </div>
+            )}
 
             {/* Status messages */}
             {submitStatus === "success" && (
@@ -1614,16 +1699,23 @@ export default function BasicLayout({
                 className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
                 onClick={() => {
                   setShareOpen(false);
+
+                  // PR-22: Reset to saved contact data (prefill on next open)
+                  const v3 = readV3();
+                  const contact = v3.contact || {};
+                  const nameParts = (contact.name || "").trim().split(" ");
+                  const firstName = nameParts[0] || "";
+                  const lastName = nameParts.slice(1).join(" ") || "";
+
                   setFormData({
-                    firstName: "",
-                    lastName: "",
-                    phone: "",
-                    email: "",
+                    firstName,
+                    lastName,
+                    phone: contact.phone || "",
+                    email: contact.email || "",
                     gdprConsent: false,
                     honeypot: "",
-                    captchaAnswer: "", // PR-13
-                    selectedBonuses: [], // PR-13 HOTFIX
-                    refiDeadline: "7", // PR-13 HOTFIX
+                    selectedBonuses: (contact.bonuses || []) as string[],
+                    refiDeadline: "7",
                   });
                   setSubmitStatus("idle");
                   setConfirmationCode("");
@@ -1660,6 +1752,12 @@ export default function BasicLayout({
         onClose={() => setPrivacyOpen(false)}
       />
 
+      {/* PR-21: Share Success Modal (Thank-you window) */}
+      <ShareSuccessModal
+        visible={shareSuccessOpen}
+        onClose={() => setShareSuccessOpen(false)}
+      />
+
       {/* ContactModal REMOVED - ShareModal je správny formulár s meno/priezvisko/email/telefón */}
 
       {/* PR-7: StickyBottomBar */}
@@ -1679,7 +1777,7 @@ export default function BasicLayout({
       {/* PR-12: onAdminOpen už nie je potrebné - AdminShortcuts to riadi */}
       <Footer
         onPrivacyClick={() => setPrivacyOpen(true)}
-        onContactClick={() => setShareOpen(true)}
+        onContactClick={onAboutClick}
       />
 
       {/* PR-12: AdminConsole moved to RootLayout (global) */}

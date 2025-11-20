@@ -484,7 +484,7 @@ export function ContactModal({
                 }}
                 className="text-blue-400 hover:text-blue-300 underline cursor-pointer"
               >
-                Zásady ochrany súkromia
+                Zásady ochrany osobných údajov
               </button>
             </label>
           </div>

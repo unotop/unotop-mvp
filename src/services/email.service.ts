@@ -1,31 +1,14 @@
-import emailjs from '@emailjs/browser';
-
 /**
  * Email service for sending projections
- * Uses EmailJS for client-side sending
  * 
- * Setup:
- * 1. Create account at https://www.emailjs.com/
- * 2. Create email service (Gmail/Outlook)
- * 3. Create email template
- * 4. Get Service ID, Template ID, Public Key
- * 5. Create .env.local file with credentials (see .env.local.example)
+ * TEMPORARY ROLLBACK (PR-23):
+ * EmailJS blokuje server-side API calls (403 error).
+ * Vraciam client-side volanie až kým nenájdeme iné riešenie (Resend.com, SendGrid, atď).
  * 
- * Security:
- * - Credentials are loaded from environment variables
- * - Enable rate limiting in EmailJS dashboard (max 200/day)
- * - Whitelist only your domains (unotop.sk, unotop.netlify.app)
+ * TODO: Migrovať na Resend.com alebo SendGrid pre skutočný server-side email
  */
 
-// PR-13: Load from environment variables (NOT hardcoded)
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
-
-// Validate credentials on load
-if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
-  console.error('[EmailJS] ⚠️ Missing credentials - email service disabled. Check .env.local file.');
-}
+import emailjs from "@emailjs/browser";
 
 export interface ProjectionData {
   user: {
@@ -62,76 +45,99 @@ export interface ProjectionData {
     reserveHigh?: number;
     surplus?: number;
     stage?: string;
+    // PR-23: reCAPTCHA v3
+    recaptchaToken?: string;
   };
   recipients: string[];
 }
 
 /**
- * Send projection email via EmailJS
+ * Send projection email via EmailJS (CLIENT-SIDE - temporary rollback)
+ * 
+ * ROLLBACK REASON: EmailJS blokuje server-side API (403 error)
+ * Next: Migrovať na Resend.com alebo SendGrid
  */
 export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
-  // Format mix for email
+  // Get client-side credentials from env
+  const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+  const confirmTemplateId = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE_ID;
+  const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+  if (!serviceId || !templateId || !publicKey) {
+    throw new Error("Missing EmailJS credentials in environment");
+  }
+
+  // Format mix for email template
   const mixFormatted = data.projection.mix
-    .map(item => `${item.key}: ${item.pct.toFixed(1)}%`)
-    .join(', ');
+    .map((item) => `${item.key}: ${item.pct.toFixed(1)}%`)
+    .join("\n");
 
-  // PR-13 HOTFIX: Format bonuses for email
-  const bonusesFormatted = data.projection.bonuses && data.projection.bonuses.length > 0
-    ? data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join('\n')
-    : '';
+  const bonusesFormatted = data.projection.bonuses
+    ? data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join("\n")
+    : "Žiadne bonusy";
 
-  // Prepare template params for EmailJS
   const templateParams = {
-    user_name: `${data.user.firstName} ${data.user.lastName}`,
     first_name: data.user.firstName,
     last_name: data.user.lastName,
-    user_email: data.user.email,
-    user_phone: data.user.phone,
-    lump_sum: data.projection.lumpSumEur.toLocaleString('sk-SK'),
-    monthly: data.projection.monthlyVklad.toLocaleString('sk-SK'),
-    years: data.projection.horizonYears,
-    goal: data.projection.goalAssetsEur.toLocaleString('sk-SK'),
-    future_value: Math.round(data.projection.futureValue).toLocaleString('sk-SK'),
-    progress: data.projection.progressPercent,
-    yield: (data.projection.yieldAnnual * 100).toFixed(1),
-    deeplink: data.projection.deeplink,
-    // Metadata (PR-7 Task 10)
-    risk_pref: data.metadata?.riskPref || 'N/A',
-    client_type: data.metadata?.clientType || 'N/A',
-    version: data.metadata?.version || 'N/A',
-    utm_source: data.metadata?.utm_source || '',
-    utm_medium: data.metadata?.utm_medium || '',
-    utm_campaign: data.metadata?.utm_campaign || '',
-    reference_code: data.metadata?.referenceCode || '',
-    // PR-13B: Reserve context
-    reserve_help: data.metadata?.reserveHelp ? 'Áno' : 'Nie',
-    expenses: data.metadata?.expenses ? data.metadata.expenses.toLocaleString('sk-SK') : 'N/A',
-    reserve_low: data.metadata?.reserveLow ? data.metadata.reserveLow.toLocaleString('sk-SK') : 'N/A',
-    reserve_high: data.metadata?.reserveHigh ? data.metadata.reserveHigh.toLocaleString('sk-SK') : 'N/A',
-    surplus: data.metadata?.surplus ? data.metadata.surplus.toLocaleString('sk-SK') : 'N/A',
-    stage: data.metadata?.stage || 'N/A',
+    client_email: data.user.email,
+    phone: data.user.phone,
+    lump_sum: data.projection.lumpSumEur.toLocaleString("sk-SK"),
+    monthly_vklad: data.projection.monthlyVklad.toLocaleString("sk-SK"),
+    horizon_years: data.projection.horizonYears,
+    goal_assets: data.projection.goalAssetsEur.toLocaleString("sk-SK"),
+    future_value: Math.round(data.projection.futureValue).toLocaleString("sk-SK"),
+    progress_percent: data.projection.progressPercent.toFixed(0),
+    yield_annual: data.projection.yieldAnnual.toFixed(1),
     mix_formatted: mixFormatted,
-    // PR-13 HOTFIX: Bonuses
     bonuses_formatted: bonusesFormatted,
+    deeplink: data.projection.deeplink,
+    to_emails: data.recipients.join(", "),
   };
 
+  console.log("[EmailService] Sending via client-side EmailJS...");
+
   try {
-    const response = await emailjs.send(
-      EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
-      templateParams,
-      EMAILJS_PUBLIC_KEY
-    );
+    // Send internal email (to agents)
+    await emailjs.send(serviceId, templateId, templateParams, publicKey);
+    console.log("✅ Internal email sent");
 
-    if (response.status !== 200) {
-      throw new Error(`EmailJS failed with status ${response.status}`);
+    // Send confirmation email to client
+    if (data.user.email && confirmTemplateId) {
+      try {
+        await emailjs.send(
+          serviceId,
+          confirmTemplateId,
+          {
+            client_email: data.user.email,
+            first_name: data.user.firstName,
+            bonuses_formatted: bonusesFormatted,
+          },
+          publicKey
+        );
+        console.log("✅ Confirmation email sent");
+      } catch (confirmError) {
+        console.warn("⚠️ Confirmation email failed (non-critical):", confirmError);
+      }
     }
-
-    console.log('[EmailService] Projection sent successfully', response);
   } catch (error) {
-    console.error('[EmailService] Failed to send projection:', error);
+    console.error("[EmailService] Failed to send emails:", error);
     throw error;
   }
+}
+
+/**
+ * PR-23: Client confirmation email now handled server-side by Netlify Function
+ * This function is deprecated - confirmation is sent automatically when sendProjectionEmail() succeeds
+ * @deprecated Use sendProjectionEmail() instead - it sends both internal and client confirmation emails
+ */
+export async function sendClientConfirmationEmail(
+  clientEmail: string,
+  firstName: string,
+  bonuses?: string[]
+): Promise<void> {
+  // No-op: Server-side Netlify Function handles confirmation automatically
+  console.log('[EmailService] Client confirmation handled by Netlify Function (server-side)');
 }
 
 /**

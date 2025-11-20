@@ -81,10 +81,97 @@ function safeParse<T>(s: string | null): T | null {
   try { return s ? JSON.parse(s) as T : null; } catch { return null; }
 }
 
+/**
+ * PR-23: Validate and sanitize V3 data (prevent localStorage poisoning)
+ * 
+ * Security limits:
+ * - lumpSumEur ≤ 10M
+ * - monthly ≤ 100k
+ * - horizonYears: 1-50
+ * - mix sum ≈ 100%
+ */
+function validateV3Data(data: V3): V3 {
+  const validated = { ...data };
+  let warnings: string[] = [];
+
+  // 1. Validate lumpSumEur
+  if (validated.profile?.lumpSumEur != null) {
+    const lump = validated.profile.lumpSumEur;
+    if (lump > 10_000_000) {
+      warnings.push(`lumpSumEur exceeded 10M (${lump.toLocaleString()}), clamping to 10M`);
+      validated.profile.lumpSumEur = 10_000_000;
+    } else if (lump < 0) {
+      warnings.push(`lumpSumEur negative (${lump}), resetting to 0`);
+      validated.profile.lumpSumEur = 0;
+    }
+  }
+
+  // 2. Validate monthly (top-level mirror for back-compat)
+  if (typeof validated.monthly === 'number') {
+    if (validated.monthly > 100_000) {
+      warnings.push(`monthly exceeded 100k (${validated.monthly.toLocaleString()}), clamping to 100k`);
+      validated.monthly = 100_000;
+    } else if (validated.monthly < 0) {
+      warnings.push(`monthly negative (${validated.monthly}), resetting to 0`);
+      validated.monthly = 0;
+    }
+  }
+
+  // 3. Validate horizonYears
+  if (validated.profile?.horizonYears != null) {
+    const horizon = validated.profile.horizonYears;
+    if (horizon > 50) {
+      warnings.push(`horizonYears exceeded 50 (${horizon}), clamping to 50`);
+      validated.profile.horizonYears = 50;
+    } else if (horizon < 1) {
+      warnings.push(`horizonYears below 1 (${horizon}), resetting to 1`);
+      validated.profile.horizonYears = 1;
+    }
+  }
+
+  // 4. Validate mix sum (should be ≈100%)
+  if (validated.mix && Array.isArray(validated.mix)) {
+    const sum = validated.mix.reduce((acc, item) => acc + (item.pct || 0), 0);
+    const diff = Math.abs(sum - 100);
+    
+    if (diff > 0.1) {
+      warnings.push(`mix sum is ${sum.toFixed(2)}% (expected 100%), normalizing`);
+      
+      // Normalize to 100%
+      if (sum > 0) {
+        validated.mix = validated.mix.map(item => ({
+          ...item,
+          pct: Math.round((item.pct / sum) * 100 * 100) / 100
+        }));
+      } else {
+        // Invalid mix (all zeros) - reset to safe default
+        warnings.push('mix all zeros, resetting to default balanced mix');
+        validated.mix = [
+          { key: 'gold', pct: 12 },
+          { key: 'dyn', pct: 20 },
+          { key: 'etf', pct: 40 },
+          { key: 'bonds', pct: 20 },
+          { key: 'cash', pct: 8 },
+        ];
+      }
+    }
+  }
+
+  // Log warnings if any
+  if (warnings.length > 0) {
+    console.warn('[v3] LocalStorage validation warnings:', warnings);
+  }
+
+  return validated;
+}
+
 export function readV3(): V3 {
-  return safeParse<V3>(localStorage.getItem(KEY_V3_COLON))
-      ?? safeParse<V3>(localStorage.getItem(KEY_V3_UNDERSCORE))
-      ?? {};
+  const raw = safeParse<V3>(localStorage.getItem(KEY_V3_COLON))
+           ?? safeParse<V3>(localStorage.getItem(KEY_V3_UNDERSCORE))
+           ?? {};
+  
+  // PR-23: Validate and sanitize data
+  return validateV3Data(raw);
 }
 
 export function writeV3(patch: Partial<V3>): V3 {
