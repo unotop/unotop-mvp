@@ -53,7 +53,14 @@ interface BasicProjectionPanelProps {
   goalAssetsEur: number;
   riskPref: "konzervativny" | "vyvazeny" | "rastovy";
   mode?: "BASIC" | "PRO"; // PR-4: Hide cash alerts in BASIC
-  debts?: Array<{ id: string; name: string; principal: number; ratePa: number; monthly: number; monthsLeft?: number }>; // PR-26: Debt reactivity
+  debts?: Array<{
+    id: string;
+    name: string;
+    principal: number;
+    ratePa: number;
+    monthly: number;
+    monthsLeft?: number;
+  }>; // PR-26: Debt reactivity
 }
 
 /**

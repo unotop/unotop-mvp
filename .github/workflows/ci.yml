@@ -6,6 +6,11 @@ on:
   push:
     branches: [ci-test, feat/legacy-basic]
 
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -19,8 +24,11 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Clean install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+          git checkout package-lock.json
 
       - name: Run critical tests
         run: npm run test:critical --silent
