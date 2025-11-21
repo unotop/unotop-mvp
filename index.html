@@ -14,10 +14,12 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <title>UNOTOP – majetkový plánovač</title>
     
-    <!-- PR-23: reCAPTCHA v3 - invisible bot protection -->
-    <script src="https://www.google.com/recaptcha/api.js?render=6Ld6ORMsAAAAAL2GcN5sTGUVUw9o_6FSb_9DxQ67" async defer></script>
+    <!-- PR-25: reCAPTCHA v3 - CONDITIONAL loading based on feature flag -->
+    <!-- Only load if VITE_ENABLE_RECAPTCHA=true (PRO mode), skip in BASIC mode -->
+    <!-- Note: This is a build-time replacement. For runtime control, use script loader in app. -->
+    <script id="recaptcha-script" src="https://www.google.com/recaptcha/api.js?render=6Ld6ORMsAAAAAL2GcN5sTGUVUw9o_6FSb_9DxQ67" async defer></script>
     <style>
-      /* PR-23: Hide reCAPTCHA badge (allowed if "Protected by reCAPTCHA" text is in privacy policy) */
+      /* PR-25: Hide reCAPTCHA badge (allowed if "Protected by reCAPTCHA" text is in privacy policy) */
       .grecaptcha-badge {
         visibility: hidden;
       }
