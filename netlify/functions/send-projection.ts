@@ -74,7 +74,7 @@ async function sendEmailViaResend(
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      from: "Unotop MVP <noreply@resend.dev>", // Free tier uses resend.dev domain
+      from: "Unotop MVP <noreply@send.unotop.sk>", // PR-26: Verified domain
       to,
       subject,
       html: htmlContent,
@@ -245,21 +245,36 @@ export const handler: Handler = async (
     }
 
     // PR-26: Build HTML email template (internal - for agents)
-    const mixLabels: Record<string, string> = {
-      gold: "🥇 Zlato",
-      dyn: "📊 Dyn. riadenie",
-      etf: "🌍 ETF svet",
-      bonds: "📜 Dlhopisy",
-      cash: "💵 Hotovosť",
-      crypto: "₿ Krypto",
-      real: "🏘️ Reality",
-      other: "📦 Ostatné",
+    // PR-26: Format mix item labels (handle bond variants)
+    const formatMixLabel = (key: string): string => {
+      const labels: Record<string, string> = {
+        gold: "🥇 Zlato",
+        dyn: "📊 Dyn. riadenie",
+        etf: "🌍 ETF svet",
+        bonds: "📜 Dlhopisy",
+        cash: "💵 Hotovosť",
+        crypto: "₿ Krypto",
+        real: "🏘️ Reality",
+        other: "📦 Ostatné",
+      };
+
+      // Handle bond variants (bond3y9, bond5y6, etc.)
+      if (key.startsWith("bond")) {
+        const match = key.match(/bond(\d+)y(\d+)/);
+        if (match) {
+          const years = match[1];
+          const rate = match[2];
+          return `📜 Dlhopis ${rate}% na ${years} roky`;
+        }
+      }
+
+      return labels[key] || key;
     };
 
     const mixHtml = data.projection.mix
       .map((item: any) => `
         <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
-          <span>${mixLabels[item.key] || item.key}</span>
+          <span>${formatMixLabel(item.key)}</span>
           <strong>${item.pct.toFixed(1)}%</strong>
         </div>
       `).join('');
