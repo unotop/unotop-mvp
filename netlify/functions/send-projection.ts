@@ -74,7 +74,7 @@ async function sendEmailViaResend(
       "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      from: "Unotop MVP <noreply@send.unotop.sk>", // PR-26: Verified domain
+      from: "Unotop MVP <noreply@unotop.sk>", // PR-26: Verified root domain
       to,
       subject,
       html: htmlContent,
