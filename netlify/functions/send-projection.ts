@@ -17,6 +17,7 @@ const ALLOWED_ORIGINS = [
   "http://localhost:5174",
   "http://localhost:8888",  // Netlify Dev default
   "https://unotop.netlify.app",
+  "https://unotop-mvp.netlify.app",  // PR-26: Production domain
   "https://unotop.sk",
 ];
 
