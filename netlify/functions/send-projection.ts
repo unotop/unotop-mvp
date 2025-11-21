@@ -361,16 +361,19 @@ Progres: ${data.projection.progressPercent}%
 Deeplink: ${data.projection.deeplink}
 `;
 
+
     // PR-26: Send internal email (to agents) via Resend
-    console.log("[EmailService] Sending internal email via Resend...");
+    const agentRecipients = Array.isArray(data.recipients) && data.recipients.length > 0
+      ? data.recipients
+      : ["info.unotop@gmail.com"];
+    console.log("[EmailService] Sending internal email via Resend...", agentRecipients);
     const internalResponse = await sendEmailViaResend(
-      data.recipients,
+      agentRecipients,
       `📊 Projekcia: ${data.user.firstName} ${data.user.lastName}`,
       internalHtml,
       internalText,
       data.user.email
     );
-
     console.log("[EmailService] Internal email sent OK, ID:", internalResponse.id);
 
     // PR-26: Send confirmation email to client
@@ -378,6 +381,7 @@ Deeplink: ${data.projection.deeplink}
 
     if (data.user.email) {
       try {
+
         const confirmHtml = `
 <!DOCTYPE html>
 <html>
@@ -386,20 +390,40 @@ Deeplink: ${data.projection.deeplink}
   <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px;">
     <h1 style="margin: 0;">✅ Projekcia prijatá</h1>
   </div>
-  
   <p>Dobrý deň ${data.user.firstName},</p>
   <p>Ďakujeme za záujem o investičné poradenstvo cez Unotop MVP.</p>
   <p><strong>Vaša projekcia bola úspešne prijatá.</strong> Náš tím vás bude kontaktovať v najbližších 24 hodinách.</p>
-  
-  ${data.projection.bonuses?.length > 0 ? `
+
   <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
-    <h3 style="margin-top: 0; color: #059669;">🎁 Vybrané bonusy (${data.projection.bonuses.length})</h3>
-    ${bonusesHtml}
+    <h3 style="margin-top: 0; color: #059669;">📊 Vaša projekcia</h3>
+    <p><strong>Jednorazový vklad:</strong> ${data.projection.lumpSumEur.toLocaleString("sk-SK")} €</p>
+    <p><strong>Mesačný vklad:</strong> ${data.projection.monthlyVklad.toLocaleString("sk-SK")} €</p>
+    <p><strong>Horizont:</strong> ${data.projection.horizonYears} rokov</p>
+    <p><strong>Cieľ:</strong> ${data.projection.goalAssetsEur.toLocaleString("sk-SK")} €</p>
+    <p><strong>Hodnota po ${data.projection.horizonYears} rokoch:</strong> <span style="color: #10b981; font-size: 1.2em;">${Math.round(data.projection.futureValue).toLocaleString("sk-SK")} €</span></p>
+    <p><strong>Progres k cieľu:</strong> ${data.projection.progressPercent}%</p>
+    <p><strong>Výnos p.a.:</strong> ${(data.projection.yieldAnnual * 100).toFixed(1)}%</p>
   </div>
+
+  <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+    <h3 style="margin-top: 0; color: #059669;">🎯 Zloženie portfólia</h3>
+    ${mixHtml}
+  </div>
+
+  ${data.projection.bonuses?.length > 0 ? `
+    <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="margin-top: 0; color: #059669;">🎁 Vybrané bonusy (${data.projection.bonuses.length})</h3>
+      ${bonusesHtml}
+    </div>
   ` : ''}
-  
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="${data.projection.deeplink}" style="display: inline-block; background: #059669; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+      🔗 Otvoriť interaktívnu projekciu
+    </a>
+  </div>
+
   <p>S pozdravom,<br><strong>Unotop tím</strong></p>
-  
   <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; font-size: 12px; color: #6b7280;">
     <p>info.unotop@gmail.com | +421 915 637 495</p>
   </div>
