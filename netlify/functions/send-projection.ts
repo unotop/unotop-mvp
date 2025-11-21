@@ -211,15 +211,17 @@ export const handler: Handler = async (
       };
     }
 
-    // Get EmailJS credentials from env (server-side only!)
+    // PR-25: Get EmailJS credentials from env (server-side only!)
     const EMAILJS_SERVICE_ID = process.env.EMAILJS_SERVICE_ID;
-    const EMAILJS_TEMPLATE_ID = process.env.EMAILJS_TEMPLATE_ID;
+    const EMAILJS_INTERNAL_TEMPLATE_ID = process.env.EMAILJS_INTERNAL_TEMPLATE_ID;
     const EMAILJS_CONFIRMATION_TEMPLATE_ID = process.env.EMAILJS_CONFIRMATION_TEMPLATE_ID;
     const EMAILJS_PUBLIC_KEY = process.env.EMAILJS_PUBLIC_KEY;
     const EMAILJS_PRIVATE_KEY = process.env.EMAILJS_PRIVATE_KEY; // For server-side auth
+    const ENABLE_RECAPTCHA = process.env.ENABLE_RECAPTCHA !== "false"; // PR-25: Feature flag
 
-    if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
-      console.error("[Netlify Function] Missing EmailJS credentials");
+    // PR-25: Internal template is CRITICAL (hard requirement)
+    if (!EMAILJS_SERVICE_ID || !EMAILJS_INTERNAL_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+      console.error("[EmailService] Missing INTERNAL template ID or credentials – aborting");
       return {
         statusCode: 500,
         headers: {
@@ -228,6 +230,27 @@ export const handler: Handler = async (
         },
         body: JSON.stringify({ error: "Server configuration error" }),
       };
+    }
+
+    // PR-25: Confirmation template is OPTIONAL (soft requirement, warn if missing)
+    if (!EMAILJS_CONFIRMATION_TEMPLATE_ID) {
+      console.warn("[EmailService] EMAILJS_CONFIRMATION_TEMPLATE_ID missing – client emails disabled");
+    }
+
+    // PR-25: Verify reCAPTCHA token (if enabled)
+    if (ENABLE_RECAPTCHA) {
+      const recaptchaToken = data.metadata?.recaptchaToken;
+      
+      if (!recaptchaToken) {
+        console.warn("[reCAPTCHA] Token missing but ENABLE_RECAPTCHA=true – allowing for now");
+        // TODO: Add server-side verification with RECAPTCHA_SECRET_KEY
+        // For now, presence of token is checked but not verified (honeypot + rate limit are primary defenses)
+      } else {
+        console.log("[reCAPTCHA] Token received:", recaptchaToken.slice(0, 20) + "...");
+        // TODO: Verify token via https://www.google.com/recaptcha/api/siteverify
+      }
+    } else {
+      console.log("[reCAPTCHA] Disabled (ENABLE_RECAPTCHA=false) – using honeypot + rate limit only");
     }
 
     // Format data for EmailJS
@@ -270,10 +293,10 @@ export const handler: Handler = async (
       bonuses_formatted: bonusesFormatted,
     };
 
-    // Send internal email (to agents) - using REST API with private key
+    // PR-25: Send internal email (to agents) - CRITICAL, must succeed
     const internalResponse = await sendEmailViaEmailJS(
       EMAILJS_SERVICE_ID,
-      EMAILJS_TEMPLATE_ID,
+      EMAILJS_INTERNAL_TEMPLATE_ID,
       templateParams,
       EMAILJS_PUBLIC_KEY,
       EMAILJS_PRIVATE_KEY
@@ -283,7 +306,11 @@ export const handler: Handler = async (
       throw new Error(`EmailJS failed with status ${internalResponse.status}`);
     }
 
-    // Send confirmation email to client (non-blocking)
+    console.log("[EmailService] Internal email sent OK");
+
+    // PR-25: Send confirmation email to client (OPTIONAL, non-blocking)
+    let clientConfirmationStatus: "sent" | "failed" | "skipped" = "skipped";
+
     if (data.user.email && EMAILJS_CONFIRMATION_TEMPLATE_ID) {
       try {
         await sendEmailViaEmailJS(
@@ -297,10 +324,15 @@ export const handler: Handler = async (
           EMAILJS_PUBLIC_KEY,
           EMAILJS_PRIVATE_KEY
         );
+        console.log("[EmailService] Client confirmation email sent OK to", data.user.email);
+        clientConfirmationStatus = "sent";
       } catch (confirmError) {
-        console.warn("[Netlify Function] Client confirmation failed:", confirmError);
+        console.warn("[EmailService] Client confirmation email failed:", confirmError);
+        clientConfirmationStatus = "failed";
         // Don't fail the request - internal email is priority
       }
+    } else if (!EMAILJS_CONFIRMATION_TEMPLATE_ID) {
+      console.warn("[EmailService] Confirmation template ID missing – skipping client email");
     }
 
     return {
@@ -316,6 +348,7 @@ export const handler: Handler = async (
         success: true,
         message: "Projection sent successfully",
         referenceCode: data.metadata?.referenceCode,
+        clientConfirmation: clientConfirmationStatus, // PR-25: Track confirmation status
       }),
     };
   } catch (error) {

@@ -3,6 +3,31 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./RootLayout"; // RootLayout wraps BASIC/PRO conditional rendering
 
+// PR-25: Dynamically load reCAPTCHA script if enabled
+const isRecaptchaEnabled = import.meta.env.VITE_ENABLE_RECAPTCHA !== "false";
+
+if (isRecaptchaEnabled) {
+  const recaptchaScript = document.getElementById("recaptcha-script");
+  if (!recaptchaScript) {
+    console.warn("[reCAPTCHA] Script element #recaptcha-script not found in index.html");
+  } else {
+    console.log("[reCAPTCHA] Script will load (VITE_ENABLE_RECAPTCHA=true)");
+  }
+} else {
+  // Remove script tag if disabled
+  const recaptchaScript = document.getElementById("recaptcha-script");
+  if (recaptchaScript) {
+    recaptchaScript.remove();
+    console.log("[reCAPTCHA] Script removed (VITE_ENABLE_RECAPTCHA=false)");
+  }
+
+  // Remove badge styles
+  const grecaptchaBadge = document.querySelector(".grecaptcha-badge") as HTMLElement;
+  if (grecaptchaBadge) {
+    grecaptchaBadge.style.display = "none";
+  }
+}
+
 // Error Boundary for production debugging
 class ErrorBoundary extends Component<
   { children: ReactNode },
