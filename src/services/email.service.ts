@@ -1,14 +1,9 @@
 /**
  * Email service for sending projections
  * 
- * TEMPORARY ROLLBACK (PR-23):
- * EmailJS blokuje server-side API calls (403 error).
- * Vraciam client-side volanie až kým nenájdeme iné riešenie (Resend.com, SendGrid, atď).
- * 
- * TODO: Migrovať na Resend.com alebo SendGrid pre skutočný server-side email
+ * PR-26: Server-side email via Netlify Function
+ * Environment variables configured in Netlify UI (not exposed to client)
  */
-
-import emailjs from "@emailjs/browser";
 
 export interface ProjectionData {
   user: {
@@ -52,74 +47,31 @@ export interface ProjectionData {
 }
 
 /**
- * Send projection email via EmailJS (CLIENT-SIDE - temporary rollback)
+ * Send projection email via Netlify Function (SERVER-SIDE - secure)
  * 
- * ROLLBACK REASON: EmailJS blokuje server-side API (403 error)
- * Next: Migrovať na Resend.com alebo SendGrid
+ * Netlify Function endpoint: /.netlify/functions/send-projection
+ * Sends both internal (to agents) and confirmation (to client) emails
  */
 export async function sendProjectionEmail(data: ProjectionData): Promise<void> {
-  // Get client-side credentials from env
-  const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-  const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-  const confirmTemplateId = import.meta.env.VITE_EMAILJS_CONFIRMATION_TEMPLATE_ID;
-  const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
-
-  if (!serviceId || !templateId || !publicKey) {
-    throw new Error("Missing EmailJS credentials in environment");
-  }
-
-  // Format mix for email template
-  const mixFormatted = data.projection.mix
-    .map((item) => `${item.key}: ${item.pct.toFixed(1)}%`)
-    .join("\n");
-
-  const bonusesFormatted = data.projection.bonuses
-    ? data.projection.bonuses.map((b, i) => `${i + 1}. ${b}`).join("\n")
-    : "Žiadne bonusy";
-
-  const templateParams = {
-    first_name: data.user.firstName,
-    last_name: data.user.lastName,
-    client_email: data.user.email,
-    phone: data.user.phone,
-    lump_sum: data.projection.lumpSumEur.toLocaleString("sk-SK"),
-    monthly_vklad: data.projection.monthlyVklad.toLocaleString("sk-SK"),
-    horizon_years: data.projection.horizonYears,
-    goal_assets: data.projection.goalAssetsEur.toLocaleString("sk-SK"),
-    future_value: Math.round(data.projection.futureValue).toLocaleString("sk-SK"),
-    progress_percent: data.projection.progressPercent.toFixed(0),
-    yield_annual: data.projection.yieldAnnual.toFixed(1),
-    mix_formatted: mixFormatted,
-    bonuses_formatted: bonusesFormatted,
-    deeplink: data.projection.deeplink,
-    to_emails: data.recipients.join(", "),
-  };
-
-  console.log("[EmailService] Sending via client-side EmailJS...");
+  console.log("[EmailService] Sending via Netlify Function (server-side)...");
 
   try {
-    // Send internal email (to agents)
-    await emailjs.send(serviceId, templateId, templateParams, publicKey);
-    console.log("✅ Internal email sent");
+    const response = await fetch("/.netlify/functions/send-projection", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
 
-    // Send confirmation email to client
-    if (data.user.email && confirmTemplateId) {
-      try {
-        await emailjs.send(
-          serviceId,
-          confirmTemplateId,
-          {
-            client_email: data.user.email,
-            first_name: data.user.firstName,
-            bonuses_formatted: bonusesFormatted,
-          },
-          publicKey
-        );
-        console.log("✅ Confirmation email sent");
-      } catch (confirmError) {
-        console.warn("⚠️ Confirmation email failed (non-critical):", confirmError);
-      }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[EmailService] Netlify Function error:", errorText);
+      throw new Error(`Email service failed: ${response.status} ${errorText}`);
     }
+
+    const result = await response.json();
+    console.log("✅ Emails sent via Netlify Function:", result);
   } catch (error) {
     console.error("[EmailService] Failed to send emails:", error);
     throw error;
