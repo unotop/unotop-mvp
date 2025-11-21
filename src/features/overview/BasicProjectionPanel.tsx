@@ -53,6 +53,7 @@ interface BasicProjectionPanelProps {
   goalAssetsEur: number;
   riskPref: "konzervativny" | "vyvazeny" | "rastovy";
   mode?: "BASIC" | "PRO"; // PR-4: Hide cash alerts in BASIC
+  debts?: Array<{ id: string; name: string; principal: number; ratePa: number; monthly: number; monthsLeft?: number }>; // PR-26: Debt reactivity
 }
 
 /**
@@ -73,6 +74,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   goalAssetsEur,
   riskPref,
   mode = "BASIC", // PR-4: Default to BASIC
+  debts = [], // PR-26: Default to empty array
 }) => {
   // PR-9 Task A: Validate riskPref PRED defaultMix
   const validRiskPref: RiskPref =
@@ -91,7 +93,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const hasMix = true; // Always show projection with effective mix
   const isUsingFallback = effectiveMix === defaultMix;
 
-  // PR-6 Task A: useProjection hook - instant reactivity, no snapshot
+  // PR-26: Get v3 ONLY for profile checks, debts are passed as prop
   const v3 = readV3();
 
   // PR-13 FIX: Bonuses state removed - bonuses now in ContactModal
@@ -101,13 +103,14 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const hasBasicData = lumpSumEur > 0 || monthlyVklad > 0 || horizonYears > 0;
   const shouldShowRecommendations = hasProfileSelected && hasBasicData;
 
+  // PR-26: Use debts prop instead of v3.debts for reactivity
   const projection = useProjection({
     lumpSumEur,
     monthlyVklad,
     horizonYears,
     goalAssetsEur,
     mix: effectiveMix,
-    debts: v3.debts || [],
+    debts, // PR-26: Use prop (updates on debt add/remove)
     riskPref: validRiskPref,
   });
 
