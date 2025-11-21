@@ -1077,6 +1077,7 @@ export default function BasicLayout({
             seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
           }
           mode="BASIC"
+          debts={v3ForDrift.debts || []}
         />
       </div>
 
