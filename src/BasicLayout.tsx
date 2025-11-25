@@ -12,6 +12,7 @@ import { StickyBottomBar } from "./components/StickyBottomBar"; // PR-7: Bottom 
 import { BasicSettingsPanel } from "./features/basic/BasicSettingsPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { BasicProjectionPanel } from "./features/overview/BasicProjectionPanel";
+// PR-27: ValuationModeSelector moved to BasicProjectionPanel
 // PR-6 Task E+F: DirtyChangesChip removed (instant reactivity via useProjection hook)
 // PR-12: useProjection import pre drift detection
 import { useProjection } from "./features/projection/useProjection";
@@ -47,6 +48,8 @@ import {
   sendViaMailto,
   type ProjectionData,
 } from "./services/email.service";
+// PR-27: Inflation helpers for share modal
+import { toRealValue, toNominalGoal } from "./utils/inflation";
 import {
   canSubmit,
   getRemainingSubmissions,
@@ -155,6 +158,28 @@ export default function BasicLayout({
   const [shareSuccessOpen, setShareSuccessOpen] = React.useState(false); // PR-21: Thank-you modal
   const [bonusesExpanded, setBonusesExpanded] = React.useState(false); // PR-17: Collapsible bonuses
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
+
+  // PR-27: Valuation mode state (real = po inflácii, nominal = bez odpočtu inflácie)
+  const [valuationMode, setValuationMode] = React.useState<"real" | "nominal">(
+    () => {
+      const v3 = readV3();
+      return v3.profile?.valuationMode || "real";
+    }
+  );
+
+  // PR-27: Sync valuationMode with v3 changes (deeplink load, cross-tab updates)
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      const v3 = readV3();
+      const newMode = v3.profile?.valuationMode || "real";
+      if (newMode !== valuationMode) {
+        setValuationMode(newMode);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [valuationMode]);
 
   // PR-6 Task E+F: projectionRefresh removed (instant reactivity via useProjection hook)
 
@@ -813,6 +838,7 @@ export default function BasicLayout({
           lumpSumEur: lump,
           horizonYears: years,
           goalAssetsEur: goal,
+          valuationMode, // PR-27: Include valuation mode in deeplink
         },
         monthly,
         mix,
@@ -1078,6 +1104,8 @@ export default function BasicLayout({
           }
           mode="BASIC"
           debts={v3ForDrift.debts || []}
+          valuationMode={valuationMode}
+          onValuationModeChange={setValuationMode}
         />
       </div>
 
@@ -1094,7 +1122,6 @@ export default function BasicLayout({
           />
         </div>
       )}
-
       {/* Share CTA */}
       <section
         id="share-section"
@@ -1212,8 +1239,25 @@ export default function BasicLayout({
                 (v3Data as any).riskPref ||
                 "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
               const approx = approxYieldAnnualFromMix(mix, riskPref);
-              const fv = calculateFutureValue(lump, monthly, years, approx);
-              const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
+              const fvNominal = calculateFutureValue(
+                lump,
+                monthly,
+                years,
+                approx
+              );
+              // PR-27: Transformácia podľa valuationMode
+              const displayFV =
+                valuationMode === "real"
+                  ? toRealValue(fvNominal, years)
+                  : fvNominal;
+              const displayGoal =
+                valuationMode === "real" && goal > 0
+                  ? toNominalGoal(goal, years)
+                  : goal;
+              const pct =
+                displayGoal > 0
+                  ? Math.round((displayFV / displayGoal) * 100)
+                  : 0;
 
               return (
                 <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
@@ -1226,7 +1270,7 @@ export default function BasicLayout({
                         Hodnota po {years} rokoch:
                       </span>
                       <div className="font-bold text-emerald-400 tabular-nums">
-                        {Math.round(fv).toLocaleString("sk-SK")} €
+                        {Math.round(displayFV).toLocaleString("sk-SK")} €
                       </div>
                     </div>
                     <div>
@@ -1779,6 +1823,7 @@ export default function BasicLayout({
         riskPref={(seed.profile?.riskPref as RiskPref) || "vyvazeny"}
         onSubmitClick={() => setShareOpen(true)} // REVERTING: ShareModal je správny formulár
         hasDriftBlocking={hasDriftBlocking} // PR-12: Blokuje odoslanie ak drift
+        valuationMode={valuationMode} // PR-27: Inflation adjustment
       />
 
       {/* PR-7: Footer s GDPR linkom */}

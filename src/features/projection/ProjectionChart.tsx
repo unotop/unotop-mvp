@@ -15,6 +15,7 @@ import type { Debt } from "../../persist/v3";
 import { monthsToYears, formatCurrency } from "./engine";
 import { useProjection } from "./useProjection";
 import type { RiskPref } from "../mix/assetModel";
+import { toRealValue, getBothValues } from "../../utils/inflation"; // PR-27
 
 interface ProjectionChartProps {
   // Investičné vstupy
@@ -28,6 +29,7 @@ interface ProjectionChartProps {
   // Voliteľné
   goalAssetsEur?: number;
   hideDebts?: boolean; // BASIC režim - nezobrazuj dlhovú krivku
+  valuationMode?: "real" | "nominal"; // PR-27: Inflation adjustment
 }
 
 /**
@@ -43,6 +45,7 @@ export function ProjectionChart({
   debts,
   goalAssetsEur,
   hideDebts = false,
+  valuationMode = "real", // PR-27: Default to real
 }: ProjectionChartProps) {
   // Validate riskPref
   const validRiskPref: RiskPref =
@@ -77,19 +80,36 @@ export function ProjectionChart({
       const debt = debtSeries[year] || 0;
       const invested = investedSeries[year] || 0;
 
+      // PR-27: Apply inflation adjustment based on valuationMode
+      const displayWealth =
+        valuationMode === "real" ? toRealValue(wealth, year) : wealth;
+      const displayDebt =
+        valuationMode === "real" ? toRealValue(debt, year) : debt;
+      const displayInvested =
+        valuationMode === "real" ? toRealValue(invested, year) : invested;
+
       // PR-11: Profit = wealth - invested (NIE wealth - debt!)
-      const profit = wealth - invested;
+      const profit = displayWealth - displayInvested;
 
       data.push({
         year,
-        majetok: Math.max(0, Math.round(wealth)), // Clamp ≥ 0
-        dlhy: Math.max(0, Math.round(debt)), // Clamp ≥ 0
-        vložené: Math.round(invested),
+        majetok: Math.max(0, Math.round(displayWealth)), // Clamp ≥ 0
+        dlhy: Math.max(0, Math.round(displayDebt)), // Clamp ≥ 0
+        vložené: Math.round(displayInvested),
         zisk: Math.round(profit), // Môže byť záporný
+        // PR-27: Store both values for tooltip
+        _nominalWealth: Math.round(wealth),
+        _realWealth: Math.round(toRealValue(wealth, year)),
       });
     }
     return data;
-  }, [fvSeries, debtSeries, investedSeries, effectiveHorizonYears]);
+  }, [
+    fvSeries,
+    debtSeries,
+    investedSeries,
+    effectiveHorizonYears,
+    valuationMode,
+  ]);
 
   // Debug: skontroluj chartData (dočasné) - ODSTRÁNENÉ aby nevypisovalo do konzoly
   // React.useEffect(() => {
@@ -196,6 +216,9 @@ export function ProjectionChart({
                 const majetok = data.majetok;
                 const vložené = data.vložené;
                 const zisk = data.zisk;
+                // PR-27: Dual values (real + nominal)
+                const nominalWealth = data._nominalWealth || majetok;
+                const realWealth = data._realWealth || majetok;
 
                 return (
                   <div
@@ -210,9 +233,41 @@ export function ProjectionChart({
                     <div style={{ fontWeight: "bold", marginBottom: "4px" }}>
                       {rok === 0 ? "Štart" : `Rok ${rok}`}
                     </div>
-                    <div style={{ color: "#34d399" }}>
-                      Očakávaný majetok: {formatCurrency(Math.max(0, majetok))}
-                    </div>
+                    {/* PR-27: Show primary value based on mode, secondary below */}
+                    {valuationMode === "real" ? (
+                      <>
+                        <div style={{ color: "#34d399" }}>
+                          V dnešných cenách:{" "}
+                          {formatCurrency(Math.max(0, majetok))}
+                        </div>
+                        <div
+                          style={{
+                            color: "#94a3b8",
+                            fontSize: "10px",
+                            marginTop: "2px",
+                          }}
+                        >
+                          Nominálne:{" "}
+                          {formatCurrency(Math.max(0, nominalWealth))}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ color: "#34d399" }}>
+                          Nominálne: {formatCurrency(Math.max(0, majetok))}
+                        </div>
+                        <div
+                          style={{
+                            color: "#94a3b8",
+                            fontSize: "10px",
+                            marginTop: "2px",
+                          }}
+                        >
+                          V dnešných cenách:{" "}
+                          {formatCurrency(Math.max(0, realWealth))}
+                        </div>
+                      </>
+                    )}
                     <div style={{ color: "#60a5fa", marginTop: "2px" }}>
                       Vložené celkom: {formatCurrency(Math.max(0, vložené))}
                     </div>

@@ -20,6 +20,9 @@ import {
   shouldShowConcreteAdvice,
 } from "./rightPanelState";
 // PR-13 FIX: BonusesModal removed - bonuses now in ContactModal
+// PR-27: Inflation helpers + ValuationModeSelector
+import { toRealValue, toRealYield, toNominalGoal } from "../../utils/inflation";
+import { ValuationModeSelector } from "../../components/ValuationModeSelector";
 
 /**
  * Formatuje čísla s medzerami ako oddeľovačmi tisícov (SK formát)
@@ -61,6 +64,8 @@ interface BasicProjectionPanelProps {
     monthly: number;
     monthsLeft?: number;
   }>; // PR-26: Debt reactivity
+  valuationMode?: "real" | "nominal"; // PR-27: Inflation adjustment
+  onValuationModeChange?: (mode: "real" | "nominal") => void; // PR-27: Callback for mode changes
 }
 
 /**
@@ -82,6 +87,8 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   riskPref,
   mode = "BASIC", // PR-4: Default to BASIC
   debts = [], // PR-26: Default to empty array
+  valuationMode = "real", // PR-27: Default to real (po inflácii)
+  onValuationModeChange, // PR-27: Callback for mode changes
 }) => {
   // PR-9 Task A: Validate riskPref PRED defaultMix
   const validRiskPref: RiskPref =
@@ -135,6 +142,22 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
     goalProgress: progressPercent,
     remaining,
   } = projection;
+
+  // PR-27: Apply inflation adjustment based on valuation mode
+  // Engine works in nominal world, view layer transforms to real if needed
+  const displayFV =
+    valuationMode === "real" ? toRealValue(fv, horizonYears) : fv;
+  const displayYield =
+    valuationMode === "real" ? toRealYield(approxYield) : approxYield;
+
+  // PR-27: Progress k cieľu - porovnávame v rovnakom "svete"
+  // Real mode: FV_real vs goal_real (goal je zadaný v dnešných cenách)
+  // Nominal mode: FV_nom vs goal_nom (prepočítame goal do budúcich cien)
+  const displayGoal =
+    valuationMode === "real"
+      ? goalAssetsEur
+      : toNominalGoal(goalAssetsEur, horizonYears);
+  const displayProgress = displayGoal > 0 ? (displayFV / displayGoal) * 100 : 0;
 
   // Detect investment stage for adaptive caps
   const stage = detectStage(
@@ -249,7 +272,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             className="text-4xl md:text-5xl font-bold text-white tabular-nums mb-3"
             data-testid="expected-assets-value"
           >
-            {formatLargeNumber(fv)} €
+            {formatLargeNumber(displayFV)} €
           </div>
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-emerald-300/80">
@@ -279,7 +302,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             {showYieldRisk ? (
               <>
                 <div className="text-2xl font-bold text-white tabular-nums mb-1">
-                  +{(approxYield * 100).toFixed(1)} %
+                  +{(displayYield * 100).toFixed(1)} %
                 </div>
                 <div className="text-xs text-blue-300/70">
                   {riskLabel}
@@ -303,7 +326,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
           {/* Mini karta 2: Progres k cieľu */}
           <div
             className={`p-4 bg-gradient-to-br ${
-              progressPercent >= 100
+              displayProgress >= 100
                 ? "from-emerald-900/20 to-emerald-800/10"
                 : "from-amber-900/20 to-amber-800/10"
             }`}
@@ -312,7 +335,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
               <div className="text-xl">🎯</div>
               <div
                 className={`text-xs uppercase tracking-wider font-semibold ${
-                  progressPercent >= 100
+                  displayProgress >= 100
                     ? "text-emerald-400/70"
                     : "text-amber-400/70"
                 }`}
@@ -324,7 +347,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
               <>
                 <div
                   className={`text-2xl font-bold text-white tabular-nums mb-1 ${
-                    progressPercent >= 100 ? "text-emerald-300" : ""
+                    displayProgress >= 100 ? "text-emerald-300" : ""
                   }`}
                 >
                   {remaining > 0
@@ -333,16 +356,16 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                 </div>
                 <div
                   className={`text-xs ${
-                    progressPercent >= 100
+                    displayProgress >= 100
                       ? "text-emerald-300/70"
                       : "text-amber-300/70"
                   }`}
                 >
-                  {progressPercent >= 100
-                    ? progressPercent === 100
+                  {displayProgress >= 100
+                    ? displayProgress === 100
                       ? "Cieľ splnený"
-                      : `Prekročený o ${(progressPercent - 100).toFixed(0)}%`
-                    : `Progres: ${progressPercent.toFixed(0)}%`}
+                      : `Prekročený o ${(displayProgress - 100).toFixed(0)}%`
+                    : `Progres: ${displayProgress.toFixed(0)}%`}
                 </div>
               </>
             ) : (
@@ -355,6 +378,23 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             )}
           </div>
         </div>
+      </div>
+
+      {/* PR-27: Inflation Mode Selector (BASIC + PRO) */}
+      <div className="flex justify-center">
+        <ValuationModeSelector
+          mode={valuationMode}
+          onChange={(newMode: "real" | "nominal") => {
+            // Update parent state + persist
+            if (onValuationModeChange) {
+              onValuationModeChange(newMode);
+            }
+            // Persist to v3
+            writeV3({
+              profile: { ...readV3().profile, valuationMode: newMode },
+            });
+          }}
+        />
       </div>
 
       {/* PR-4: Cash Reserve Info - zobraz len v PRO režime */}
@@ -409,6 +449,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
           goalAssetsEur={goalAssetsEur} // PR-6: live values
           riskPref={validRiskPref}
           hideDebts={false} // PR-8: Zobraz debt line (unified graph)
+          valuationMode={valuationMode} // PR-27: Inflation adjustment
         />
         {/* Risk Gauge (pod grafom) - 6 úrovní */}
         <div className="-mt-2 pt-2 border-t border-white/5">
@@ -527,7 +568,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             )}
 
             {/* Priorita 2: Cieľ splnený (ak nie je riziko) */}
-            {!isOverRisk && progressPercent >= 100 && (
+            {!isOverRisk && displayProgress >= 100 && (
               <div className="flex items-start gap-2 text-sm">
                 <span className="text-emerald-500 shrink-0">🎉</span>
                 <div className="text-slate-300">
@@ -539,7 +580,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
             {/* Priorita 3: Edukatívne odporúčania (ak cieľ nie je splnený) */}
             {!isOverRisk &&
               goalAssetsEur > 0 &&
-              progressPercent < 100 &&
+              displayProgress < 100 &&
               remaining > 0 && (
                 <div className="flex items-start gap-2 text-sm">
                   <span className="text-blue-500 shrink-0">💡</span>
@@ -592,7 +633,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
 
             {/* Priorita 4: Pozitívna spätná väzba (default - ak nie sú iné odporúčania) */}
             {!isOverRisk &&
-              (progressPercent >= 100 || progressPercent === 0) && (
+              (displayProgress >= 100 || displayProgress === 0) && (
                 <div className="flex items-start gap-2 text-sm">
                   <span className="text-emerald-500 shrink-0">✓</span>
                   <div className="text-slate-300">

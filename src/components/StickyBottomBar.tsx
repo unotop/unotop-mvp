@@ -20,6 +20,8 @@ import { readV3 } from "../persist/v3";
 import { unlockMix } from "../features/mix/mix-lock";
 import type { RiskPref } from "../features/mix/assetModel";
 import type { MixItem } from "../features/mix/mix.service";
+// PR-27: Inflation helpers
+import { toRealValue, toRealYield } from "../utils/inflation";
 
 interface StickyBottomBarProps {
   mix: MixItem[];
@@ -30,6 +32,7 @@ interface StickyBottomBarProps {
   riskPref: RiskPref;
   onSubmitClick: () => void;
   hasDriftBlocking?: boolean; // PR-12: Blokuje odoslanie ak hasDrift && !autoOptimize
+  valuationMode?: "real" | "nominal"; // PR-27: Inflation adjustment
 }
 
 export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
@@ -41,6 +44,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
   riskPref,
   onSubmitClick,
   hasDriftBlocking = false, // Default false
+  valuationMode = "real", // PR-27: Default to real (po inflácii)
 }) => {
   const v3 = readV3();
   const debts = v3.debts || [];
@@ -67,6 +71,12 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
   });
 
   const { fvFinal, approxYield, crossoverIndex, riskScore } = projection;
+
+  // PR-27: Transformácia podľa valuationMode
+  const displayFV =
+    valuationMode === "real" ? toRealValue(fvFinal, horizonYears) : fvFinal;
+  const displayYield =
+    valuationMode === "real" ? toRealYield(approxYield) : approxYield;
 
   // PR-8: Helper pre formátovanie majetku (Očakávaný majetok)
   const formatWealth = (value: number): string => {
@@ -117,7 +127,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             >
               <span className="text-slate-400">Očakávaný majetok:</span>
               <span className="font-bold text-emerald-400 tabular-nums">
-                {formatWealth(fvFinal)}
+                {formatWealth(displayFV)}
               </span>
             </div>
 
@@ -128,7 +138,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             >
               <span className="text-slate-400">Ročný výnos:</span>
               <span className="font-bold text-blue-400 tabular-nums">
-                +{(approxYield * 100).toFixed(1)} %
+                +{(displayYield * 100).toFixed(1)} %
               </span>
             </div>
 
