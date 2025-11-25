@@ -51,6 +51,8 @@ export type Profile = {
   selected?: 'konzervativny' | 'vyvazeny' | 'rastovy'; // PR-7: sticky profil po výbere
   // PR-12: Beta auto-optimize
   autoOptimizeMix?: boolean; // default false
+  // PR-27: Voľba zhodnotenia (nominálne vs. reálne po inflácii)
+  valuationMode?: 'real' | 'nominal'; // default 'real'
 };
 
 export type V3 = Partial<{

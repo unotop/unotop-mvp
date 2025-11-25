@@ -71,16 +71,19 @@ Interaktívna kalkulačka s "herným" zážitkom – jednoduché, jasné kroky, 
 ### 🛡️ Security & Anti-bot policy (BASIC 0.9.0)
 
 #### reCAPTCHA
+
 - **V BASIC režime je reCAPTCHA vedome vypnutá** (`ENABLE_RECAPTCHA = false`, `VITE_ENABLE_RECAPTCHA = false`)
 - **Dôvod:** Menej problémov s Tracking Prevention / blokovaním scriptov, plynulejší UX pre bežného používateľa
 - **Nie je to bug ani nedokončená featura** – je to vedomé rozhodnutie pre jednoduchosť BASIC verzie
 
 #### Ochrana pred spamom
+
 - **Honeypot pole:** Skryté pole + metadata (jednoduchý bot filter)
 - **Netlify Function rate limit:** 5 odoslaní / hodinu na IP
 - **Validácie:** Email/telefón/čísla v safe ranges (už popísané vyššie)
 
 #### Politika do budúcna
+
 - Ak by sa objavil reálny spam, prvý krok je **sprísnenie rate limitu** (napr. 3/hodinu)
 - reCAPTCHA (alebo iný bot filter) sa môže zapnúť neskôr v PRO režime alebo len pri podozrivých requestoch
 

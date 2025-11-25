@@ -50,12 +50,12 @@ export default function WelcomeModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/95 backdrop-blur-sm p-4 overflow-y-auto"
+      className="fixed inset-0 z-[9999] flex items-start justify-center bg-slate-950/95 backdrop-blur-sm p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="welcome-title"
     >
-      <div className="relative w-full max-w-xl bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden">
+      <div className="relative w-full max-w-xl bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl ring-1 ring-white/10 overflow-hidden my-8">
         {/* Header with gradient accent */}
         <div className="bg-gradient-to-r from-emerald-600/20 to-blue-600/20 px-4 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6">
           <h1
