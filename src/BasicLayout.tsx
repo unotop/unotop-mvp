@@ -48,6 +48,9 @@ import {
   sendViaMailto,
   type ProjectionData,
 } from "./services/email.service";
+// ADVISOR DEBUG: InvestmentPowerBox test
+import InvestmentPowerBox from "./features/invest/InvestmentPowerBox";
+import { calculateEffectivePlanVolume } from "./features/portfolio/assetMinima";
 // PR-27: Inflation helpers for share modal
 import { toRealValue, toNominalGoal } from "./utils/inflation";
 import {
@@ -1012,6 +1015,17 @@ export default function BasicLayout({
         validationState={validationState}
       />
 
+      {/* PR-28 Phase B: Investment Power Box */}
+      <InvestmentPowerBox
+        effectivePlanVolume={calculateEffectivePlanVolume(
+          investParams.lumpSumEur || 0,
+          investParams.monthlyVklad || 0,
+          horizonYearsRounded || 0
+        )}
+        horizonYears={horizonYearsRounded || 0}
+        monthlyEur={investParams.monthlyVklad || 0}
+      />
+
       {/* Portfolio selector - disabled button, content is always closed until unlocked */}
       <button
         id="sec3"
@@ -1305,7 +1319,7 @@ export default function BasicLayout({
                               etf: "🌍 ETF svet",
                               bonds: "📜 Dlhopis 7,5% (5r)",
                               bond3y9: "💰 Dlhopis 9% (3r)",
-                              cash: "💵 Hotovosť",
+                              cash: "💵 Pracujúca rezerva – IAD DK",
                               crypto: "₿ Krypto",
                               real: "🏘️ Reality",
                               other: "📦 Ostatné",

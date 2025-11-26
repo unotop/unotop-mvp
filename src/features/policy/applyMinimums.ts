@@ -137,7 +137,7 @@ function getAssetLabel(key: string): string {
     bonds: "Dlhopisy",
     bond3y9: "Dlhopisy 3-9r",
     dyn: "Dynamické riadenie",
-    cash: "Hotovosť",
+    cash: "Pracujúca rezerva – IAD DK",
     crypto: "Krypto",
     real: "Reality",
   };

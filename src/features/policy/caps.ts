@@ -57,6 +57,11 @@ export function getAssetCaps(pref: RiskPref, stage: Stage): Caps {
     base.etf = 50;   // +5 p.b. z CORE 45%
     base.dyn = 15;   // +2 p.b. z CORE 13%
     base.cash = 50;  // +15 p.b. z CORE 35%
+    
+    // PR-27b FIX: Reality cap nižší pre rastový profil (zabráni risk 9.4/10)
+    if (pref === "rastovy") {
+      base.real = 12; // Zníž z 20% na 12% (pri ETF 50% + dyn 15% + crypto 6%)
+    }
   }
 
   // LATE: jemne ukrojiť volatilitu, chrániť kapitál

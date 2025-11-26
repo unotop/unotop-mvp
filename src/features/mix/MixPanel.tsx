@@ -40,7 +40,7 @@ const ASSETS: AssetDef[] = [
   { key: "etf", label: "ETF (svet – aktívne)" },
   { key: "bonds", label: "Garantovaný dlhopis 7,5% p.a. (5r)" },
   { key: "bond3y9", label: "Dlhopis 9% p.a. (3r, mesačný CF)" },
-  { key: "cash", label: "Hotovosť/rezerva" },
+  { key: "cash", label: "Pracujúca rezerva – IAD DK" },
   { key: "crypto", label: "Krypto (BTC/ETH)" },
   { key: "real", label: "Reality (komerčné)" },
 ];

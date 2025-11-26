@@ -44,8 +44,8 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
       { key: "etf", pct: 20 },
       { key: "bonds", pct: 17 },      // 50% z pôvodných 34%
       { key: "bond3y9", pct: 17 },    // 50% z pôvodných 34% (mesačný CF)
-      { key: "dyn", pct: 8 },
-      { key: "cash", pct: 12 },
+      { key: "dyn", pct: 5 },         // PR-31: 5% baseline (profile policy cap upraví pre PREMIUM/STARTER)
+      { key: "cash", pct: 15 },       // Zvýšené z 12% (kompenzácia za znížený dyn)
       { key: "crypto", pct: 0 },
       { key: "real", pct: 6 },
     ],
@@ -58,16 +58,17 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "amber",
     description: "Vyvážený pomer rizika a výnosu. Vhodné pre väčšinu investorov s dlhodobým horizontom.",
     mix: [
-      { key: "gold", pct: 13 },    // Znížené z 14
-      { key: "etf", pct: 32 },     
-      { key: "bonds", pct: 10 },    
-      { key: "bond3y9", pct: 10 },  
-      { key: "dyn", pct: 18 },     
-      { key: "cash", pct: 9 },     
-      { key: "crypto", pct: 4 },   
-      { key: "real", pct: 4 },     // Znížené z 5
+      // PR-30: Starter Balanced - bez crypto (crypto je "odmena" pre rastový/väčší plán)
+      { key: "gold", pct: 40 },    // Stabilita
+      { key: "etf", pct: 45 },     // Rast
+      { key: "bonds", pct: 5 },    // Príjem
+      { key: "bond3y9", pct: 5 },  // Príjem mesačný
+      { key: "dyn", pct: 0 },      // Starter: bez dyn
+      { key: "cash", pct: 5 },     // Minimálna rezerva
+      { key: "crypto", pct: 0 },   // Starter: bez crypto
+      { key: "real", pct: 0 },     // Starter: bez reality
     ],
-    targetRisk: { min: 4.5, max: 6.0 },
+    targetRisk: { min: 5.5, max: 6.5 }, // PR-30: Cieľ 5.5-6.5 (pod riskMax 7.0)
   },
   {
     id: "rastovy",
@@ -76,16 +77,17 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "green",
     description: "Vyššie riziko, maximálny potenciálny výnos. Vhodné pre skúsených investorov s vysokou toleranciou rizika.",
     mix: [
-      { key: "gold", pct: 12 },    
-      { key: "etf", pct: 35 },     
-      { key: "bonds", pct: 6.5 },   
-      { key: "bond3y9", pct: 6.5 }, 
-      { key: "dyn", pct: 21.5 },    // > 21% (test požiadavka)
-      { key: "cash", pct: 5.5 },    
-      { key: "crypto", pct: 5.5 },  // Znížené z 7 (pre súčet 100%)
-      { key: "real", pct: 7.5 },    // Znížené z 8 (pre súčet 100%)
+      // PR-30: Starter Growth - crypto znížené na 3% (aby enforceRiskCap nechalo > 0%)
+      { key: "gold", pct: 40 },    // Stabilita (rovnaká ako Balanced)
+      { key: "etf", pct: 47 },     // Viac než Balanced (zvýšené z 45%)
+      { key: "bonds", pct: 2.5 },  // Menej bonds než Balanced
+      { key: "bond3y9", pct: 2.5 }, // Menej bonds než Balanced
+      { key: "dyn", pct: 0 },      // Starter: bez dyn (príliš riskantné pre malý plán)
+      { key: "cash", pct: 5 },     // Rovnaká ako Balanced (enforceRiskCap to zníži)
+      { key: "crypto", pct: 3 },   // PR-30: Znížené z 7% → 3% (aby prežilo enforceRiskCap)
+      { key: "real", pct: 0 },     // Starter: bez reality
     ],
-    targetRisk: { min: 6.5, max: 7.5 },
+    targetRisk: { min: 7.0, max: 8.0 }, // PR-30: Cieľ 7-8 (nad Balanced, pod riskMax 8.0)
   },
 ];
 

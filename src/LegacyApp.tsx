@@ -6,6 +6,8 @@ import { MixPanel } from "./features/mix/MixPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { ProfileSection } from "./features/profile/ProfileSection";
 import { InvestSection } from "./features/invest/InvestSection";
+import InvestmentPowerBox from "./features/invest/InvestmentPowerBox";
+import { calculateEffectivePlanVolume } from "./features/portfolio/assetMinima";
 import { ProjectionMetricsPanel } from "./features/overview/ProjectionMetricsPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
@@ -1071,6 +1073,58 @@ export default function LegacyApp({
           {/* Starý debt UI odstránený - teraz používame standalone section */}
         </section>
       )}
+      {/* DEBUG: Test InvestmentPowerBox priamo v LegacyApp */}
+      {(() => {
+        // ADVISOR DEBUG: typeof check
+        console.log(
+          "[DEBUG] InvestmentPowerBox import typeof:",
+          typeof InvestmentPowerBox
+        );
+        console.log(
+          "[DEBUG] InvestmentPowerBox import value:",
+          InvestmentPowerBox
+        );
+
+        // ADVISOR DEBUG: Inline baseline test
+        const InlineTestBox = () => (
+          <div
+            data-testid="inline-test-box"
+            style={{
+              background: "yellow",
+              padding: "1rem",
+              marginBottom: "1rem",
+              border: "3px solid orange",
+            }}
+          >
+            ✅ INLINE TEST BOX FUNGUJE (baseline)
+          </div>
+        );
+
+        return (
+          <div
+            style={{
+              marginBottom: "1rem",
+              padding: "1rem",
+              border: "2px solid red",
+            }}
+          >
+            <h3 style={{ color: "red", marginBottom: "0.5rem" }}>
+              DEBUG: InvestmentPowerBox Test
+            </h3>
+            <InlineTestBox />
+            <InvestmentPowerBox
+              effectivePlanVolume={calculateEffectivePlanVolume(
+                (readV3() as any).profile?.lumpSumEur || 0,
+                (readV3() as any).monthly || 0,
+                (readV3() as any).profile?.horizonYears || 0
+              )}
+              horizonYears={(readV3() as any).profile?.horizonYears || 0}
+              monthlyEur={(readV3() as any).monthly || 0}
+            />
+          </div>
+        );
+      })()}
+
       {/* sec2: Investičné nastavenia - extracted component */}
       <InvestSection open={open2} onToggle={() => setOpen2((v) => !v)} />
 
@@ -1531,7 +1585,7 @@ export default function LegacyApp({
                               etf: "🌍 ETF svet",
                               bonds: "📜 Dlhopis 7,5% (5r)",
                               bond3y9: "💰 Dlhopis 9% (3r)",
-                              cash: "💵 Hotovosť",
+                              cash: "💵 Pracujúca rezerva – IAD DK",
                               crypto: "₿ Krypto",
                               real: "🏘️ Reality",
                               other: "📦 Ostatné",

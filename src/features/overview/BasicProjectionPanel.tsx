@@ -415,7 +415,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
               <p className="font-semibold text-slate-200 mb-1">
                 {cashReserveInfo.current < cashReserveInfo.optimal
                   ? "Rezerva pod optimom"
-                  : "Nadmerná hotovosť"}
+                  : "Nadmerná rezerva na IAD DK"}
               </p>
               <p className="text-slate-400 text-xs mb-2">
                 Aktuálne: {cashReserveInfo.current.toFixed(1)}% | Optimálne:{" "}

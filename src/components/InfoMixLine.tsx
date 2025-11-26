@@ -15,7 +15,7 @@ const ASSET_LABELS: Record<
   dyn: { icon: "🔄", name: "Dyn. riadenie", order: 3 },
   bonds: { icon: "📈", name: "Dlhopis 7.5%", order: 4 },
   bond3y9: { icon: "📈", name: "Dlhopis 9%", order: 5 },
-  cash: { icon: "💵", name: "Hotovosť", order: 6 },
+  cash: { icon: "💵", name: "IAD depozitné konto", order: 6 },
   crypto: { icon: "₿", name: "Krypto", order: 7 },
   real: { icon: "🏢", name: "Reality", order: 8 },
   other: { icon: "📦", name: "Ostatné", order: 9 },
