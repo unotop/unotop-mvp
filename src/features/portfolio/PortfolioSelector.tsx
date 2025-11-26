@@ -68,14 +68,30 @@ export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
     null
   );
 
-  // Read lumpSumEur ONCE at component mount/update (not in render)
+  // Read lumpSumEur and update info banner reactively
   const [showLowDepositInfo, setShowLowDepositInfo] = React.useState(false);
 
   React.useEffect(() => {
-    const v3 = readV3();
-    const lumpSumEur = v3.profile?.lumpSumEur || 0;
-    setShowLowDepositInfo(lumpSumEur < 2500);
-  }, []); // Empty deps = run once on mount
+    const updateLowDepositInfo = () => {
+      const v3 = readV3();
+      const lumpSumEur = v3.profile?.lumpSumEur || 0;
+      setShowLowDepositInfo(lumpSumEur < 2500);
+    };
+
+    // Initial check
+    updateLowDepositInfo();
+
+    // Listen to storage events for cross-component updates
+    window.addEventListener("storage", updateLowDepositInfo);
+
+    // Poll for changes (debounce delay fix)
+    const interval = setInterval(updateLowDepositInfo, 200);
+
+    return () => {
+      window.removeEventListener("storage", updateLowDepositInfo);
+      clearInterval(interval);
+    };
+  }, []); // Run once on mount, cleanup on unmount
 
   // Detect when component becomes visible/invisible (via parent unmount/remount)
   // Reset selection when user invalidates settings
