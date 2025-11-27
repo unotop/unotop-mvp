@@ -15,6 +15,10 @@ export default function WelcomeModal({
   React.useEffect(() => {
     // Lock scroll when modal is open
     document.body.style.overflow = "hidden";
+    
+    // PR-34: Scroll to top pri otvorení intro (užívateľ musí vidieť vrch, nie spodok)
+    window.scrollTo({ top: 0, behavior: "instant" });
+    
     return () => {
       document.body.style.overflow = "";
     };
