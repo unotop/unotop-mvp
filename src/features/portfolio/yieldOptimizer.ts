@@ -1,5 +1,6 @@
 /**
  * PR-31: Yield Optimizer
+ * PR-34: Cap checks + risk headroom (+1.0) + safety pass
  * 
  * Zvyšuje očakávaný výnos portfólia (expectedReturnPa) v rámci risk budgetu.
  * 
@@ -8,6 +9,9 @@
  * - Presúvame z low-yield → high-yield aktív (bonds → bond9, gold → ETF, cash → bonds)
  * - Iteratívne (max 3 kroky), stop ak riskScore >= riskMax - 0.2
  * - PR-31 FIX: Validuje profile asset caps (bond9 max 25% pre Conservative atď.)
+ * - PR-34 CRITICAL: Cap checks PRED move (gold ≤ GOLD_POLICY, ETF ≤ 50%, dyn/crypto ≤ caps)
+ * - PR-34 CRITICAL: Risk headroom +1.0 (maxRiskForOptimizer = min(riskCap + 1.0, 9.0))
+ * - PR-34 CRITICAL: Safety pass PO moves (clamp overflows → IAD/bonds/real)
  * 
  * Cieľ: V rámci risk manažmentu (riskMax nedotknuteľný) hľadať MAX výnos.
  */
@@ -17,7 +21,7 @@ import type { RiskPref } from "../mix/assetModel";
 import { normalize } from "../mix/mix.service";
 import { riskScore0to10, approxYieldAnnualFromMix, ASSET_PARAMS } from "../mix/assetModel";
 import { getRiskMax } from "../policy/risk";
-import { getProfileAssetCaps } from "../policy/profileAssetPolicy";
+import { getProfileAssetCaps, getGoldPolicy } from "../policy/profileAssetPolicy";
 
 /**
  * Yield optimization moves (od low-yield → high-yield)
@@ -76,6 +80,168 @@ const MAX_BOOST_BY_PROFILE = {
   vyvazeny: 0.012,      // max +1.2% boost
   rastovy: 0.020,       // max +2.0% boost (zvýšené z 1.5%)
 };
+
+/**
+ * PR-34: Global hard caps (single source of truth)
+ * - Gold: 40% global max (profil-specific caps v GOLD_POLICY: C 40, B 20, G 15)
+ * - ETF: 50% global max
+ * - Dyn: 22% global max
+ * - Crypto: 8% global max
+ * - Real: nezmenené (profil-dependent)
+ */
+const GLOBAL_HARD_CAPS: Record<string, number> = {
+  gold: 40,
+  etf: 50,
+  dyn: 22,
+  crypto: 8,
+};
+
+/**
+ * PR-34: Validate move pred aplikovaním
+ * Checks:
+ * - gold ≤ min(GOLD_POLICY.hardCap, GLOBAL_HARD_CAPS.gold)
+ * - ETF ≤ GLOBAL_HARD_CAPS.etf
+ * - dyn/crypto ≤ GLOBAL_HARD_CAPS
+ * - real ≤ profile cap (ak definovaný)
+ */
+function validateMoveAgainstCaps(
+  testMix: MixItem[],
+  riskPref: RiskPref,
+  profileCaps: ReturnType<typeof getProfileAssetCaps>
+): { valid: boolean; reason?: string } {
+  const goldPolicy = getGoldPolicy(riskPref);
+
+  for (const item of testMix) {
+    // Gold: profil-specific cap (C: 40, B: 20, G: 15) AND global cap (40)
+    if (item.key === "gold") {
+      const goldCap = Math.min(goldPolicy.hardCap, GLOBAL_HARD_CAPS.gold);
+      if (item.pct > goldCap + 0.1) {
+        // 0.1 tolerance pre normalizáciu
+        return {
+          valid: false,
+          reason: `Gold ${item.pct.toFixed(1)}% > cap ${goldCap}%`,
+        };
+      }
+    }
+
+    // ETF: global cap 50%
+    if (item.key === "etf") {
+      if (item.pct > GLOBAL_HARD_CAPS.etf + 0.1) {
+        return {
+          valid: false,
+          reason: `ETF ${item.pct.toFixed(1)}% > cap ${GLOBAL_HARD_CAPS.etf}%`,
+        };
+      }
+    }
+
+    // Dyn: global cap 22%
+    if (item.key === "dyn") {
+      if (item.pct > GLOBAL_HARD_CAPS.dyn + 0.1) {
+        return {
+          valid: false,
+          reason: `Dyn ${item.pct.toFixed(1)}% > cap ${GLOBAL_HARD_CAPS.dyn}%`,
+        };
+      }
+    }
+
+    // Crypto: global cap 8%
+    if (item.key === "crypto") {
+      if (item.pct > GLOBAL_HARD_CAPS.crypto + 0.1) {
+        return {
+          valid: false,
+          reason: `Crypto ${item.pct.toFixed(1)}% > cap ${GLOBAL_HARD_CAPS.crypto}%`,
+        };
+      }
+    }
+
+    // Real: profile cap (ak definovaný)
+    if (item.key === "real") {
+      const realCap = profileCaps.real;
+      if (realCap !== undefined && item.pct > realCap + 0.1) {
+        return {
+          valid: false,
+          reason: `Real ${item.pct.toFixed(1)}% > cap ${realCap}%`,
+        };
+      }
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * PR-34: Safety pass po optimizer moves
+ * Clamp všetky assets ktoré presahujú caps, redistribute do safety sinks.
+ * 
+ * Safety sinks (podľa profilu):
+ * - Conservative: IAD (bond9) > bonds > gold
+ * - Balanced: bonds > IAD (bond9) > gold
+ * - Growth: bonds > real > IAD (bond9)
+ */
+function applySafetyPass(mix: MixItem[], riskPref: RiskPref, profileCaps: ReturnType<typeof getProfileAssetCaps>): void {
+  const goldPolicy = getGoldPolicy(riskPref);
+  let totalOverflow = 0;
+
+  // STEP 1: Clamp všetky assets ktoré presahujú caps
+  for (const item of mix) {
+    let cap: number | undefined;
+
+    if (item.key === "gold") {
+      cap = Math.min(goldPolicy.hardCap, GLOBAL_HARD_CAPS.gold);
+    } else if (item.key === "etf") {
+      cap = GLOBAL_HARD_CAPS.etf;
+    } else if (item.key === "dyn") {
+      cap = GLOBAL_HARD_CAPS.dyn;
+    } else if (item.key === "crypto") {
+      cap = GLOBAL_HARD_CAPS.crypto;
+    } else if (item.key === "real" && profileCaps.real !== undefined) {
+      cap = profileCaps.real;
+    }
+
+    if (cap !== undefined && item.pct > cap) {
+      const overflow = item.pct - cap;
+      item.pct = cap;
+      totalOverflow += overflow;
+      console.log(`[YieldOptimizer Safety] Clamped ${item.key} ${(cap + overflow).toFixed(1)}% → ${cap}%`);
+    }
+  }
+
+  if (totalOverflow < 0.01) {
+    return; // No overflow
+  }
+
+  // STEP 2: Redistribute overflow do safety sinks
+  const safetySinks =
+    riskPref === "konzervativny"
+      ? [
+          { key: "bond3y9", weight: 0.5 },
+          { key: "bonds", weight: 0.3 },
+          { key: "gold", weight: 0.2 },
+        ]
+      : riskPref === "vyvazeny"
+      ? [
+          { key: "bonds", weight: 0.5 },
+          { key: "bond3y9", weight: 0.35 },
+          { key: "gold", weight: 0.15 },
+        ]
+      : [
+          { key: "bonds", weight: 0.45 },
+          { key: "real", weight: 0.30 },
+          { key: "bond3y9", weight: 0.25 },
+        ];
+
+  for (const sink of safetySinks) {
+    const sinkItem = mix.find((m) => m.key === sink.key);
+    if (sinkItem) {
+      const allocation = totalOverflow * sink.weight;
+      sinkItem.pct += allocation;
+      console.log(`[YieldOptimizer Safety] Redistributed ${allocation.toFixed(2)} p.b. → ${sink.key}`);
+    }
+  }
+
+  // STEP 3: Normalize
+  normalize(mix);
+}
 
 /**
  * Optimalizuj mix pre MAX výnos v rámci risk budgetu
@@ -143,6 +309,14 @@ export function optimizeYield(
     `Yield ${(initialYield * 100).toFixed(2)}%, Room ${riskRoom.toFixed(2)}`
   );
   
+  // PR-34: Risk headroom pre optimizer (+1.0)
+  // Umožňuje optimizeru využiť riziko aktívnejšie (napr. Balanced/Growth)
+  // Max 9.0 (zabránime extrému)
+  const maxRiskForOptimizer = Math.min(riskMax + 1.0, 9.0);
+  console.log(
+    `[YieldOptimizer] Risk limit: ${riskMax.toFixed(1)} (riskCap) → ${maxRiskForOptimizer.toFixed(1)} (optimizer headroom +1.0)`
+  );
+  
   const appliedMoves: string[] = [];
   let iterations = 0;
   
@@ -164,18 +338,15 @@ export function optimizeYield(
       break;
     }
     
-    // Stop ak sme VÝZNAMNE nad riskMax (nechceme pridať ešte viac risk)
-    // PR-31 FIX2: Ak je risk tesne nad riskMax (do +0.5), stále optimalizuj
-    //  - Yield moves môžu ZNÍŽIŤ risk (napr. bonds → bond9 má nižší risk)
-    //  - enforceRiskCap môže nechať risk tesne nad riskMax (advisor verdikt OK)
-    if (currentRisk > riskMax + 0.5) {
+    // PR-34: Stop ak sme nad maxRiskForOptimizer (headroom +1.0 už využitý)
+    if (currentRisk > maxRiskForOptimizer) {
       console.log(
-        `[YieldOptimizer] STOP: Risk významne nad limitom (${currentRisk.toFixed(2)} > ${riskMax.toFixed(1)} + 0.5)`
+        `[YieldOptimizer] STOP: Risk nad optimizer limitom (${currentRisk.toFixed(2)} > ${maxRiskForOptimizer.toFixed(1)})`
       );
       break;
     }
     
-    // Nájdi najlepší move (najvyšší yield gain bez prekročenia riskMax)
+    // Nájdi najlepší move (najvyšší yield gain bez prekročenia maxRiskForOptimizer)
     let bestMove: typeof YIELD_MOVES[0] | null = null;
     let bestYieldGain = 0;
     let bestMixAfterMove: MixItem[] | null = null;
@@ -195,6 +366,15 @@ export function optimizeYield(
       toItem.pct += move.amount;
       normalize(testMix);
       
+      // PR-34 CRITICAL: Validate caps PRED akceptovaním move
+      const capValidation = validateMoveAgainstCaps(testMix, riskPref, profileCaps);
+      if (!capValidation.valid) {
+        // console.log(
+        //   `[YieldOptimizer] SKIP move ${move.from} → ${move.to}: ${capValidation.reason}`
+        // );
+        continue; // Porušuje cap
+      }
+      
       // PR-31 FIX: Validuj profile caps pre TARGET asset
       const targetCap = profileCaps[move.to as keyof typeof profileCaps];
       if (targetCap !== undefined && toItem.pct > targetCap) {
@@ -205,10 +385,10 @@ export function optimizeYield(
         continue; // Prekročili by sme profile cap
       }
       
-      // Skontroluj risk
+      // PR-34: Skontroluj risk (s headroom +1.0)
       const testRisk = riskScore0to10(testMix);
-      if (testRisk > riskMax) {
-        continue; // Prekročili by sme riskMax
+      if (testRisk > maxRiskForOptimizer) {
+        continue; // Prekročili by sme maxRiskForOptimizer
       }
       
       // Vypočítaj yield gain
@@ -252,6 +432,9 @@ export function optimizeYield(
   
   const finalRisk = riskScore0to10(mix);
   const finalYield = approxYieldAnnualFromMix(mix);
+  
+  // PR-34 CRITICAL: Safety pass po všetkých moves (clamp overflows)
+  applySafetyPass(mix, riskPref, profileCaps);
   
   if (appliedMoves.length > 0) {
     console.log(
