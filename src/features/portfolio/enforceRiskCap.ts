@@ -77,19 +77,21 @@ const SAFE_TARGETS_PRIMARY: Record<RiskPref, { key: MixItem["key"]; weight: numb
 
 /**
  * FALLBACK targets pre deadlock scenáre (gold+cash plné)
- * Bonds majú risk ~1.5-2.0, stále lepšie než nechať ETF/crypto
+ * PR-33 FIX B: ODSTRÁNENÝ ETF (predchádza cap overflow), pridaný IAD
+ * Bonds ~1.5-2.0 risk, IAD (bond9) ~1.0 risk – bezpečnejšie než ETF
  */
 const SAFE_TARGETS_FALLBACK: Record<RiskPref, { key: MixItem["key"]; weight: number }[]> = {
   konzervativny: [
-    { key: "bonds", weight: 1.0 },   // 100% do bonds ak gold+cash plné
+    { key: "bonds", weight: 0.60 },  // bond5 + bondShort
+    { key: "iad", weight: 0.40 },    // bond9 (garantované, cap 15%)
   ],
   vyvazeny: [
-    { key: "bonds", weight: 0.70 },  // 70% bonds
-    { key: "etf", weight: 0.30 },    // 30% ETF (aj keď rizikovejšie)
+    { key: "bonds", weight: 0.60 },
+    { key: "iad", weight: 0.40 },
   ],
   rastovy: [
-    { key: "bonds", weight: 0.50 },  // 50% bonds
-    { key: "etf", weight: 0.50 },    // 50% ETF
+    { key: "bonds", weight: 0.60 },
+    { key: "iad", weight: 0.40 },
   ],
 };
 
@@ -256,12 +258,65 @@ export function enforceRiskCap(
       }
     }
 
-    // Ak STÁLE zostal remainder → DEADLOCK (všetky targets plné)
-    if (remainingReduction > 0.1) {
+    // PR-33 FIX B: EMERGENCY FALLBACK po 10 iteráciách (predchádza DEADLOCK)
+    if (iterations >= 10 && remainingReduction > 0.05) {
+      console.warn(
+        `[EnforceRiskCap] EMERGENCY FALLBACK (iteration ${iterations}): Vynulujem rizikovú časť portfólia`
+      );
+
+      // NULUJ riziká: dyn, crypto, real
+      const emergencyReduction = mix
+        .filter(m => ['dyn', 'crypto', 'real'].includes(m.key))
+        .reduce((sum, m) => sum + m.pct, 0);
+
+      mix.forEach(m => {
+        if (['dyn', 'crypto', 'real'].includes(m.key)) {
+          console.log(`[EnforceRiskCap]   → ${m.key} ${m.pct.toFixed(1)}% → 0% (emergency)`);
+          m.pct = 0;
+        }
+      });
+
+      // REDISTRIBUUJ do bezpečných aktív OKREM ETF (predchádza cap overflow)
+      // Priorita: IAD (bond9) > bonds (bond5/bondShort) > gold
+      const safeTargets = [
+        { key: 'iad', weight: 0.50, cap: riskPref === 'konzervativny' ? 15 : 25 },
+        { key: 'bonds', weight: 0.30, cap: 30 },
+        { key: 'gold', weight: 0.20, cap: 40 }
+      ];
+
+      let emergencyRemaining = emergencyReduction;
+
+      for (const target of safeTargets) {
+        const targetIndex = mix.findIndex(m => m.key === target.key);
+        if (targetIndex === -1) continue;
+
+        const currentPct = mix[targetIndex].pct;
+        const targetRoom = Math.max(0, target.cap - currentPct);
+        const allocation = Math.min(
+          emergencyRemaining * target.weight,
+          targetRoom * 0.95
+        );
+
+        if (allocation > 0.01) {
+          mix[targetIndex].pct += allocation;
+          emergencyRemaining -= allocation;
+          console.log(
+            `[EnforceRiskCap]   → ${target.key} +${allocation.toFixed(2)} p.b. (emergency safe haven)`
+          );
+        }
+      }
+
+      // Ak STÁLE zostalo → akceptuj (lepšie ako infinite loop)
+      if (emergencyRemaining > 0.1) {
+        console.warn(
+          `[EnforceRiskCap] Emergency: Zostalo ${emergencyRemaining.toFixed(2)} p.b. nedistribuovaných (akceptované)`
+        );
+      }
+    } else if (remainingReduction > 0.1) {
+      // Normálny DEADLOCK warning (ale pokračuj, nie break)
       console.error(
         `[EnforceRiskCap] DEADLOCK: Cannot redistribute ${remainingReduction.toFixed(2)} p.b. (all targets full: gold ${currentGold.toFixed(1)}%, cash ${currentCash.toFixed(1)}%)`
       );
-      break; // Validation fail je akceptovateľné
     }
 
     // Normalizuj a prepočítaj risk
@@ -277,11 +332,19 @@ export function enforceRiskCap(
     if (currentRisk <= riskMax) {
       break;
     }
+
+    // Hard stop po 15 iteráciách (aj s emergency fallback)
+    if (iterations >= 15) {
+      console.error(
+        `[EnforceRiskCap] HARD STOP po 15 iteráciách (risk ${currentRisk.toFixed(2)} / ${riskMax.toFixed(1)})`
+      );
+      break;
+    }
   }
 
   // Warning ak stále nad riskMax (ale blízko)
   let warning: string | null = null;
-  const tolerance = 0.5;
+  const tolerance = 1.5; // PR-33 FIX B: Zvýšená tolerancia (1.5 vs 0.5) – preferujeme mierny risk overflow vs DEADLOCK
 
   if (currentRisk > riskMax && currentRisk <= riskMax + tolerance) {
     warning = `⚠️ Risk blízko horného limitu profilu (${currentRisk.toFixed(1)} / ${riskMax.toFixed(1)})`;

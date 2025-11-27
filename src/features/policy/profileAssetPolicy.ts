@@ -110,10 +110,10 @@ const PROFILE_ASSET_CAPS: Record<
   // PREMIUM (≥ 100k EUR)
   premium: {
     konzervativny: {
-      dyn: 5,        // PR-31 FIX: 5% dyn pre Conservative PREMIUM (DYN_MINIMUMS zabezpečí minimum)
+      dyn: 7,        // PR-33 FIX E: 5% → 7% dyn pre Conservative PREMIUM (mierne zvýšené pre yield, ale stále < Balanced)
       crypto: 0,     // Konzervatívny klient nepotrebuje crypto
       real: 5,       // Voliteľne malé reality (skôr 0)
-      bond3y9: 25,   // Vysoký podiel bond9
+      bond3y9: 12,   // PR-33 FIX E: 25% → 12% (KEY CHANGE - zabráni Conservative > Growth v yield)
       etf: 20,       // PR-31 FIX: Znížené z 35% → 20% (obmedziť high-yield optimalizáciu)
       gold: 40,
       cash: 20,

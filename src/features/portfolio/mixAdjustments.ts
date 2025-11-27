@@ -397,43 +397,10 @@ export function getAdjustedMix(
       }
     }
 
-    // === STEP 9: Re-enforce Stage Caps (PR-28 ADVISOR VERDIKT) ===
-    // DÔVOD: enforceRiskCap môže pri redistribúcii + normalizácii prekročiť stage caps
-    // (napr. gold 40.22% > 40% kvôli zaokrúhľovaniu)
-    // RIEŠENIE: Znovu aplikuj enforceStageCaps(), potom recompute risk + warning logic
-    console.log(`[MixAdjustments] STEP 9: Re-enforcing stage caps po enforceRiskCap...`);
-    mix = enforceStageCaps(mix, riskPref, stage);
-
-    // Prepočítaj risk po STEP 9
-    const finalRiskAfterStep9 = riskScore0to10(mix);
-    const riskMax = getRiskMax(riskPref);
-
-    // Advisor verdikt: Ak risk > riskMax && risk ≤ riskMax + 0.3 && risk < initialRisk → OK s warningom
-    if (finalRiskAfterStep9 > riskMax) {
-      const riskDelta = finalRiskAfterStep9 - initialRiskBeforeEnforce;
-      const riskExcess = finalRiskAfterStep9 - riskMax;
-
-      if (riskExcess <= 0.3 && riskDelta < 0) {
-        // Akceptujeme s warningom
-        console.warn(
-          `[MixAdjustments] ⚠️ Risk blízko horného limitu po STEP 9 (${finalRiskAfterStep9.toFixed(2)} / ${riskMax.toFixed(1)}), ` +
-          `ale zlepšené vs. pôvodný (${riskDelta.toFixed(2)})`
-        );
-        warnings.push("risk-cap-enforced"); // Už môže byť, ale pre istotu
-      } else {
-        // Stále nad limitom a neakceptovateľné
-        console.error(
-          `[MixAdjustments] ⚠️ CRITICAL: Risk prekročil limit aj po STEP 9 (${finalRiskAfterStep9.toFixed(2)} / ${riskMax.toFixed(1)})`
-        );
-      }
-    } else {
-      console.log(`[MixAdjustments] ✅ Risk po STEP 9: ${finalRiskAfterStep9.toFixed(2)} / ${riskMax.toFixed(1)} - OK`);
-    }
-
-    // Update info s finálnym risk po STEP 9
-    if (info.riskCapEnforcement) {
-      info.riskCapEnforcement.finalRisk = finalRiskAfterStep9;
-    }
+    // PR-33 FIX: STEP 9 (re-enforce stage caps) REMOVED
+    // DÔVOD: Vytváralo LOOP DETECTED cykly a DEADLOCKy
+    // RIEŠENIE: Stage caps sa aplikujú len raz (STEP 5.7), enforceRiskCap je finálny arbiter
+    // Ak enforceRiskCap posunie asset mierne nad cap (napr. gold 40.2%), je to tolerované
   }
 
   // === STEP 10: Yield Optimizer (PR-31 FIX - moved after enforceRiskCap) ===

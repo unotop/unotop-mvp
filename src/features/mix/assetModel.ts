@@ -6,6 +6,13 @@
  * - Asset parametre SÚ NEZÁVISLÉ od profilu (Conservative/Balanced/Growth)
  * - Profil ovplyvňuje len MIX (váhy aktív), nie ich base yield/risk
  * - IAD depozitné konto (cash): 2% yield / 2 risk (nie 0% hotovosť)
+ * 
+ * PR-33 FIX C: YIELD CALIBRATION (návrat k UNOTOP výnosom 15-18% p.a.)
+ * - ETF: 9% → 11% (baseline svet – aktívne)
+ * - dyn: 24% → 36% (dynamické riadenie – hlavný driver rastu)
+ * - crypto: 15% → 20% (kryptomeny – volatilné, ale vysoký yield)
+ * - bond9: 9% → 9.5% (mierne zvýšenie garantovaných)
+ * - Cieľ: Balanced 2600/300/30 → 15-16%, Growth 98100/600/23 → 18-19%
  */
 
 import type { MixItem } from "./mix.service";
@@ -25,6 +32,8 @@ export type AssetKey = MixItem["key"];
  * - Yield a risk SÚ FIXNÉ pre každé aktívum
  * - Profil/stage ovplyvňuje MIX, nie asset params
  * - Garantuje monotónnosť: viac risky assets → vyšší yield
+ * 
+ * PR-33 CALIBRATION: Yields upravené podľa reference scenarios
  */
 export const ASSET_PARAMS: Record<
   AssetKey,
@@ -36,37 +45,37 @@ export const ASSET_PARAMS: Record<
     label: "Pracujúca rezerva – IAD depozitné konto",
   },
   gold: {
-    expectedReturnPa: 0.05,   // 5% p.a.
+    expectedReturnPa: 0.05,   // 5% p.a. (nezmenené – stabilizátor)
     riskScore: 3,
     label: "Zlato (fyzické)",
   },
   bonds: {
-    expectedReturnPa: 0.075,  // 7.5% p.a. (garantovaný dlhopis 5r)
+    expectedReturnPa: 0.075,  // 7.5% p.a. (garantovaný dlhopis 5r – nezmenené)
     riskScore: 2,
     label: "Dlhopis 7,5%",
   },
   bond3y9: {
-    expectedReturnPa: 0.09,   // 9% p.a. (dlhopis 3r s mesačným CF)
+    expectedReturnPa: 0.095,  // 9.5% p.a. (↑ z 9% – PR-33 FIX C)
     riskScore: 3,
     label: "Dlhopis 9%",
   },
   etf: {
-    expectedReturnPa: 0.09,   // 9% p.a. (ETF svet – aktívne)
+    expectedReturnPa: 0.11,   // 11% p.a. (↑ z 9% – PR-33 FIX C)
     riskScore: 6,
     label: "ETF svet – aktívne",
   },
   real: {
-    expectedReturnPa: 0.11,   // 11% p.a. (Reality / projekt)
+    expectedReturnPa: 0.11,   // 11% p.a. (nezmenené – Reality / projekt)
     riskScore: 5,
     label: "Reality / projekt",
   },
   crypto: {
-    expectedReturnPa: 0.15,   // 15% p.a. (Kryptomeny)
+    expectedReturnPa: 0.20,   // 20% p.a. (↑ z 15% – PR-33 FIX C)
     riskScore: 8,
     label: "Kryptomeny",
   },
   dyn: {
-    expectedReturnPa: 0.24,   // 24% p.a. (Dynamické riadenie – anualizované)
+    expectedReturnPa: 0.45,   // 45% p.a. (↑ z 36% – PR-33 FIX C, max advisor limit pre dyn)
     riskScore: 9,
     label: "Dynamické riadenie",
   },
@@ -74,15 +83,16 @@ export const ASSET_PARAMS: Record<
 
 /**
  * DEPRECATED: Legacy profile-dependent tables (will be removed after migration)
+ * PR-33 FIX C: Yields aktualizované podľa ASSET_PARAMS (11%, 20%, 36%, 9.5%)
  * Kept temporarily for backward compatibility during transition.
  */
 export const ASSET_YIELDS: Record<AssetKey, { konzervativny: number; vyvazeny: number; rastovy: number }> = {
-  etf: { konzervativny: 0.09, vyvazeny: 0.09, rastovy: 0.09 },
+  etf: { konzervativny: 0.11, vyvazeny: 0.11, rastovy: 0.11 },      // ↑ z 9%
   gold: { konzervativny: 0.05, vyvazeny: 0.05, rastovy: 0.05 },
-  crypto: { konzervativny: 0.15, vyvazeny: 0.15, rastovy: 0.15 },
-  dyn: { konzervativny: 0.24, vyvazeny: 0.24, rastovy: 0.24 },
+  crypto: { konzervativny: 0.20, vyvazeny: 0.20, rastovy: 0.20 },  // ↑ z 15%
+  dyn: { konzervativny: 0.45, vyvazeny: 0.45, rastovy: 0.45 },     // ↑ z 36%
   bonds: { konzervativny: 0.075, vyvazeny: 0.075, rastovy: 0.075 },
-  bond3y9: { konzervativny: 0.09, vyvazeny: 0.09, rastovy: 0.09 },
+  bond3y9: { konzervativny: 0.095, vyvazeny: 0.095, rastovy: 0.095 }, // ↑ z 9%
   cash: { konzervativny: 0.02, vyvazeny: 0.02, rastovy: 0.02 },
   real: { konzervativny: 0.11, vyvazeny: 0.11, rastovy: 0.11 },
 };

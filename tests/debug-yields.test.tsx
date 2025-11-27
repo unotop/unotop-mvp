@@ -1,6 +1,6 @@
 /**
  * DEBUG: Porovnanie yields pre Conservative vs Growth
- * 
+ *
  * Testuje rôzne monthly amounts (bez lump sum)
  */
 
@@ -20,8 +20,8 @@ describe("DEBUG: Conservative vs Growth yields", () => {
 
   for (const { monthly, label } of scenarios) {
     it(`${label}: Growth yield >= Conservative yield`, () => {
-      const presetC = PORTFOLIO_PRESETS.find(p => p.id === "konzervativny")!;
-      const presetG = PORTFOLIO_PRESETS.find(p => p.id === "rastovy")!;
+      const presetC = PORTFOLIO_PRESETS.find((p) => p.id === "konzervativny")!;
+      const presetG = PORTFOLIO_PRESETS.find((p) => p.id === "rastovy")!;
 
       const profile = {
         lumpSumEur: 0,
@@ -38,8 +38,14 @@ describe("DEBUG: Conservative vs Growth yields", () => {
         reserveMonths: 0,
       };
 
-      const mixC = getAdjustedMix(presetC.mix, { ...profile, riskPref: "konzervativny" });
-      const mixG = getAdjustedMix(presetG.mix, { ...profile, riskPref: "rastovy" });
+      const mixC = getAdjustedMix(presetC.mix, {
+        ...profile,
+        riskPref: "konzervativny",
+      });
+      const mixG = getAdjustedMix(presetG.mix, {
+        ...profile,
+        riskPref: "rastovy",
+      });
 
       const yieldC = approxYieldAnnualFromMix(mixC.mix) * 100;
       const yieldG = approxYieldAnnualFromMix(mixG.mix) * 100;

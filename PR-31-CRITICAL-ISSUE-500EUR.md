@@ -8,25 +8,26 @@
 500 EUR/mesiac, 0 EUR vstup, 21 rokov:
   Conservative: 7.86% p.a. ❌
   Growth:       7.54% p.a. ❌
-  
+
 ROZDIEL: Conservative o +0.32% VYŠŠÍ ako Growth!
 ```
 
 ## Test Results (všetky monthly amounts)
 
-| Monthly | Conservative | Growth | Status |
-|---------|--------------|--------|--------|
-| 150 EUR | ? | ? | ✅ PASS (qa-profile-hierarchy: 6.18% < 7.05%) |
-| 300 EUR | ? | ? | ✅ PASS |
-| **500 EUR** | **7.86%** | **7.54%** | **❌ FAIL** |
-| 800 EUR | 7.54% | 9.65% | ✅ PASS |
-| 1000 EUR | 7.54% | 9.65% | ✅ PASS |
+| Monthly     | Conservative | Growth    | Status                                        |
+| ----------- | ------------ | --------- | --------------------------------------------- |
+| 150 EUR     | ?            | ?         | ✅ PASS (qa-profile-hierarchy: 6.18% < 7.05%) |
+| 300 EUR     | ?            | ?         | ✅ PASS                                       |
+| **500 EUR** | **7.86%**    | **7.54%** | **❌ FAIL**                                   |
+| 800 EUR     | 7.54%        | 9.65%     | ✅ PASS                                       |
+| 1000 EUR    | 7.54%        | 9.65%     | ✅ PASS                                       |
 
 ## Root Cause Analysis
 
 ### Yield Optimizer Delta (příčina)
 
 **Conservative 500 EUR/m:**
+
 ```
 [YieldOptimizer] START: Risk 4.31 / 5.0, Yield 6.49%, Room 0.69
 [YieldOptimizer] Move 1: IAD DK → Bond 9% (+0.35% yield, risk 4.36)
@@ -36,6 +37,7 @@ ROZDIEL: Conservative o +0.32% VYŠŠÍ ako Growth!
 ```
 
 **Growth 500 EUR/m:**
+
 ```
 [YieldOptimizer] START: Risk 6.68 / 8.5, Yield 7.22%, Room 1.82
 [YieldOptimizer] Move 1: IAD DK → Bond 9% (+0.35% yield, risk 6.73)
@@ -45,6 +47,7 @@ ROZDIEL: Conservative o +0.32% VYŠŠÍ ako Growth!
 ```
 
 **Porovnanie:**
+
 - Conservative: **+1.37%** boost (3× IAD DK → Bond9 @ 0.35% each)
 - Growth: **+0.32%** boost (1× IAD DK @ 0.35% + 2× Zlato @ 0.20%)
 
@@ -56,13 +59,15 @@ ROZDIEL: Conservative o +0.32% VYŠŠÍ ako Growth!
 2. **Move Quality**: Conservative 3× "IAD DK → Bond9" @ 0.35% (high-yield move)
 3. **Growth Move Degradation**: Po 1. move musel Growth prejsť na "Zlato → Bond9" @ 0.20% (nižší yield)
 
-**Hypotéza:** 
+**Hypotéza:**
+
 - Conservative mix má viac IAD DK (bonds), takže optimizer má viac "high-yield" moves
 - Growth mix má menej IAD DK, takže optimizer rýchlo vyčerpá top moves a musí použiť horší (Zlato)
 
 ### Profile Asset Policy (pre 500 EUR = 126k EUR volume)
 
 **Conservative PREMIUM (126k EUR):**
+
 ```
 [ProfileAssetPolicy] PREMIUM boost: dyn 0.0% → 5% (adding 5.0% from cash/bonds)
 [ProfileAssetPolicy] etf: 35.0% → 20.0% (cap enforced, overflow 15.0%)
@@ -73,11 +78,13 @@ ROZDIEL: Conservative o +0.32% VYŠŠÍ ako Growth!
 ```
 
 **Growth PREMIUM (126k EUR):**
+
 ```
 [ProfileAssetPolicy] PREMIUM boost: dyn 0.0% → 12% (adding 12.0% from cash/bonds)
 ```
 
 **Rozdiel:**
+
 - Conservative: ETF capped na 20%, overflow (+17.5%) išiel do bonds/bond9 → viac "fuel" pre optimizer
 - Growth: Žiadne capy, dyn boost z bonds → menej bonds na optimization
 
@@ -91,12 +98,13 @@ ROZDIEL: Conservative o +0.32% VYŠŠÍ ako Growth!
 ## Navrhované riešenia
 
 ### Riešenie 1: Cap yield optimizer boost (najrýchlejšie)
+
 ```typescript
 // yieldOptimizer.ts
 const MAX_BOOST_BY_PROFILE = {
   konzervativny: 0.008, // max +0.8% boost
-  vyvazeny: 0.010,      // max +1.0% boost
-  rastovy: 0.015,       // max +1.5% boost
+  vyvazeny: 0.01, // max +1.0% boost
+  rastovy: 0.015, // max +1.5% boost
 };
 
 // V runYieldOptimizer():
@@ -111,6 +119,7 @@ if (yieldGain >= maxBoost) {
 **Cons:** Neriešim root cause (Conservative má viac bonds po profile policy)
 
 ### Riešenie 2: Adjust profile asset policy (fundamentálne)
+
 ```typescript
 // profileAssetPolicy.ts - Conservative PREMIUM
 maxCaps: {
@@ -125,6 +134,7 @@ maxCaps: {
 **Cons:** Komplexnejšie, musím retestovať všetky scenáre
 
 ### Riešenie 3: Yield optimizer move priority (sofistikované)
+
 ```typescript
 // Pred každým move: skontroluj, či výsledok zachováva hierarchiu
 const projectedYield = currentYield + yieldGain;
@@ -141,10 +151,12 @@ if (projectedYield > otherProfilesMaxYield + TOLERANCE) {
 ## Odporúčanie
 
 **Immediate fix (Phase 1):**
+
 - ✅ Riešenie 1: Cap yield optimizer boost (1 hodina práce)
 - ✅ Pridať test pre 500 EUR/m (qa-profile-hierarchy-500.test.tsx)
 
 **Long-term fix (Phase 2):**
+
 - ⏳ Riešenie 2: Review profile asset policy caps (Conservative bonds limits)
 - ⏳ Pridať tests pre viac volume bands (50k, 100k, 150k, 200k, 250k)
 
@@ -160,7 +172,10 @@ it("500 EUR/m: Growth yield >= Conservative yield", () => {
     // ... (rest of profile)
   };
 
-  const mixC = getAdjustedMix(presetC.mix, { ...profile, riskPref: "konzervativny" });
+  const mixC = getAdjustedMix(presetC.mix, {
+    ...profile,
+    riskPref: "konzervativny",
+  });
   const mixG = getAdjustedMix(presetG.mix, { ...profile, riskPref: "rastovy" });
 
   const yieldC = approxYieldAnnualFromMix(mixC.mix) * 100;
@@ -197,11 +212,13 @@ it("500 EUR/m: Growth yield >= Conservative yield", () => {
 ---
 
 **Test command:**
+
 ```bash
 npm test -- debug-yields
 ```
 
 **Expected after fix:**
+
 ```
 500 EUR/m: Conservative 7.00% < Growth 7.54% ✅
 ```
