@@ -76,7 +76,7 @@ export const ASSET_PARAMS: Record<
   },
   dyn: {
     expectedReturnPa: 0.45,   // 45% p.a. (↑ z 36% – PR-33 FIX C, max advisor limit pre dyn)
-    riskScore: 9,
+    riskScore: 8,             // PR-34: Znížené z 9 → 8 (rovnaké ako crypto – dyn nie je rizikovejší)
     label: "Dynamické riadenie",
   },
 };
