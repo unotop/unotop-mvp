@@ -58,15 +58,15 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "amber",
     description: "Vyvážený pomer rizika a výnosu. Vhodné pre väčšinu investorov s dlhodobým horizontom.",
     mix: [
-      // PR-30: Starter Balanced - bez crypto (crypto je "odmena" pre rastový/väčší plán)
-      { key: "gold", pct: 40 },    // Stabilita
-      { key: "etf", pct: 45 },     // Rast
-      { key: "bonds", pct: 5 },    // Príjem
-      { key: "bond3y9", pct: 5 },  // Príjem mesačný
-      { key: "dyn", pct: 0 },      // Starter: bez dyn
+      // PR-34: Zlato znížené z 40% → 12%, dyn zvýšené z 0% → 10%
+      { key: "gold", pct: 12 },    // PR-34: Znížené (stabilita bez extrému)
+      { key: "etf", pct: 50 },     // PR-34: Zvýšené z 45% (hlavný rast)
+      { key: "bonds", pct: 9 },    // Zvýšené z 5% (kompenzácia)
+      { key: "bond3y9", pct: 9 },  // Zvýšené z 5% (mesačný CF)
+      { key: "dyn", pct: 10 },     // PR-34: Zvýšené z 0% (aktívne riadenie)
       { key: "cash", pct: 5 },     // Minimálna rezerva
       { key: "crypto", pct: 0 },   // Starter: bez crypto
-      { key: "real", pct: 0 },     // Starter: bez reality
+      { key: "real", pct: 5 },     // Zvýšené z 0% (diverzifikácia)
     ],
     targetRisk: { min: 5.5, max: 6.5 }, // PR-30: Cieľ 5.5-6.5 (pod riskMax 7.0)
   },
@@ -77,15 +77,15 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "green",
     description: "Vyššie riziko, maximálny potenciálny výnos. Vhodné pre skúsených investorov s vysokou toleranciou rizika.",
     mix: [
-      // PR-30: Starter Growth - crypto znížené na 3% (aby enforceRiskCap nechalo > 0%)
-      { key: "gold", pct: 40 },    // Stabilita (rovnaká ako Balanced)
-      { key: "etf", pct: 47 },     // Viac než Balanced (zvýšené z 45%)
-      { key: "bonds", pct: 2.5 },  // Menej bonds než Balanced
-      { key: "bond3y9", pct: 2.5 }, // Menej bonds než Balanced
-      { key: "dyn", pct: 0 },      // Starter: bez dyn (príliš riskantné pre malý plán)
-      { key: "cash", pct: 5 },     // Rovnaká ako Balanced (enforceRiskCap to zníži)
-      { key: "crypto", pct: 3 },   // PR-30: Znížené z 7% → 3% (aby prežilo enforceRiskCap)
-      { key: "real", pct: 0 },     // Starter: bez reality
+      // PR-34: Zlato znížené z 40% → 10%, dyn zvýšené z 0% → 16%, crypto 3% → 6%
+      { key: "gold", pct: 10 },    // PR-34: Znížené (minimálna stabilita)
+      { key: "etf", pct: 52 },     // PR-34: Zvýšené z 47% (hlavný rast)
+      { key: "bonds", pct: 4 },    // Zvýšené z 2.5% (stabilita)
+      { key: "bond3y9", pct: 4 },  // Zvýšené z 2.5% (mesačný CF)
+      { key: "dyn", pct: 16 },     // PR-34: Zvýšené z 0% (aktívne riadenie)
+      { key: "cash", pct: 2 },     // Znížené z 5% (minimalizácia hotovosti)
+      { key: "crypto", pct: 6 },   // PR-34: Zvýšené z 3% (agresívny rast)
+      { key: "real", pct: 6 },     // Zvýšené z 0% (diverzifikácia)
     ],
     targetRisk: { min: 7.0, max: 8.0 }, // PR-30: Cieľ 7-8 (nad Balanced, pod riskMax 8.0)
   },
