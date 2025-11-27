@@ -164,6 +164,9 @@ export function enforceStageCaps(
       item.pct = cap;
       adjustmentsMade = true;
       
+      // DEBUG LOG (PR-34)
+      console.log(`[enforceStageCaps] ${item.key} clamped ${pctBefore.toFixed(1)}% → ${cap}% (stage=${stage}, riskPref=${riskPref})`);
+      
       // Track individual asset cap enforcement
       trackPolicyAdjustment({
         stage,

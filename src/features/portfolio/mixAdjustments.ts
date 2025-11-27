@@ -126,10 +126,11 @@ function normalizeAndClampMix(mix: MixItem[], riskPref: RiskPref, maxRiskForOpti
     }
   }
 
-  // STEP 3: Fix súčet
+  // STEP 3: Fix súčet (len ak drift > 0.5%)
   const currentSum = mix.reduce((sum, item) => sum + item.pct, 0);
 
-  if (Math.abs(currentSum - 100) > 0.1) {
+  if (Math.abs(currentSum - 100) > 0.5) {
+    // PR-34 FIX: Zvýš toleranciu z 0.1% na 0.5% (enforceStageCaps už normalizoval)
     if (currentSum < 100) {
       // Doplň do IAD/bonds
       const deficit = 100 - currentSum;
@@ -390,6 +391,7 @@ export function getAdjustedMix(
   if (currentRisk > riskCap + TUNE_TOLERANCE.downThreshold) {
     mix = downTuneRisk(mix, riskCap, riskPref, stageCapsMap);
     currentRisk = riskScore0to10(mix, riskPref); // Refresh
+    console.log(`[DEBUG STEP 5.5A DOWN-TUNE] ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
   }
   
   // STEP 5.5B: UP-TUNE (ak risk < targetMin - tolerance)
@@ -397,6 +399,7 @@ export function getAdjustedMix(
     const maxAdjustment = MAX_TOTAL_ADJUSTMENT[riskPref];
     mix = upTuneRisk(mix, targetMin, riskPref, stage, stageCapsMap, profile, maxAdjustment);
     currentRisk = riskScore0to10(mix, riskPref); // Refresh
+    console.log(`[DEBUG STEP 5.5B UP-TUNE] ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
     
     // Ak stále pod targetMin → info chip
     if (currentRisk < targetMin) {
@@ -424,6 +427,7 @@ export function getAdjustedMix(
   // === STEP 6: Stage-aware caps enforcement (PR-8) ===
   // Detekuj stage a aplikuj adaptive caps
   mix = enforceStageCaps(mix, riskPref, stage);
+  console.log(`[DEBUG STEP 6 enforceStageCaps] ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
 
   // === STEP 7: Final Cash Cap Enforcement (PR-27b) ===
   // KRITICKÝ FIX: Cash cap sa musí aplikovať PO všetkých tuning krokoch
@@ -442,6 +446,7 @@ export function getAdjustedMix(
       warnings.push("cash-cap-exceeded");
     }
   }
+  console.log(`[DEBUG STEP 7 applyCashCap] ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
 
   // === STEP 7.5: Profile Asset Policy (PR-31) ===
   // Aplikuj profile-aware asset caps PRED enforceRiskCap
@@ -459,6 +464,7 @@ export function getAdjustedMix(
     );
     // Info pre debug (nie warning - je to normálne správanie)
   }
+  console.log(`[DEBUG STEP 7.5 applyProfileAssetPolicy] ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
 
   // PR-31 FIX: Yield optimizer MOVED to STEP 10 (after enforceRiskCap)
   // Dôvod: Growth profil môže mať risk > riskMax pred enforceRiskCap,
@@ -511,6 +517,7 @@ export function getAdjustedMix(
     // RIEŠENIE: Stage caps sa aplikujú len raz (STEP 5.7), enforceRiskCap je finálny arbiter
     // Ak enforceRiskCap posunie asset mierne nad cap (napr. gold 40.2%), je to tolerované
   }
+  console.log(`[DEBUG STEP 8 enforceRiskCap] ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
 
   // === STEP 10: Yield Optimizer (PR-31 FIX - moved after enforceRiskCap) ===
   // Ak máme risk rezervu (riskScore < riskMax - 0.2), zvýš výnos
@@ -539,9 +546,11 @@ export function getAdjustedMix(
 
   // === PR-34: FINAL STEP - Normalize & Clamp (posledná obrana) ===
   console.log(`[MixAdjustments] FINAL STEP: normalizeAndClampMix...`);
+  console.log(`[MixAdjustments DEBUG] PRED normalizeAndClampMix: ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
   const finalRiskMax = getRiskMax(riskPref);
   const maxRiskForOptimizer = Math.min(finalRiskMax + 1.0, 9.0); // Sync s yieldOptimizer headroom
   mix = normalizeAndClampMix(mix, riskPref, maxRiskForOptimizer);
+  console.log(`[MixAdjustments DEBUG] PO normalizeAndClampMix: ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
 
   return { mix, warnings, info };
 }

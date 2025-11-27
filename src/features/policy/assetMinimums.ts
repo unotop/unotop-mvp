@@ -18,7 +18,7 @@ export const ASSET_MINIMUMS = {
   gold:    { lumpMin: 0,      monthlyMin: 50  },   // zlaté sporenie od ~50 €/mes
   bonds:   { lumpMin: 2500,   monthlyMin: 0   },   // nákup dlhopisu 2 500 €
   bond3y9: { lumpMin: 2500,   monthlyMin: 0   },   // rovnaké
-  dyn:     { lumpMin: 1000,   monthlyMin: 0   },   // dynamické riadenie od 1 000 € vstup
+  dyn:     { lumpMin: 500,    monthlyMin: 100 },   // PR-34: Zníž z 1000→500, monthly od 100 (realistické pre 600/mes vklad)
   cash:    { lumpMin: 0,      monthlyMin: 0   },   // vždy OK
   crypto:  { lumpMin: 100,    monthlyMin: 50  },   // praktické minimum
   real:    { lumpMin: 300000, monthlyMin: 0   },   // ostáva filter príjem≥3500 alebo lump≥300k

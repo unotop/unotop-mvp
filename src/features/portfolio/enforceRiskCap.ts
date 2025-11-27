@@ -141,10 +141,23 @@ export function enforceRiskCap(
     iterations++;
 
     // Nájdi najrizikovejší asset, ktorý má > 0 %
+    // PR-34 FIX: Preskočiť assety, ktoré sú už NA alebo POD profile cap
+    // (napr. Balanced dyn 10% je už na profile cap, nemôže sa ďalej škrtať)
     let reducedKey: MixItem["key"] | null = null;
     for (const key of RISK_ORDERED_KEYS) {
       const asset = mix.find((m) => m.key === key);
       if (asset && asset.pct > 0) {
+        // PR-34: Hardcoded check pre dyn (profile asset policy caps)
+        // Balanced: dyn cap = 10%, Conservative: dyn cap = 10%, Growth: dyn cap = 20%
+        if (key === "dyn") {
+          const dynProfileCap = riskPref === "rastovy" ? 20 : 10; // B/C: 10%, G: 20%
+          if (asset.pct <= dynProfileCap * 1.05) {
+            // dyn je <= profile cap (+5% tolerance) → preskočiť (už capped v STEP 7.5)
+            console.log(`[EnforceRiskCap] dyn ${asset.pct.toFixed(1)}% <= profile cap ${dynProfileCap}%, skip škrtania`);
+            continue;
+          }
+        }
+        
         reducedKey = key;
         break;
       }
