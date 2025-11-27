@@ -39,6 +39,7 @@ import { enforceRiskCap, type EnforceRiskCapResult } from "./enforceRiskCap"; //
 import { ensureProfileHierarchy } from "./ensureProfileHierarchy"; // PR-30: Profile hierarchy
 import { applyProfileAssetPolicy } from "../policy/profileAssetPolicy"; // PR-31: Profile asset policy
 import { optimizeYield, type YieldOptimizerResult } from "./yieldOptimizer"; // PR-31: Yield optimizer
+import { getGoldPolicy } from "../policy/profileAssetPolicy"; // PR-34: Gold policy caps
 
 /**
  * PR-13 ULTIMATE: Target Bands - Cieľové rizikové pásma pre každý profil
@@ -68,6 +69,114 @@ const TUNE_TOLERANCE = {
   downThreshold: 0.2,  // Štartuj DOWN pri cap + 0.2
   upThreshold: 0.1,    // Štartuj UP pri targetMin - 0.1
 };
+
+/**
+ * PR-34: Global hard caps (musí byť sync s yieldOptimizer.ts)
+ */
+const GLOBAL_HARD_CAPS: Record<string, number> = {
+  gold: 40,
+  etf: 50,
+  dyn: 22,
+  crypto: 8,
+};
+
+/**
+ * PR-34: Finálny normalize & clamp krok (posledná obrana pred validáciou)
+ * 
+ * Kroky:
+ * 1. Zaokrúhli všetky váhy na 2 des. miesta
+ * 2. Clamp všetky assets ktoré presahujú caps:
+ *    - gold ≤ min(GOLD_POLICY.hardCap, GLOBAL_HARD_CAPS.gold)
+ *    - ETF ≤ GLOBAL_HARD_CAPS.etf
+ *    - dyn ≤ GLOBAL_HARD_CAPS.dyn
+ *    - crypto ≤ GLOBAL_HARD_CAPS.crypto
+ * 3. Fix súčet:
+ *    - Ak < 100%: doplň do IAD/bonds podľa profilu
+ *    - Ak > 100%: uberie z najrizikovejších (dyn, crypto, ETF)
+ */
+function normalizeAndClampMix(mix: MixItem[], riskPref: RiskPref, maxRiskForOptimizer: number): MixItem[] {
+  const goldPolicy = getGoldPolicy(riskPref);
+
+  // STEP 1: Zaokrúhli na 2 des. miesta
+  mix.forEach((item) => {
+    item.pct = Math.round(item.pct * 100) / 100;
+  });
+
+  // STEP 2: Clamp assets ktoré presahujú caps
+  let totalOverflow = 0;
+
+  for (const item of mix) {
+    let cap: number | undefined;
+
+    if (item.key === "gold") {
+      cap = Math.min(goldPolicy.hardCap, GLOBAL_HARD_CAPS.gold);
+    } else if (item.key === "etf") {
+      cap = GLOBAL_HARD_CAPS.etf;
+    } else if (item.key === "dyn") {
+      cap = GLOBAL_HARD_CAPS.dyn;
+    } else if (item.key === "crypto") {
+      cap = GLOBAL_HARD_CAPS.crypto;
+    }
+
+    if (cap !== undefined && item.pct > cap) {
+      const overflow = item.pct - cap;
+      item.pct = cap;
+      totalOverflow += overflow;
+      console.log(`[MixAdjustments Clamp] ${item.key} ${(cap + overflow).toFixed(1)}% → ${cap}%`);
+    }
+  }
+
+  // STEP 3: Fix súčet
+  const currentSum = mix.reduce((sum, item) => sum + item.pct, 0);
+
+  if (Math.abs(currentSum - 100) > 0.1) {
+    if (currentSum < 100) {
+      // Doplň do IAD/bonds
+      const deficit = 100 - currentSum;
+      const safetySinks =
+        riskPref === "konzervativny"
+          ? [
+              { key: "bond3y9", weight: 0.6 },
+              { key: "bonds", weight: 0.4 },
+            ]
+          : riskPref === "vyvazeny"
+          ? [
+              { key: "bonds", weight: 0.55 },
+              { key: "bond3y9", weight: 0.45 },
+            ]
+          : [
+              { key: "bonds", weight: 0.6 },
+              { key: "bond3y9", weight: 0.4 },
+            ];
+
+      for (const sink of safetySinks) {
+        const sinkItem = mix.find((m) => m.key === sink.key);
+        if (sinkItem) {
+          sinkItem.pct += deficit * sink.weight;
+        }
+      }
+
+      console.log(`[MixAdjustments Clamp] Deficit ${deficit.toFixed(2)}% → redistributed to safety sinks`);
+    } else {
+      // Uberie z najrizikovejších (dyn > crypto > ETF)
+      const surplus = currentSum - 100;
+      const riskySources = ["dyn", "crypto", "etf"];
+
+      for (const key of riskySources) {
+        const item = mix.find((m) => m.key === key);
+        if (item && item.pct > 0) {
+          const cut = Math.min(surplus, item.pct);
+          item.pct -= cut;
+          console.log(`[MixAdjustments Clamp] Surplus ${surplus.toFixed(2)}%: cut ${key} -${cut.toFixed(2)}%`);
+          break; // Cut from first available risky asset
+        }
+      }
+    }
+  }
+
+  // STEP 4: Final normalize (ensure exact 100%)
+  return normalize(mix);
+}
 
 export interface ProfileForAdjustments {
   lumpSumEur: number;
@@ -428,7 +537,13 @@ export function getAdjustedMix(
     // Info (nie warning - je to želaná optimalizácia)
   }
 
-  return { mix: normalize(mix), warnings, info };
+  // === PR-34: FINAL STEP - Normalize & Clamp (posledná obrana) ===
+  console.log(`[MixAdjustments] FINAL STEP: normalizeAndClampMix...`);
+  const finalRiskMax = getRiskMax(riskPref);
+  const maxRiskForOptimizer = Math.min(finalRiskMax + 1.0, 9.0); // Sync s yieldOptimizer headroom
+  mix = normalizeAndClampMix(mix, riskPref, maxRiskForOptimizer);
+
+  return { mix, warnings, info };
 }
 
 /**
