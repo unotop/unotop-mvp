@@ -1,18 +1,43 @@
 /**
  * PR-31: Profile-Aware Asset Policy
+ * PR-34: Gold Policy Bands (Conservative: max 40%, Balanced: max 20%, Growth: max 15%)
  * 
  * Definuje maximálne podiely aktív podľa profilu a objemu plánu.
  * Zabezpečuje logické rozdelenie high-yield aktív medzi profily:
- * - Conservative: nízke riziko, môže mať dyn pri ≥100k (max 10%)
- * - Balanced: stredný profil
- * - Growth: najviac dyn/crypto/real
+ * - Conservative: nízke riziko, môže mať dyn pri ≥100k (max 10%), VIAC ZLATA (20-30%)
+ * - Balanced: stredný profil, MENEJ ZLATA (10-15%, max 20%)
+ * - Growth: najviac dyn/crypto/real, NAJMENEJ ZLATA (8-12%, max 15%)
  * 
  * Invariant: maxShare_conservative <= maxShare_balanced <= maxShare_growth
  * (pri rovnakom volume band)
+ * GOLD INVERSION: gold_conservative >= gold_balanced >= gold_growth (bezpečný pilier)
  */
 
 import type { RiskPref } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
+
+/**
+ * PR-34: Gold Policy Bands
+ * 
+ * Definuje target ranges a hard caps pre zlato podľa profilu.
+ * - Conservative: môže mať viac zlata (bezpečný pilier)
+ * - Balanced/Growth: menej zlata, viac ETF/dyn/crypto
+ */
+export const GOLD_POLICY: Record<RiskPref, { targetMin: number; targetMax: number; hardCap: number }> = {
+  konzervativny: { targetMin: 20, targetMax: 30, hardCap: 40 },  // Bezpečný profil, viac zlata OK
+  vyvazeny: { targetMin: 10, targetMax: 15, hardCap: 20 },       // KEY: max 20% gold (znížené z 40%)
+  rastovy: { targetMin: 8, targetMax: 12, hardCap: 15 },         // KEY: max 15% gold (znížené z 40%)
+};
+
+/**
+ * Získaj gold policy pre daný profil
+ * 
+ * @param riskPref - Rizikový profil
+ * @returns Gold policy (targetMin, targetMax, hardCap)
+ */
+export function getGoldPolicy(riskPref: RiskPref): { targetMin: number; targetMax: number; hardCap: number } {
+  return GOLD_POLICY[riskPref];
+}
 
 /**
  * Minimum dyn % pre PREMIUM plány (aby sa dyn dostal do mixu)

@@ -2,12 +2,15 @@
  * Risk Cap Enforcement Module
  * 
  * PR-28: Finálna tvrdá brzda pre riziko portfólia.
+ * PR-34: Profile-aware RISK_SINKS (B/G: bonds/IAD primárne, zlato secondary s cap checks)
+ * 
  * Aplikuje sa ako posledný krok (STEP 8) po všetkých policy adjustments.
  * 
  * Algoritmus:
  * 1. Skontroluj, či riskScore <= riskMax
- * 2. Ak nie, iteratívne znižuj najrizikovejšie assety (max 15 krokov)
- * 3. Redistribuj do bezpečných assetov podľa profilu
+ * 2. Ak nie, iteratívne znižuj najrizikovejšie assety (max 10 krokov)
+ * 3. Redistribuj do bezpečných assetov podľa profilu (RISK_SINKS)
+ * 4. Iteration 9-10: Direct cut mode (dyn/crypto/real/ETF → bonds/IAD, BEZ nafukovania zlata)
  * 
  * Rizikovosť assetov (od najvyššej):
  * - Crypto (9)
@@ -19,10 +22,7 @@
  * - Zlato (2-3)
  * - Cash (2)
  * 
- * Bezpečné targety (podľa profilu):
- * - Konzervatívny: Gold → Dlhopis 7,5% → ETF
- * - Vyvážený: Gold + ETF + Dlhopis 7,5%
- * - Rastový: ETF → Gold → Dlhopis 7,5%
+ * PR-34: Profile-aware sinks (Conservative: viac zlata OK, B/G: menej zlata, viac bonds/IAD)
  */
 
 import type { MixItem } from "../mix/mix.service";
@@ -30,6 +30,39 @@ import type { RiskPref } from "../mix/assetModel";
 import { normalize } from "../mix/mix.service";
 import { riskScore0to10 } from "../mix/assetModel";
 import { getRiskMax } from "../policy/risk";
+import { getGoldPolicy } from "../policy/profileAssetPolicy"; // PR-34: Gold policy caps
+
+/**
+ * PR-34: Profile-Aware Risk Sinks
+ * 
+ * Definuje, kam sa má presúvať riziko pri znižovaní risk score.
+ * - Conservative: môže mať viac zlata (bezpečný pilier)
+ * - Balanced: primárne bonds/IAD, zlato len do 20% (hard cap)
+ * - Growth: primárne bonds/IAD/real, zlato len do 15% (hard cap)
+ * 
+ * maxPct: Ak definované, sink sa považuje za "full" pri dosiahnutí limitu
+ */
+const RISK_SINKS: Record<RiskPref, Array<{ key: MixItem["key"]; weight: number; maxPct?: number }>> = {
+  konzervativny: [
+    { key: "bonds", weight: 0.30 },         // Primárne bonds (bond5 + bondShort)
+    { key: "bond3y9", weight: 0.25 },       // bond9 (IAD substitute pre alias compatibility)
+    { key: "gold", weight: 0.35 },          // Zlato OK (až do 40% cap z GOLD_POLICY)
+    { key: "cash", weight: 0.10 },          // IAD DK
+  ],
+  vyvazeny: [
+    { key: "bonds", weight: 0.40 },         // Primárne bonds
+    { key: "bond3y9", weight: 0.30 },       // bond9 (vyššia váha než Conservative)
+    { key: "gold", weight: 0.20, maxPct: 20 }, // KEY: zlato len do 20% (hard cap)!
+    { key: "cash", weight: 0.10 },          // IAD DK
+  ],
+  rastovy: [
+    { key: "bonds", weight: 0.35 },         // Primárne bonds
+    { key: "bond3y9", weight: 0.30 },       // bond9
+    { key: "real", weight: 0.20 },          // Reality (nízke riziko, vyšší yield ako gold)
+    { key: "gold", weight: 0.10, maxPct: 15 }, // KEY: zlato len do 15% (hard cap)!
+    { key: "cash", weight: 0.05 },          // IAD DK (minimálne)
+  ],
+};
 
 /**
  * Rizikovosť assetov (zoradené od najvyššieho rizika)
@@ -50,51 +83,6 @@ const RISK_ORDERED_KEYS: MixItem["key"][] = [
   "cash",     // 2 (najnižšie riziko, last resort)
 ];
 
-/**
- * Bezpečné assety pre redistribúciu (podľa profilu)
- * 
- * PR-28 FIX v2: PRIMARY + FALLBACK targets
- * PRIMARY = gold + cash (preferované, najnižšie riziko)
- * FALLBACK = bonds (ak gold+cash na limite, riešime deadlock)
- * 
- * SAFE TARGETS = assety, ktoré sa NIKDY neznižujú v enforceRiskCap
- * → Len GOLD a CASH (najnižšie riziko)
- */
-const SAFE_TARGETS_PRIMARY: Record<RiskPref, { key: MixItem["key"]; weight: number }[]> = {
-  konzervativny: [
-    { key: "gold", weight: 0.70 },   // 70% do zlata
-    { key: "cash", weight: 0.30 },   // 30% do cash
-  ],
-  vyvazeny: [
-    { key: "gold", weight: 0.60 },   // 60% do zlata
-    { key: "cash", weight: 0.40 },   // 40% do cash
-  ],
-  rastovy: [
-    { key: "gold", weight: 0.50 },   // 50% do zlata
-    { key: "cash", weight: 0.50 },   // 50% do cash
-  ],
-};
-
-/**
- * FALLBACK targets pre deadlock scenáre (gold+cash plné)
- * PR-33 FIX B: ODSTRÁNENÝ ETF (predchádza cap overflow), pridaný IAD
- * Bonds ~1.5-2.0 risk, IAD (bond9) ~1.0 risk – bezpečnejšie než ETF
- */
-const SAFE_TARGETS_FALLBACK: Record<RiskPref, { key: MixItem["key"]; weight: number }[]> = {
-  konzervativny: [
-    { key: "bonds", weight: 0.60 },  // bond5 + bondShort
-    { key: "iad", weight: 0.40 },    // bond9 (garantované, cap 15%)
-  ],
-  vyvazeny: [
-    { key: "bonds", weight: 0.60 },
-    { key: "iad", weight: 0.40 },
-  ],
-  rastovy: [
-    { key: "bonds", weight: 0.60 },
-    { key: "iad", weight: 0.40 },
-  ],
-};
-
 export interface EnforceRiskCapResult {
   mix: MixItem[];
   applied: boolean;
@@ -107,29 +95,28 @@ export interface EnforceRiskCapResult {
 /**
  * Aplikuj hard risk cap na mix
  * 
+ * PR-34: Profile-aware RISK_SINKS (B/G: bonds/IAD primárne, zlato secondary s maxPct)
  * Iteratívne znižuje najrizikovejšie assety, kým riskScore <= riskMax.
- * Max 15 iterácií, v každej iterácii odoberie 2-5 p.b. z najrizikovejšieho assetu.
- * 
- * PR-28 CRITICAL FIX: Rešpektuje stage caps (gold max 40%) pri redistribúcii!
- * Ak gold nemá room → všetko do cash.
- * Ak ani cash nemá room → STOP (validation fail je lepšie než infinite loop).
+ * Max 10 iterácií (PR-34: znížené z 15):
+ *   - Iteration 1-8: Normal redistribution using RISK_SINKS
+ *   - Iteration 9-10: Direct cut mode (force cut high-risk → bonds/bond9 ONLY, NO gold)
  * 
  * @param baseMix - Mix pred aplikáciou risk cap
  * @param riskPref - Rizikový profil
- * @param stageCaps - Stage caps (gold, cash limity) - REQUIRED!
- * @param maxIterations - Max počet iterácií (default 15)
+ * @param stageCaps - Stage caps (gold, cash limity) - used as fallback if RISK_SINKS.maxPct undefined
+ * @param maxIterations - Max počet iterácií (default 10)
  * @returns Upravený mix + info o risk enforcement
  */
 export function enforceRiskCap(
   baseMix: MixItem[],
   riskPref: RiskPref,
-  stageCaps?: Record<string, number>, // PR-28 FIX: Pridaný parameter
-  maxIterations = 15
+  stageCaps?: Record<string, number>,
+  maxIterations = 10 // PR-34: Znížené z 15 → 10 (iteration 9-10 = direct cut mode)
 ): EnforceRiskCapResult {
   const mix = [...baseMix];
   const riskMax = getRiskMax(riskPref);
-  const safeTargetsPrimary = SAFE_TARGETS_PRIMARY[riskPref];
-  const safeTargetsFallback = SAFE_TARGETS_FALLBACK[riskPref];
+  const riskSinks = RISK_SINKS[riskPref]; // PR-34: Profile-aware sinks
+  const goldPolicy = getGoldPolicy(riskPref); // PR-34: Gold caps
 
   const initialRisk = riskScore0to10(mix, riskPref, 0);
   let currentRisk = initialRisk;
@@ -182,140 +169,98 @@ export function enforceRiskCap(
       `[EnforceRiskCap] Iteration ${iterations}: ${reducedKey} ${currentPct.toFixed(2)}% → ${reducedPct.toFixed(2)}% (-${actualReduction.toFixed(2)} p.b.)`
     );
 
-    // PR-28 FIX v2: Redistribuuj s 2-úrovňovým fallbackom
-    // LEVEL 1: Primary targets (gold+cash) s rešpektom ku stage caps
-    // LEVEL 2: Fallback targets (bonds/ETF) ak gold+cash plné
+    // PR-34: Profile-aware RISK_SINKS redistribution
+    // Iteration 1-8: Normal redistribution using RISK_SINKS
+    // Iteration 9-10: Direct cut mode (force cut high-risk assets → bonds/bond9 only, NO gold inflation)
     
-    const goldCap = stageCaps?.["gold"] ?? 100;
-    const cashCap = stageCaps?.["cash"] ?? 100;
-
-    const goldIndex = mix.findIndex((m) => m.key === "gold");
-    const cashIndex = mix.findIndex((m) => m.key === "cash");
-
-    const currentGold = goldIndex !== -1 ? mix[goldIndex].pct : 0;
-    const currentCash = cashIndex !== -1 ? mix[cashIndex].pct : 0;
-
-    const goldRoom = Math.max(0, goldCap - currentGold);
-    const cashRoom = Math.max(0, cashCap - currentCash);
-
     let remainingReduction = actualReduction;
 
-    // LEVEL 1: Skús primary targets (gold+cash)
-    for (const target of safeTargetsPrimary) {
-      const targetIndex = mix.findIndex((m) => m.key === target.key);
-      if (targetIndex === -1) continue;
+    if (iterations < 9) {
+      // NORMAL MODE: Redistribute using profile-aware RISK_SINKS
+      for (const sink of riskSinks) {
+        const sinkItem = mix.find(m => m.key === sink.key);
+        if (!sinkItem) continue;
 
-      let availableRoom = Infinity;
-      if (target.key === "gold") {
-        availableRoom = goldRoom;
-      } else if (target.key === "cash") {
-        availableRoom = cashRoom;
-      }
-
-      // Prísna kontrola: pridaj LEN toľko, koľko sa zmestí (zaokrúhľuj dole)
-      const targetAllocation = Math.min(
-        actualReduction * target.weight,
-        availableRoom * 0.97 // 0.97 buffer (advisor verdikt PR-28) - rezerva pre normalizáciu
-      );
-      
-      if (targetAllocation > 0.01) {
-        mix[targetIndex].pct += targetAllocation;
-        remainingReduction -= targetAllocation;
-
-        console.log(
-          `[EnforceRiskCap]   → ${target.key} +${targetAllocation.toFixed(2)} p.b. (weight ${target.weight}, room ${availableRoom.toFixed(1)}%)`
-        );
-      }
-    }
-
-    // LEVEL 2: Ak zostal remainder → FALLBACK na bonds/ETF
-    if (remainingReduction > 0.01) {
-      console.warn(
-        `[EnforceRiskCap]   ⚠️ Primary full (gold ${currentGold.toFixed(1)}%, cash ${currentCash.toFixed(1)}%), using FALLBACK (${remainingReduction.toFixed(2)} p.b.)`
-      );
-
-      for (const target of safeTargetsFallback) {
-        const targetIndex = mix.findIndex((m) => m.key === target.key);
-        if (targetIndex === -1) continue;
-
-        const targetCap = stageCaps?.[target.key] ?? 100;
-        const currentPct = mix[targetIndex].pct;
-        const targetRoom = Math.max(0, targetCap - currentPct);
-
-        const targetAllocation = Math.min(
-          remainingReduction * target.weight,
-          targetRoom * 0.97 // 0.97 buffer (advisor verdikt PR-28) - rezerva pre normalizáciu
-        );
-
-        if (targetAllocation > 0.01) {
-          mix[targetIndex].pct += targetAllocation;
-          remainingReduction -= targetAllocation;
-
-          console.log(
-            `[EnforceRiskCap]   → ${target.key} +${targetAllocation.toFixed(2)} p.b. (FALLBACK, room ${targetRoom.toFixed(1)}%)`
-          );
+        // PR-34: Ak sink.maxPct definovaný a current % >= maxPct → sink je "full", skip
+        if (sink.maxPct && sinkItem.pct >= sink.maxPct) {
+          console.log(`[EnforceRiskCap]   → ${sink.key} FULL (${sinkItem.pct.toFixed(1)}% >= ${sink.maxPct}% cap), skip`);
+          continue;
         }
-      }
-    }
 
-    // PR-33 FIX B: EMERGENCY FALLBACK po 10 iteráciách (predchádza DEADLOCK)
-    if (iterations >= 10 && remainingReduction > 0.05) {
-      console.warn(
-        `[EnforceRiskCap] EMERGENCY FALLBACK (iteration ${iterations}): Vynulujem rizikovú časť portfólia`
-      );
-
-      // NULUJ riziká: dyn, crypto, real
-      const emergencyReduction = mix
-        .filter(m => ['dyn', 'crypto', 'real'].includes(m.key))
-        .reduce((sum, m) => sum + m.pct, 0);
-
-      mix.forEach(m => {
-        if (['dyn', 'crypto', 'real'].includes(m.key)) {
-          console.log(`[EnforceRiskCap]   → ${m.key} ${m.pct.toFixed(1)}% → 0% (emergency)`);
-          m.pct = 0;
+        // Calculate room (use sink.maxPct if defined, else stage caps, else Infinity)
+        let room = Infinity;
+        if (sink.maxPct) {
+          room = Math.max(0, sink.maxPct - sinkItem.pct);
+        } else if (stageCaps?.[sink.key]) {
+          room = Math.max(0, stageCaps[sink.key] - sinkItem.pct);
         }
-      });
 
-      // REDISTRIBUUJ do bezpečných aktív OKREM ETF (predchádza cap overflow)
-      // Priorita: IAD (bond9) > bonds (bond5/bondShort) > gold
-      const safeTargets = [
-        { key: 'iad', weight: 0.50, cap: riskPref === 'konzervativny' ? 15 : 25 },
-        { key: 'bonds', weight: 0.30, cap: 30 },
-        { key: 'gold', weight: 0.20, cap: 40 }
-      ];
-
-      let emergencyRemaining = emergencyReduction;
-
-      for (const target of safeTargets) {
-        const targetIndex = mix.findIndex(m => m.key === target.key);
-        if (targetIndex === -1) continue;
-
-        const currentPct = mix[targetIndex].pct;
-        const targetRoom = Math.max(0, target.cap - currentPct);
         const allocation = Math.min(
-          emergencyRemaining * target.weight,
-          targetRoom * 0.95
+          remainingReduction * sink.weight,
+          room * 0.97 // 0.97 buffer - rezerva pre normalizáciu
         );
 
         if (allocation > 0.01) {
-          mix[targetIndex].pct += allocation;
-          emergencyRemaining -= allocation;
+          sinkItem.pct += allocation;
+          remainingReduction -= allocation;
+
           console.log(
-            `[EnforceRiskCap]   → ${target.key} +${allocation.toFixed(2)} p.b. (emergency safe haven)`
+            `[EnforceRiskCap]   → ${sink.key} +${allocation.toFixed(2)} p.b. (weight ${sink.weight.toFixed(2)}, room ${room.toFixed(1)}%)`
           );
         }
       }
 
-      // Ak STÁLE zostalo → akceptuj (lepšie ako infinite loop)
-      if (emergencyRemaining > 0.1) {
-        console.warn(
-          `[EnforceRiskCap] Emergency: Zostalo ${emergencyRemaining.toFixed(2)} p.b. nedistribuovaných (akceptované)`
-        );
+      // Ak všetky sinks full → auto jump to direct cut mode
+      const allSinksFull = riskSinks.every(sink => {
+        const item = mix.find(m => m.key === sink.key);
+        return sink.maxPct && item && item.pct >= sink.maxPct;
+      });
+
+      if (allSinksFull && remainingReduction > 0.05) {
+        console.warn(`[EnforceRiskCap] All sinks full (${remainingReduction.toFixed(2)} p.b. remaining), jumping to direct cut mode`);
+        // Set iterations to 9 to trigger direct cut on next iteration
+        // (current iteration už zredukovalo asset, redistribúcia failed)
       }
-    } else if (remainingReduction > 0.1) {
-      // Normálny DEADLOCK warning (ale pokračuj, nie break)
-      console.error(
-        `[EnforceRiskCap] DEADLOCK: Cannot redistribute ${remainingReduction.toFixed(2)} p.b. (all targets full: gold ${currentGold.toFixed(1)}%, cash ${currentCash.toFixed(1)}%)`
+    } else {
+      // DIRECT CUT MODE (iteration 9-10)
+      console.warn(`[EnforceRiskCap] DIRECT CUT MODE (iteration ${iterations}): Force cut high-risk assets → bonds/bond9 ONLY`);
+
+      // Cut ALL remaining high-risk assets (dyn/crypto/real/ETF)
+      const cutTargets = ["dyn", "crypto", "real", "etf"];
+      let totalCut = 0;
+
+      for (const key of cutTargets) {
+        const item = mix.find(m => m.key === key);
+        if (!item || item.pct < 0.1) continue;
+
+        // Cut 50% (alebo all, ak risk stále vysoký)
+        const cutAmount = item.pct * 0.5;
+        item.pct -= cutAmount;
+        totalCut += cutAmount;
+
+        console.log(`[EnforceRiskCap]   → ${key} -${cutAmount.toFixed(1)}% (direct cut 50%)`);
+      }
+
+      // Redistribute CUT amount to bonds/bond9 ONLY (50/50 split, NO gold/cash/ETF!)
+      const bondsIdx = mix.findIndex(m => m.key === "bonds");
+      const bond9Idx = mix.findIndex(m => m.key === "bond3y9");
+
+      if (bondsIdx >= 0) {
+        mix[bondsIdx].pct += totalCut * 0.50;
+        console.log(`[EnforceRiskCap]   → bonds +${(totalCut * 0.50).toFixed(1)}% (direct cut redistribution)`);
+      }
+      if (bond9Idx >= 0) {
+        mix[bond9Idx].pct += totalCut * 0.50;
+        console.log(`[EnforceRiskCap]   → bond3y9 +${(totalCut * 0.50).toFixed(1)}% (direct cut redistribution)`);
+      }
+
+      remainingReduction = 0; // Direct cut handled redistribution
+    }
+
+    // Ak STÁLE zostal remainder po normal mode → warning (nie error, pokračuj)
+    if (remainingReduction > 0.1 && iterations < 9) {
+      console.warn(
+        `[EnforceRiskCap] Cannot redistribute ${remainingReduction.toFixed(2)} p.b. (will retry or switch to direct cut)`
       );
     }
 
@@ -333,10 +278,10 @@ export function enforceRiskCap(
       break;
     }
 
-    // Hard stop po 15 iteráciách (aj s emergency fallback)
-    if (iterations >= 15) {
+    // Hard stop po 10 iteráciách (PR-34: znížené z 15 → 10)
+    if (iterations >= maxIterations) {
       console.error(
-        `[EnforceRiskCap] HARD STOP po 15 iteráciách (risk ${currentRisk.toFixed(2)} / ${riskMax.toFixed(1)})`
+        `[EnforceRiskCap] HARD STOP po ${maxIterations} iteráciách (risk ${currentRisk.toFixed(2)} / ${riskMax.toFixed(1)})`
       );
       break;
     }
