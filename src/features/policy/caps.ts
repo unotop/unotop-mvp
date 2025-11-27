@@ -55,7 +55,7 @@ export function getAssetCaps(pref: RiskPref, stage: Stage): Caps {
   // STARTER: povoľ rastové ťahúne, ale drž rozum v dynamike
   if (stage === "STARTER") {
     base.etf = 50;   // +5 p.b. z CORE 45%
-    base.dyn = 15;   // +2 p.b. z CORE 13%
+    base.dyn = 18;   // PR-34: Zvýšené z 15% → 18% (viac dyn pre yield)
     base.cash = 50;  // +15 p.b. z CORE 35%
     
     // PR-27b FIX: Reality cap nižší pre rastový profil (zabráni risk 9.4/10)
@@ -67,7 +67,7 @@ export function getAssetCaps(pref: RiskPref, stage: Stage): Caps {
   // LATE: jemne ukrojiť volatilitu, chrániť kapitál
   if (stage === "LATE") {
     base.etf = 35;   // -10 p.b. z CORE 45%
-    base.dyn = 12;   // -1 p.b. z CORE 13%
+    base.dyn = 16;   // PR-34: Zvýšené z 12% → 16% (4700/500/20 yield gap fix)
     base.cash = 30;  // -5 p.b. z CORE 35%
   }
 

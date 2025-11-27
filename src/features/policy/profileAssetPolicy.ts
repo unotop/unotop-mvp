@@ -46,8 +46,8 @@ export function getGoldPolicy(riskPref: RiskPref): { targetMin: number; targetMa
  */
 const DYN_MINIMUMS: Record<RiskPref, number> = {
   konzervativny: 5,  // Min 5% dyn pre Conservative PREMIUM
-  vyvazeny: 8,       // Min 8% dyn pre Balanced PREMIUM  
-  rastovy: 12,       // Min 12% dyn pre Growth PREMIUM
+  vyvazeny: 10,      // PR-34: Zvýšené z 8% → 10% (4700/500/20 baseline)
+  rastovy: 15,       // PR-34: Zvýšené z 12% → 15% (4700/500/20 aggressive)
 };
 
 /**
@@ -113,7 +113,7 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 20,
     },
     vyvazeny: {
-      dyn: 5,        // Rovnaké dyn ako Conservative
+      dyn: 8,        // PR-34: Zvýšené z 5% → 8% (10k/300/20 yield gap fix)
       crypto: 5,     // Viac crypto
       real: 10,      // Povolené reality
       bond3y9: 20,
@@ -122,7 +122,7 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 15,
     },
     rastovy: {
-      dyn: 12,       // Výrazne viac dyn
+      dyn: 15,       // PR-34: Zvýšené z 12% → 15% (CORE aggressive dyn)
       crypto: 10,    // Viac crypto
       real: 15,      // Viac reality
       bond3y9: 25,
@@ -144,7 +144,7 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 20,
     },
     vyvazeny: {
-      dyn: 10,       // Balanced môže mať 10% dyn
+      dyn: 12,       // PR-34: Zvýšené z 10% → 12% (4700/500/20 yield fix)
       crypto: 7,     // Viac crypto
       real: 10,      // Viac reality
       bond3y9: 25,
@@ -153,7 +153,7 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 15,
     },
     rastovy: {
-      dyn: 20,       // Najvyššie dyn
+      dyn: 22,       // PR-34: Zvýšené z 20% → 22% (4700/500/20 aggressive yield)
       crypto: 10,    // Najvyššie crypto
       real: 20,      // Najvyššie reality
       bond3y9: 30,   // Najvyššie bond9
