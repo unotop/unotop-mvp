@@ -71,6 +71,8 @@ const PROFILE_ASSET_CAPS: Record<
   Record<RiskPref, Partial<Record<MixItem["key"], number>>>
 > = {
   // STARTER (< 50k EUR)
+  // PR-34 FIX: Rastový/Vyvážený STARTER musia mať vyššie caps (dyn, crypto)
+  // aby sa odlíšili od konzervatívneho. Inak risk 3.9 namiesto 8.5.
   starter: {
     konzervativny: {
       dyn: 0,        // Žiadne dyn
@@ -82,21 +84,21 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 20,      // Cap na IAD
     },
     vyvazeny: {
-      dyn: 0,        // Žiadne dyn (STARTER aggressive caps)
-      crypto: 3,     // Minimálne crypto
-      real: 0,       // Žiadne reality
+      dyn: 15,       // PR-34: Zvýšené z 0% → 15% (STARTER yield fix)
+      crypto: 5,     // PR-34: Zvýšené z 3% → 5%
+      real: 0,       // Žiadne reality (stále malý plán)
       bond3y9: 20,   // Viac bond9 než Conservative
-      etf: 45,       // Viac ETF než Conservative
-      gold: 40,
+      etf: 50,       // PR-34: Zvýšené z 45% → 50%
+      gold: 20,      // PR-34: Znížené z 40% → 20%
       cash: 15,
     },
     rastovy: {
-      dyn: 5,        // Malé dyn
-      crypto: 7,     // Viac crypto než Balanced
+      dyn: 22,       // P0 FIX: Zvýšené z 20% → 22% (Growth MUSÍ mať vyššie riziko ako Balanced)
+      crypto: 12,    // P0 FIX: Zvýšené z 10% → 12%
       real: 5,       // Malé reality
       bond3y9: 20,
-      etf: 50,       // Najvyššie ETF
-      gold: 40,
+      etf: 55,       // PR-34: Zvýšené z 50% → 55%
+      gold: 12,      // P0 FIX: Znížené z 15% → 12% (priestor pre dyn/crypto)
       cash: 10,
     },
   },
@@ -122,12 +124,12 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 15,
     },
     rastovy: {
-      dyn: 15,       // PR-34: Zvýšené z 12% → 15% (CORE aggressive dyn)
-      crypto: 10,    // Viac crypto
+      dyn: 22,       // P0 FIX: Zvýšené z 15% → 22% (CORE Growth must have high dyn)
+      crypto: 12,    // P0 FIX: Zvýšené z 10% → 12%
       real: 15,      // Viac reality
       bond3y9: 25,
       etf: 50,
-      gold: 40,
+      gold: 15,      // P0 FIX: Znížené z 40% → 15% (konzistencia s STARTER)
       cash: 10,
     },
   },
@@ -154,11 +156,11 @@ const PROFILE_ASSET_CAPS: Record<
     },
     rastovy: {
       dyn: 22,       // PR-34: Zvýšené z 20% → 22% (4700/500/20 aggressive yield)
-      crypto: 10,    // Najvyššie crypto
+      crypto: 12,    // P0 FIX: Zvýšené z 10% → 12% (najvyššie crypto)
       real: 20,      // Najvyššie reality
       bond3y9: 30,   // Najvyššie bond9
       etf: 55,       // Najvyššie ETF
-      gold: 40,
+      gold: 12,      // P0 FIX: Znížené z 40% → 12% (konzistencia, priestor pre dyn/crypto)
       cash: 10,
     },
   },
