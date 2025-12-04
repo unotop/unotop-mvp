@@ -125,12 +125,12 @@ const RISK_MAX_PER_BAND: Record<VolumeBand, Record<RiskPref, number>> = {
     rastovy: 8.5, // Standard cap
   },
   CORE: {
-    konzervativny: 5.0,
+    konzervativny: 4.5, // P1.5 FIX: Znížené z 5.0 → 4.5 (strict C < B ordering)
     vyvazeny: 7.0,
     rastovy: 9.0, // +0.5 headroom
   },
   PREMIUM: {
-    konzervativny: 5.0,
+    konzervativny: 4.5, // P1.5 FIX: Znížené z 5.0 → 4.5 (strict C < B ordering)
     vyvazeny: 7.0,
     rastovy: 9.5, // +1.0 headroom (VIP)
   },

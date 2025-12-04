@@ -22,6 +22,11 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
 }) => {
   const seed = readV3();
 
+  // Extract riskPref early (needed for InvestmentPowerBox)
+  const riskPref = (seed.profile?.riskPref ||
+    (seed as any).riskPref ||
+    "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+
   // Local state (synced to persist)
   const [lumpSumEur, setLumpSumEur] = React.useState(
     () => (seed.profile?.lumpSumEur as any) || 0
@@ -87,9 +92,7 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
       { key: "real", pct: 1 },
     ]) as MixItem[];
 
-    const riskPref = (v3.profile?.riskPref ||
-      (v3 as any).riskPref ||
-      "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+    // Use riskPref from component scope (already extracted)
     const approx = approxYieldAnnualFromMix(mix, riskPref);
     const fv = calculateFutureValue(lump, monthly, years, approx);
 
@@ -172,13 +175,16 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
         >
           {/* PR-28 Phase B: Investment Power Box */}
           <InvestmentPowerBox
+            lumpSumEur={lumpSumEur || 0}
+            monthlyEur={(readV3() as any).monthly || 0}
+            horizonYears={horizonYears || 0}
+            goalAssetsEur={goalAssetsEur || 100_000}
             effectivePlanVolume={calculateEffectivePlanVolume(
               lumpSumEur || 0,
               (readV3() as any).monthly || 0,
               horizonYears || 0
             )}
-            horizonYears={horizonYears || 0}
-            monthlyEur={(readV3() as any).monthly || 0}
+            riskPref={riskPref}
           />
 
           {/* Note: Mesačný vklad nastavte v sekcii Cashflow */}

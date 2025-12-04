@@ -111,10 +111,11 @@ export function enforceRiskCap(
   baseMix: MixItem[],
   riskPref: RiskPref,
   stageCaps?: Record<string, number>,
-  maxIterations = 10 // PR-34: Znížené z 15 → 10 (iteration 9-10 = direct cut mode)
+  maxIterations = 10, // PR-34: Znížené z 15 → 10 (iteration 9-10 = direct cut mode)
+  customRiskMax?: number // PR-37: Override riskMax (pre malé plány)
 ): EnforceRiskCapResult {
   const mix = [...baseMix];
-  const riskMax = getRiskMax(riskPref);
+  const riskMax = customRiskMax ?? getRiskMax(riskPref); // PR-37: Use custom if provided
   const riskSinks = RISK_SINKS[riskPref]; // PR-34: Profile-aware sinks
   const goldPolicy = getGoldPolicy(riskPref); // PR-34: Gold caps
 

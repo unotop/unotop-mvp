@@ -666,6 +666,10 @@ export default function BasicLayout({
   // IMPACT: Profil sa NEaplikuje automaticky, používateľ musí KLIKNÚŤ na profil
   // UX: Jasnejšie - mix sa nemení "magic-om"
 
+  // PR-34: currentRiskPref musí byť MIMO useEffect (potrebujeme ho v render scope)
+  const v3 = readV3();
+  const currentRiskPref = (v3.profile?.riskPref as any) || "vyvazeny";
+
   React.useEffect(() => {
     // PR-14.D: Vyčisti cache pri zmene vstupov (aby sa prepočítali caps/mix s novými parametrami)
     if (
@@ -674,9 +678,6 @@ export default function BasicLayout({
     ) {
       (enforceStageCaps as any)._cache.clear();
     }
-
-    const v3 = readV3();
-    const currentRiskPref = (v3.profile?.riskPref as any) || "vyvazeny";
 
     // Vytvor profile object pre adjustments
     const profile: ProfileForAdjustments = {
@@ -1017,13 +1018,16 @@ export default function BasicLayout({
 
       {/* PR-28 Phase B: Investment Power Box */}
       <InvestmentPowerBox
+        lumpSumEur={investParams.lumpSumEur || 0}
+        monthlyEur={investParams.monthlyVklad || 0}
+        horizonYears={horizonYearsRounded || 0}
+        goalAssetsEur={investParams.goalAssetsEur || 100_000}
         effectivePlanVolume={calculateEffectivePlanVolume(
           investParams.lumpSumEur || 0,
           investParams.monthlyVklad || 0,
           horizonYearsRounded || 0
         )}
-        horizonYears={horizonYearsRounded || 0}
-        monthlyEur={investParams.monthlyVklad || 0}
+        riskPref={currentRiskPref}
       />
 
       {/* Portfolio selector - disabled button, content is always closed until unlocked */}

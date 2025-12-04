@@ -54,7 +54,7 @@ export default function SubmissionWarningModal({
         <div className="bg-slate-800/50 rounded-lg p-4 space-y-2 ring-1 ring-white/5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">Zostávajúce pokusy:</span>
-            <span className="font-semibold text-white">{remaining} / 2</span>
+            <span className="font-semibold text-white">{remaining} / 3</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-400">Reset limitu:</span>

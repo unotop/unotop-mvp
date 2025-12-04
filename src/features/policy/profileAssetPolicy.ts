@@ -84,21 +84,21 @@ const PROFILE_ASSET_CAPS: Record<
       cash: 20,      // Cap na IAD
     },
     vyvazeny: {
-      dyn: 15,       // PR-34: Zvýšené z 0% → 15% (STARTER yield fix)
+      dyn: 18,       // P1.2 FIX: Zvýšené z 15% → 18% (separation from Conservative, below Growth)
       crypto: 5,     // PR-34: Zvýšené z 3% → 5%
       real: 0,       // Žiadne reality (stále malý plán)
-      bond3y9: 20,   // Viac bond9 než Conservative
+      bond3y9: 22,   // P1.2 FIX: Zvýšené z 20% → 22% (yield boost)
       etf: 50,       // PR-34: Zvýšené z 45% → 50%
-      gold: 20,      // PR-34: Znížené z 40% → 20%
+      gold: 15,      // P1.2 FIX: Znížené z 20% → 15% (menej zlata než Conservative, viac než Growth)
       cash: 15,
     },
     rastovy: {
-      dyn: 22,       // P0 FIX: Zvýšené z 20% → 22% (Growth MUSÍ mať vyššie riziko ako Balanced)
+      dyn: 25,       // P1.2 FIX: Zvýšené z 22% → 25% (ešte viac dyn pre yield boost)
       crypto: 12,    // P0 FIX: Zvýšené z 10% → 12%
       real: 5,       // Malé reality
-      bond3y9: 20,
+      bond3y9: 25,   // P1.2 FIX: Zvýšené z 20% → 25% (bond9 má vyšší yield než bonds)
       etf: 55,       // PR-34: Zvýšené z 50% → 55%
-      gold: 12,      // P0 FIX: Znížené z 15% → 12% (priestor pre dyn/crypto)
+      gold: 8,       // P1.2 FIX: Znížené z 12% → 8% (menej bezpečného piliera, viac priestoru pre high-yield)
       cash: 10,
     },
   },
@@ -106,11 +106,11 @@ const PROFILE_ASSET_CAPS: Record<
   // CORE (50k - 100k EUR)
   core: {
     konzervativny: {
-      dyn: 5,        // Povolené malé dyn
-      crypto: 0,     // Stále žiadne crypto
+      dyn: 0,        // P1.5 FIX: Znížené z 5% → 0% (žiadne dyn v CORE conservative)
+      crypto: 0,     // Žiadne crypto
       real: 0,       // Žiadne reality
       bond3y9: 20,   // Viac bond9
-      etf: 35,       // Viac ETF
+      etf: 30,       // P1.5 FIX: Znížené z 35% → 30% (strict risk control)
       gold: 40,
       cash: 20,
     },
@@ -137,11 +137,11 @@ const PROFILE_ASSET_CAPS: Record<
   // PREMIUM (≥ 100k EUR)
   premium: {
     konzervativny: {
-      dyn: 7,        // PR-33 FIX E: 5% → 7% dyn pre Conservative PREMIUM (mierne zvýšené pre yield, ale stále < Balanced)
+      dyn: 5,        // P1.5 FIX: Znížené z 7% → 5% (strict Conservative risk control)
       crypto: 0,     // Konzervatívny klient nepotrebuje crypto
       real: 5,       // Voliteľne malé reality (skôr 0)
       bond3y9: 12,   // PR-33 FIX E: 25% → 12% (KEY CHANGE - zabráni Conservative > Growth v yield)
-      etf: 20,       // PR-31 FIX: Znížené z 35% → 20% (obmedziť high-yield optimalizáciu)
+      etf: 25,       // P1.5 FIX: Znížené z 20% → 25% (mierne zvýšené, ale stále < Balanced)
       gold: 40,
       cash: 20,
     },
@@ -189,9 +189,10 @@ export function getProfileAssetCaps(
 
 /**
  * Core assets pre redistribúciu prebytkov (podľa profilu)
+ * P1.5 FIX: Conservative prioritizuje bonds/cash PRED gold (strict risk control)
  */
 const CORE_ASSETS: Record<RiskPref, MixItem["key"][]> = {
-  konzervativny: ["gold", "bonds", "bond3y9", "cash"], // Safe assets first
+  konzervativny: ["bonds", "bond3y9", "cash", "gold"], // P1.5: Safety bonds FIRST, gold last
   vyvazeny: ["gold", "etf", "bonds", "bond3y9"],       // Mix safe + growth
   rastovy: ["etf", "gold", "bonds", "bond3y9"],        // Growth assets first
 };

@@ -40,12 +40,12 @@ export const ASSET_PARAMS: Record<
   { expectedReturnPa: number; riskScore: number; label: string }
 > = {
   cash: {
-    expectedReturnPa: 0.02,   // 2% p.a. (IAD depozitné konto brutto)
+    expectedReturnPa: 0.03,   // 3% p.a. (↑ z 2% – PR-36: IAD depozitné konto brutto)
     riskScore: 2,             // Fiat + inflácia + inštitúcia (nie 0 riziko!)
     label: "Pracujúca rezerva – IAD depozitné konto",
   },
   gold: {
-    expectedReturnPa: 0.05,   // 5% p.a. (nezmenené – stabilizátor)
+    expectedReturnPa: 0.07,   // 7% p.a. (↑ z 5% – PR-36: stabilizátor s dlhodobým rastom)
     riskScore: 3,
     label: "Zlato (fyzické)",
   },
@@ -55,28 +55,28 @@ export const ASSET_PARAMS: Record<
     label: "Dlhopis 7,5%",
   },
   bond3y9: {
-    expectedReturnPa: 0.095,  // 9.5% p.a. (↑ z 9% – PR-33 FIX C)
+    expectedReturnPa: 0.09,   // 9% p.a. (PR-36: garantovaný dlhopis 3r)
     riskScore: 3,
     label: "Dlhopis 9%",
   },
   etf: {
-    expectedReturnPa: 0.11,   // 11% p.a. (↑ z 9% – PR-33 FIX C)
+    expectedReturnPa: 0.12,   // 12% p.a. (↑ z 11% – PR-36: ETF World aktívne spravované)
     riskScore: 6,
     label: "ETF svet – aktívne",
   },
   real: {
-    expectedReturnPa: 0.11,   // 11% p.a. (nezmenené – Reality / projekt)
+    expectedReturnPa: 0.10,   // 10% p.a. (PR-36: Reality / projekt)
     riskScore: 5,
     label: "Reality / projekt",
   },
   crypto: {
-    expectedReturnPa: 0.20,   // 20% p.a. (↑ z 15% – PR-33 FIX C)
+    expectedReturnPa: 0.35,   // 35% p.a. (↑ z 20% – PR-36: KRITICKÝ DRIVER pre Growth)
     riskScore: 8,
     label: "Kryptomeny",
   },
   dyn: {
-    expectedReturnPa: 0.45,   // 45% p.a. (↑ z 36% – PR-33 FIX C, max advisor limit pre dyn)
-    riskScore: 8,             // PR-34: Znížené z 9 → 8 (rovnaké ako crypto – dyn nie je rizikovejší)
+    expectedReturnPa: 0.60,   // 60% p.a. (↑ z 45% – PR-36: ~4% p.m. net, HLAVNÝ DRIVER)
+    riskScore: 8,             // PR-34: Rovnaké ako crypto (dyn nie je rizikovejší)
     label: "Dynamické riadenie",
   },
 };
@@ -87,14 +87,14 @@ export const ASSET_PARAMS: Record<
  * Kept temporarily for backward compatibility during transition.
  */
 export const ASSET_YIELDS: Record<AssetKey, { konzervativny: number; vyvazeny: number; rastovy: number }> = {
-  etf: { konzervativny: 0.11, vyvazeny: 0.11, rastovy: 0.11 },      // ↑ z 9%
-  gold: { konzervativny: 0.05, vyvazeny: 0.05, rastovy: 0.05 },
-  crypto: { konzervativny: 0.20, vyvazeny: 0.20, rastovy: 0.20 },  // ↑ z 15%
-  dyn: { konzervativny: 0.45, vyvazeny: 0.45, rastovy: 0.45 },     // ↑ z 36%
+  etf: { konzervativny: 0.12, vyvazeny: 0.12, rastovy: 0.12 },      // ↑ z 11% – PR-36
+  gold: { konzervativny: 0.07, vyvazeny: 0.07, rastovy: 0.07 },     // ↑ z 5% – PR-36
+  crypto: { konzervativny: 0.35, vyvazeny: 0.35, rastovy: 0.35 },   // ↑ z 20% – PR-36
+  dyn: { konzervativny: 0.60, vyvazeny: 0.60, rastovy: 0.60 },      // ↑ z 45% – PR-36
   bonds: { konzervativny: 0.075, vyvazeny: 0.075, rastovy: 0.075 },
-  bond3y9: { konzervativny: 0.095, vyvazeny: 0.095, rastovy: 0.095 }, // ↑ z 9%
-  cash: { konzervativny: 0.02, vyvazeny: 0.02, rastovy: 0.02 },
-  real: { konzervativny: 0.11, vyvazeny: 0.11, rastovy: 0.11 },
+  bond3y9: { konzervativny: 0.09, vyvazeny: 0.09, rastovy: 0.09 },  // PR-36: 9%
+  cash: { konzervativny: 0.03, vyvazeny: 0.03, rastovy: 0.03 },     // ↑ z 2% – PR-36
+  real: { konzervativny: 0.10, vyvazeny: 0.10, rastovy: 0.10 },     // PR-36: 10%
 };
 
 const ASSET_RISKS: Record<AssetKey, { konzervativny: number; vyvazeny: number; rastovy: number }> = {
@@ -116,6 +116,32 @@ export const RISK_CAPS: Record<RiskPref, number> = {
   vyvazeny: 6.0,
   rastovy: 7.5,
 };
+
+/**
+ * PR-36: Plan Strength Multiplier (sila vášho plánu)
+ * 
+ * Multiplikátor pre base yields z ASSET_PARAMS.
+ * Umožňuje ukázať full potenciál portfólia pri 100% sile plánu.
+ * 
+ * Hodnoty:
+ * - 50%: 0.9× base (konzervatívny scenár)
+ * - 75%: 1.0× base (DEFAULT, realistický)
+ * - 100%: 1.2× base (VIP / full power scenár)
+ * 
+ * Používa sa v approxYieldAnnualFromMix() a approxVipYieldFromMix().
+ */
+export type PlanStrength = 50 | 75 | 100;
+
+export function getPlanStrengthMultiplier(strength: PlanStrength): number {
+  switch (strength) {
+    case 50:
+      return 0.9; // Conservative (bezpečná rezerva)
+    case 75:
+      return 1.0; // Default (realistický scenár)
+    case 100:
+      return 1.2; // VIP (full power, agresívne optimalizované)
+  }
+}
 
 /**
  * PR-29: Získaj ročný výnos pre dané aktívum (PROFILE-INDEPENDENT)
@@ -201,24 +227,48 @@ export function getScaledRisk(
  * BREAKING CHANGE: riskPref parameter je DEPRECATED (kept for compatibility)
  * Výnos je čisto z mixu (Σ weight × ASSET_PARAMS.expectedReturnPa).
  * 
+ * PR-36: Pridáva planStrength multiplikátor (50% / 75% / 100%).
+ * 
  * @param mix - Mix aktív s percentami
  * @param _riskPref - DEPRECATED (kept for backward compatibility, not used)
+ * @param planStrength - Sila plánu (50 | 75 | 100), default 75% = 1.0×
  * @returns Ročný výnos ako desatinné číslo (napr. 0.12 = 12%)
  */
-export function approxYieldAnnualFromMix(mix: MixItem[], _riskPref?: RiskPref): number {
+export function approxYieldAnnualFromMix(
+  mix: MixItem[],
+  _riskPref?: RiskPref,
+  planStrength: PlanStrength = 75
+): number {
   if (!Array.isArray(mix) || mix.length === 0) return 0.04;
 
   const totalPct = mix.reduce((sum, m) => sum + m.pct, 0);
   if (totalPct < 1) return 0.04; // Nulový mix → fallback
 
+  // PR-36: Aplikuj plan strength multiplikátor
+  const multiplier = getPlanStrengthMultiplier(planStrength);
+
   let weightedYield = 0;
   for (const item of mix) {
-    const weight = item.pct / 100; // percent → decimal
-    const yield_pa = getAssetYield(item.key); // PR-29: No riskPref needed
-    weightedYield += weight * yield_pa;
+    const assetParams = ASSET_PARAMS[item.key];
+    if (assetParams) {
+      weightedYield += (item.pct / 100) * assetParams.expectedReturnPa;
+    }
   }
 
-  return weightedYield;
+  return weightedYield * multiplier;
+}
+
+/**
+ * PR-36: VIP yield = plan strength 100% (1.2× base yields)
+ * 
+ * Alias pre approxYieldAnnualFromMix(mix, undefined, 100).
+ * Ukáže maximálny potenciál portfólia (full power scenár).
+ * 
+ * @param mix - Mix aktív s percentami
+ * @returns VIP ročný výnos ako desatinné číslo (napr. 0.24 = 24%)
+ */
+export function approxVipYieldFromMix(mix: MixItem[]): number {
+  return approxYieldAnnualFromMix(mix, undefined, 100);
 }
 
 /**

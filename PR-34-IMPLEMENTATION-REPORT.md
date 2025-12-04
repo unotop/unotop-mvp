@@ -2,7 +2,7 @@
 
 **Status:** Phase 1 COMPLETED (Task 3.1.A + 3.1.B) ✅  
 **Date:** 2025-01-20  
-**Implementation:** GitHub Copilot (CS)  
+**Implementation:** GitHub Copilot (CS)
 
 ---
 
@@ -23,11 +23,15 @@ Fix Balanced & Growth profiles – eliminovať problém **gold 36-40%** (viac ak
 **File:** `src/features/policy/profileAssetPolicy.ts`
 
 **Zmeny:**
+
 ```typescript
-export const GOLD_POLICY: Record<RiskPref, { targetMin: number; targetMax: number; hardCap: number }> = {
+export const GOLD_POLICY: Record<
+  RiskPref,
+  { targetMin: number; targetMax: number; hardCap: number }
+> = {
   konzervativny: { targetMin: 20, targetMax: 30, hardCap: 40 },
-  vyvazeny: { targetMin: 10, targetMax: 15, hardCap: 20 },       // ← KEY: 20% cap (vs old 40%)
-  rastovy: { targetMin: 8, targetMax: 12, hardCap: 15 },         // ← KEY: 15% cap (vs old 40%)
+  vyvazeny: { targetMin: 10, targetMax: 15, hardCap: 20 }, // ← KEY: 20% cap (vs old 40%)
+  rastovy: { targetMin: 8, targetMax: 12, hardCap: 15 }, // ← KEY: 15% cap (vs old 40%)
 };
 
 export function getGoldPolicy(riskPref: RiskPref) {
@@ -36,6 +40,7 @@ export function getGoldPolicy(riskPref: RiskPref) {
 ```
 
 **Dopad:**
+
 - Conservative (konzervatívny): môže mať až 40% zlata (ochrana kapitálu)
 - Balanced (vyvážený): max 20% zlata (vyvážený mix)
 - Growth (rastový): max 15% zlata (growth-oriented)
@@ -47,38 +52,44 @@ export function getGoldPolicy(riskPref: RiskPref) {
 **File:** `src/features/portfolio/enforceRiskCap.ts`
 
 **Odstránené:**
+
 - `SAFE_TARGETS_PRIMARY` (gold 60-70% weight univerzálne)
 - `SAFE_TARGETS_FALLBACK` (bonds + "iad" key – type error)
 - 2-stage fallback logika (PRIMARY → FALLBACK → emergency)
 
 **Pridané:**
+
 ```typescript
-const RISK_SINKS: Record<RiskPref, Array<{ key: MixItemKey; weight: number; maxPct?: number }>> = {
+const RISK_SINKS: Record<
+  RiskPref,
+  Array<{ key: MixItemKey; weight: number; maxPct?: number }>
+> = {
   konzervativny: [
-    { key: "bonds", weight: 0.30 },
-    { key: "bond3y9", weight: 0.25 },  // IAD (bond9)
-    { key: "gold", weight: 0.35 },     // 35% weight, no maxPct → can go to 40%
-    { key: "cash", weight: 0.10 },
+    { key: "bonds", weight: 0.3 },
+    { key: "bond3y9", weight: 0.25 }, // IAD (bond9)
+    { key: "gold", weight: 0.35 }, // 35% weight, no maxPct → can go to 40%
+    { key: "cash", weight: 0.1 },
   ],
-  
+
   vyvazeny: [
-    { key: "bonds", weight: 0.40 },    // ← PRIMARY sink (40% vs old gold 60%)
-    { key: "bond3y9", weight: 0.30 },  // ← SECONDARY sink
-    { key: "gold", weight: 0.20, maxPct: 20 },  // ← TERTIARY with hard cap!
-    { key: "cash", weight: 0.10 },
+    { key: "bonds", weight: 0.4 }, // ← PRIMARY sink (40% vs old gold 60%)
+    { key: "bond3y9", weight: 0.3 }, // ← SECONDARY sink
+    { key: "gold", weight: 0.2, maxPct: 20 }, // ← TERTIARY with hard cap!
+    { key: "cash", weight: 0.1 },
   ],
-  
+
   rastovy: [
     { key: "bonds", weight: 0.35 },
-    { key: "bond3y9", weight: 0.30 },
-    { key: "real", weight: 0.20 },     // ← NEW: real estate before gold
-    { key: "gold", weight: 0.10, maxPct: 15 },  // ← MINIMAL with hard cap!
+    { key: "bond3y9", weight: 0.3 },
+    { key: "real", weight: 0.2 }, // ← NEW: real estate before gold
+    { key: "gold", weight: 0.1, maxPct: 15 }, // ← MINIMAL with hard cap!
     { key: "cash", weight: 0.05 },
   ],
 };
 ```
 
 **Nová redistribučná logika:**
+
 1. **Iterations 1-8 (normal mode):**
    - Iterate through RISK_SINKS for profile
    - For each sink: check `sink.maxPct` → skip if current% >= maxPct (sink "full")
@@ -92,10 +103,12 @@ const RISK_SINKS: Record<RiskPref, Array<{ key: MixItemKey; weight: number; maxP
    - NO gold/cash/ETF inflation (prevents cap overflow)
 
 **Odstránené:**
+
 - Emergency fallback po 10 iteráciách (vynulovať dyn/crypto/real → bonds/IAD/gold)
 - Nahradené: Direct cut mode @ iterations 9-10 (controlled reduction)
 
 **Zmeny:**
+
 - `maxIterations` 15 → 10 (iterations 9-10 = direct cut mode)
 - Hard stop @ 10 iterations (was 15)
 
@@ -104,6 +117,7 @@ const RISK_SINKS: Record<RiskPref, Array<{ key: MixItemKey; weight: number; maxP
 ## 📊 Test Results
 
 ### **Critical Tests (17/17 PASS)** ✅
+
 ```bash
 npm run test:critical
 ```
@@ -116,11 +130,13 @@ npm run test:critical
 - `tests/deeplink.banner.test.tsx` (1 test) ✅
 
 ### **PR-34 Unit Tests (3/3 PASS)** ✅
+
 ```bash
 npm run test -- tests/pr34-balanced.test.ts
 ```
 
 **Test 1: Balanced enforceRiskCap → gold max 20%**
+
 ```
 Input:  dyn 25%, crypto 10%, ETF 30%, gold 5%, bonds 15%, bond9 10%, cash 5%
 Output: dyn 20%, crypto 10%, ETF 30%, gold 5.5%, bonds 17%, bond9 11%, cash 5%
@@ -130,6 +146,7 @@ Risk:   7.05 → 6.73 (1 iteration)
 ```
 
 **Test 2: Growth enforceRiskCap → gold max 15%**
+
 ```
 Input:  dyn 30%, crypto 12%, ETF 28%, gold 5%, bonds 10%, bond9 10%, real 2%, cash 3%
 Output: (no change - risk 7.77 < Growth cap 8.5)
@@ -139,6 +156,7 @@ Risk:   7.77 (0 iterations)
 ```
 
 **Test 3: Conservative → gold môže byť až 40%**
+
 ```
 Input:  dyn 10%, crypto 3%, ETF 25%, gold 10%, bonds 20%, bond9 20%, cash 10%, real 2%
 Output: (no change - risk 4.24 < Conservative cap 5.0)
@@ -164,6 +182,7 @@ Risk:   4.24 (0 iterations)
 ```
 
 **Kľúčové zmeny vs. starý systém:**
+
 - Bonds dostali 2.00 p.b. (weight 0.40) vs. starý systém gold 3.00 p.b. (weight 0.60)
 - Gold dostal len 0.42 p.b. (weight 0.20, capped) vs. starý systém 3.00 p.b.
 - Zlato je TERTIARY sink (až po bonds/IAD), nie PRIMARY
@@ -173,7 +192,9 @@ Risk:   4.24 (0 iterations)
 ## 🧪 Validation
 
 ### **Scenario: 0/600/20 Balanced** (Advisor kritický test)
+
 **Pred PR-34:**
+
 ```
 Gold: 36-40% (viac než Conservative!)
 Risk: 6.5
@@ -182,6 +203,7 @@ Status: ❌ FAIL (validation error "Príliš vysoká alokácia zlata")
 ```
 
 **Po PR-34:**
+
 ```
 Gold: ≤ 20% (GOLD_POLICY.vyvazeny.hardCap)
 Risk: ≤ 6.0 (balanced cap)
@@ -214,16 +236,17 @@ Status: ✅ EXPECTED PASS (validácia by mala prejsť)
 ## ⏭️ Ďalšie kroky (Phase 2)
 
 ### **P0 (BLOCKING) – musia byť v PR-34:**
+
 - ❌ **Task 3.2.A/B:** Direct cut mode detail adjustments
   - Už implementované v 3.1.B, ale potrebná validácia s edge cases
   - Test: 0/600/20 scenario s LOOP/DEADLOCK rizikom
 
 ### **P1 (HIGH) – potrebné pre stabilitu:**
+
 - ❌ **Task 3.3.A:** Yield optimizer cap checks
   - Import `getGoldPolicy` do `yieldOptimizer.ts`
   - Before move: validate ETF ≤ 50%, gold ≤ goldPolicy.hardCap, dyn/crypto ≤ caps
   - If move violates cap → skip move
-  
 - ❌ **Task 3.3.B:** Safety pass after optimizer
   - After optimization: stiahnuť overflow na cap, redistribute to IAD/bonds
   - Prevents validation errors "Príliš vysoká alokácia..."
@@ -241,6 +264,7 @@ Status: ✅ EXPECTED PASS (validácia by mala prejsť)
   - Assert: gold_B ≤ 20%, gold_G ≤ 15%
 
 ### **P3 (NICE-TO-HAVE) – skip:**
+
 - ❌ High-volume Conservative dyn boost (>100k → 10% dyn)
 
 ---
@@ -248,6 +272,7 @@ Status: ✅ EXPECTED PASS (validácia by mala prejsť)
 ## 🔒 Späťná kompatibilita
 
 ### **Zachované:**
+
 - Všetky existujúce testy (17/17 critical PASS) ✅
 - Console log formát (advisor troubleshooting compatibility)
 - RiskPref typu (konzervativny/vyvazeny/rastovy)
@@ -255,6 +280,7 @@ Status: ✅ EXPECTED PASS (validácia by mala prejsť)
 - enforceRiskCap API (4 parameters, EnforceRiskCapResult type)
 
 ### **Breaking changes:**
+
 - **Žiadne** – starý kód funguje (len interná logika zmenená)
 - UI/UX unchanged (user nevidí zmenu, len výsledok)
 
@@ -280,6 +306,7 @@ git log --oneline --grep="PR-34"
 ```
 
 **Očakávané commits:**
+
 1. `feat(PR-34): Add GOLD_POLICY bands to profileAssetPolicy.ts`
 2. `feat(PR-34): Replace SAFE_TARGETS with profile-aware RISK_SINKS`
 3. `test(PR-34): Add unit tests for Balanced/Growth gold caps`

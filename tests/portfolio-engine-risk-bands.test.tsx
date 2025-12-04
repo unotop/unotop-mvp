@@ -125,7 +125,7 @@ describe("Portfolio Engine: Hard Risk Bands", () => {
     const result = computePortfolioFromInputs({
       lumpSumEur: 0,
       monthlyVklad: 150, // 150*12*30 = 54k total → ale effective volume je nižší
-      horizonYears: 25,  // Adjusted aby sme boli pod 50k
+      horizonYears: 25, // Adjusted aby sme boli pod 50k
       reserveEur: 2000,
       reserveMonths: 4,
       riskPref: "rastovy",

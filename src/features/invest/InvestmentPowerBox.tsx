@@ -6,7 +6,11 @@
 
 import React from "react";
 import { getPlanLevel, type PlanLevel } from "../portfolio/assetMinima";
-import { type RiskPref } from "../mix/assetModel";
+import {
+  type RiskPref,
+  approxYieldAnnualFromMix,
+  riskScore0to10,
+} from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
 import { readV3 } from "../../persist/v3";
 import { computePortfolioFromInputs } from "../portfolio/portfolioEngine";

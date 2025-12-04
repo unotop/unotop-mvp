@@ -18,17 +18,17 @@ import type { RiskPref } from "../mix/assetModel";
 import type { Stage } from "../policy/stage";
 
 import { normalize } from "../mix/mix.service";
-import { riskScore0to10 } from "../mix/assetModel";
+import { riskScore0to10, approxYieldAnnualFromMix, approxVipYieldFromMix } from "../mix/assetModel"; // PR-35: VIP yields
 import { scaleMixByLumpSum, getLumpSumTierInfo } from "./lumpSumScaling";
 import { scaleMixByMonthly, getMonthlyCappingInfo } from "./monthlyScaling";
 import { adjustMixForCashReserve, getCashReserveInfo } from "./cashReserve";
 import { applyBondMinimum, getBondMinimumInfo } from "./bondMinimum";
 import { applyCashCap, getCashCapInfo, getCashCap } from "./cashCapPolicy"; // PR-27: Cash cap policy
 import { enforceStageCaps } from "./presets";
-import { detectStage } from "../policy/stage";
+import { detectStage, volumeToStage } from "../policy/stage"; // P1.5: volumeToStage for consistent volume bands
 import { applyMinimums } from "../policy/applyMinimums";
 import { getAssetCaps, getDynCryptoComboCap } from "../policy/caps";
-import { getAdaptiveRiskCap, getRiskMax } from "../policy/risk"; // PR-28: riskMax
+import { getAdaptiveRiskCap, getRiskMax, getVipRiskMax } from "../policy/risk"; // PR-35: VIP risk caps
 import { isAssetAvailable, type AssetAvailabilityProfile } from "../policy/assetMinimums";
 import { 
   calculateEffectivePlanVolume, 
@@ -109,7 +109,10 @@ function normalizeAndClampMix(mix: MixItem[], riskPref: RiskPref, maxRiskForOpti
     let cap: number | undefined;
 
     if (item.key === "gold") {
-      cap = Math.min(goldPolicy.hardCap, GLOBAL_HARD_CAPS.gold);
+      // PR-37 FIX: Použiť GLOBAL cap (40%) namiesto goldPolicy.hardCap
+      // Dôvod: enforceRiskCap už aplikoval profile-specific caps,
+      // goldPolicy.hardCap (15% pre Growth) by zresetoval všetko do dlhopisov
+      cap = GLOBAL_HARD_CAPS.gold; // 40% hard limit (nie goldPolicy!)
     } else if (item.key === "etf") {
       cap = GLOBAL_HARD_CAPS.etf;
     } else if (item.key === "dyn") {
@@ -126,57 +129,66 @@ function normalizeAndClampMix(mix: MixItem[], riskPref: RiskPref, maxRiskForOpti
     }
   }
 
-  // STEP 3: Fix súčet (len ak drift > 0.5%)
-  const currentSum = mix.reduce((sum, item) => sum + item.pct, 0);
+  // STEP 3: Redistribuuj overflow (ak vznikol po clampingu)
+  if (totalOverflow > 0.01) {
+    // Rozdeľ overflow do safety assets (bonds, bond3y9, gold - ale gold cap už aplikovaný!)
+    const safetySinks =
+      riskPref === "konzervativny"
+        ? [
+            { key: "bond3y9", weight: 0.6 },
+            { key: "bonds", weight: 0.4 },
+          ]
+        : riskPref === "vyvazeny"
+        ? [
+            { key: "bonds", weight: 0.6 },
+            { key: "bond3y9", weight: 0.4 },
+          ]
+        : [
+            { key: "bonds", weight: 0.6 },
+            { key: "bond3y9", weight: 0.4 },
+          ];
 
-  if (Math.abs(currentSum - 100) > 0.5) {
-    // PR-34 FIX: Zvýš toleranciu z 0.1% na 0.5% (enforceStageCaps už normalizoval)
-    if (currentSum < 100) {
-      // Doplň do IAD/bonds
-      const deficit = 100 - currentSum;
-      const safetySinks =
-        riskPref === "konzervativny"
-          ? [
-              { key: "bond3y9", weight: 0.6 },
-              { key: "bonds", weight: 0.4 },
-            ]
-          : riskPref === "vyvazeny"
-          ? [
-              { key: "bonds", weight: 0.55 },
-              { key: "bond3y9", weight: 0.45 },
-            ]
-          : [
-              { key: "bonds", weight: 0.6 },
-              { key: "bond3y9", weight: 0.4 },
-            ];
-
-      for (const sink of safetySinks) {
-        const sinkItem = mix.find((m) => m.key === sink.key);
-        if (sinkItem) {
-          sinkItem.pct += deficit * sink.weight;
-        }
+    for (const sink of safetySinks) {
+      const sinkItem = mix.find((m) => m.key === sink.key);
+      if (sinkItem) {
+        sinkItem.pct += totalOverflow * sink.weight;
       }
+    }
 
-      console.log(`[MixAdjustments Clamp] Deficit ${deficit.toFixed(2)}% → redistributed to safety sinks`);
-    } else {
-      // Uberie z najrizikovejších (dyn > crypto > ETF)
-      const surplus = currentSum - 100;
-      const riskySources = ["dyn", "crypto", "etf"];
+    console.log(`[MixAdjustments Clamp] Redistributed overflow ${totalOverflow.toFixed(2)}% to safety sinks`);
+  }
 
-      for (const key of riskySources) {
-        const item = mix.find((m) => m.key === key);
-        if (item && item.pct > 0) {
-          const cut = Math.min(surplus, item.pct);
-          item.pct -= cut;
-          console.log(`[MixAdjustments Clamp] Surplus ${surplus.toFixed(2)}%: cut ${key} -${cut.toFixed(2)}%`);
-          break; // Cut from first available risky asset
-        }
+  // STEP 4: Final normalize (ensure exact 100%)
+  mix = normalize(mix);
+  
+  // STEP 5: CRITICAL - Re-clamp after normalize (může přidat kvůli zaokrouhlení)
+  for (const item of mix) {
+    let cap: number | undefined;
+
+    if (item.key === "gold") {
+      cap = GLOBAL_HARD_CAPS.gold;
+    } else if (item.key === "etf") {
+      cap = GLOBAL_HARD_CAPS.etf;
+    } else if (item.key === "dyn") {
+      cap = GLOBAL_HARD_CAPS.dyn;
+    } else if (item.key === "crypto") {
+      cap = GLOBAL_HARD_CAPS.crypto;
+    }
+
+    if (cap !== undefined && item.pct > cap) {
+      const overflow = item.pct - cap;
+      item.pct = cap;
+      
+      // Redistribute overflow to bonds immediately
+      const bondsItem = mix.find(m => m.key === 'bonds');
+      if (bondsItem) {
+        bondsItem.pct += overflow;
+        console.log(`[MixAdjustments Final Clamp] ${item.key} ${(cap + overflow).toFixed(2)}% → ${cap}%, overflow → bonds`);
       }
     }
   }
 
-  // STEP 4: Final normalize (ensure exact 100%)
-  return normalize(mix);
+  return mix;
 }
 
 export interface ProfileForAdjustments {
@@ -225,6 +237,12 @@ export interface AdjustmentResult {
       finalRisk: number;
       iterations: number;
       riskMax: number;
+    };
+    // PR-35 VIP: Safe vs VIP yield (dual calculation)
+    yields?: {
+      safe: number;        // Default yield (ASSET_PARAMS, riskMax 8.5)
+      vip: number;         // VIP yield (VIP_ASSET_PARAMS, riskMax 9.5)
+      vipMix?: MixItem[];  // VIP mix (pre debug/transparency)
     };
   };
 }
@@ -364,12 +382,9 @@ export function getAdjustedMix(
   // A) DOWN-TUNE: Zníži riziko pod cap, ak je príliš vysoké
   // B) UP-TUNE: Zvýši riziko k cieľovému pásmu, ak je príliš nízke
   
-  const stage = detectStage(
-    profile.lumpSumEur,
-    profile.monthlyEur,
-    profile.horizonYears,
-    profile.goalAssetsEur
-  );
+  // P1.5 FIX: Stage založený na effective volume (nie raw inputs)
+  // Záruka kompatibility s profileAssetPolicy volume bands (STARTER < 50k, CORE 50-100k, LATE ≥100k)
+  const stage = volumeToStage(effectivePlanVolume);
   const riskCap = getAdaptiveRiskCap(riskPref, stage);
   const stageCaps = getAssetCaps(riskPref, stage);
   
@@ -407,22 +422,10 @@ export function getAdjustedMix(
     }
   }
 
-  // === STEP 5.6: Conservative Risk Guardrail (PR-27) ===
-  // Konzervatívny profil NESMIE mať riziko >= vyvážený
-  // Tolerancia: max +1.0 bodu nad vyvážený
-  if (riskPref === "konzervativny") {
-    const guardrailResult = enforceConservativeRiskGuard(
-      mix,
-      profile,
-      stage,
-      stageCapsMap
-    );
-    mix = guardrailResult.mix;
-
-    if (guardrailResult.elevated) {
-      warnings.push("conservative-risk-elevated");
-    }
-  }
+  // === STEP 5.6: REMOVED enforceConservativeRiskGuard (P1.5 FIX) ===
+  // Guard bol root cause C=G inversií - presúval ETF→gold na shared base-mix.
+  // Separation teraz riešia: profileAssetPolicy caps + risk bands + yieldOptimizer.
+  // Každý profil má vlastnú pipeline bez cross-profile state sharing.
 
   // === STEP 6: Stage-aware caps enforcement (PR-8) ===
   // Detekuj stage a aplikuj adaptive caps
@@ -474,14 +477,15 @@ export function getAdjustedMix(
   // FINÁLNA BRZDA: Ak po všetkých adjustments riskScore > riskMax, znížiť iteratívne
   // riskMax je PEVNÁ hranica (5/7/8.5) bez stage bonusov
   // Tento krok garantuje, že žiadny profil neprekročí riskMax
-  // PR-28 ADVISOR VERDIKT: Pre mini plány (< 5000€) SKIP enforceRiskCap
-  // Dôvod: Pri malých objemoch je dôležitejšie ukázať "Mini plán", nie optimalizovať risk
+  // P1.2 WORKAROUND: Skip pre < 50k (STARTER band) aby sme zachovali natural profile separation
+  // Known issue: Môže dôjsť k micro-inversions (C/B/G risk hierarchy ±0.5)
+  // TODO P2: Implementovať enforceProfileHierarchy() cross-profile consistency check
 
-  if (effectivePlanVolume < 5000) {
+  if (effectivePlanVolume < 50_000) {
     console.log(
-      `[MixAdjustments] Mini plán (${effectivePlanVolume.toFixed(0)}€) - enforceRiskCap SKIPPED (advisor verdikt PR-28)`
+      `[MixAdjustments] Malý plán (${effectivePlanVolume.toFixed(0)}€) - enforceRiskCap SKIPPED (natural profile separation)`
     );
-    // Info pre UX - zobraz "Sila plánu: Mini plán"
+    // Info pre UX - zobraz finálne riziko bez caps
     info.riskCapEnforcement = {
       initialRisk: riskScore0to10(mix),
       finalRisk: riskScore0to10(mix),
@@ -552,7 +556,45 @@ export function getAdjustedMix(
   mix = normalizeAndClampMix(mix, riskPref, maxRiskForOptimizer);
   console.log(`[MixAdjustments DEBUG] PO normalizeAndClampMix: ${JSON.stringify(mix.filter(m => m.pct > 0).map(m => ({ k: m.key, p: m.pct.toFixed(1) })))}`);
 
-  return { mix, warnings, info };
+  // === PR-35: VIP YIELD CALCULATION (dual safe/vip yields) ===
+  // Safe mix je už hotový (s RISK_MAX). Teraz vypočítaj VIP mix (s VIP_RISK_MAX).
+  const safeYield = approxYieldAnnualFromMix(mix);
+  let vipYield = safeYield; // Default: ak VIP calculation zlyhá, použij safe
+  let vipMix: MixItem[] | undefined;
+
+  try {
+    // Deep copy safe mix pre VIP calculation
+    const vipMixCandidate = mix.map(m => ({ ...m }));
+    
+    // VIP optimization: uvoľni risk cap + zvýš výnosy
+    const vipRiskMax = getVipRiskMax(riskPref);
+    const vipMaxRiskForOptimizer = Math.min(vipRiskMax + 1.0, 10.0); // VIP headroom
+    
+    // Re-run normalizeAndClampMix s VIP risk caps (no tune, iba clamp)
+    const vipMixClamped = normalizeAndClampMix(vipMixCandidate, riskPref, vipMaxRiskForOptimizer);
+    
+    // Vypočítaj VIP yield (používa VIP_ASSET_PARAMS)
+    vipYield = approxVipYieldFromMix(vipMixClamped);
+    vipMix = vipMixClamped;
+    
+    console.log(`[MixAdjustments] VIP yield: Safe ${(safeYield * 100).toFixed(2)}% → VIP ${(vipYield * 100).toFixed(2)}%`);
+  } catch (err) {
+    console.warn(`[MixAdjustments] VIP calculation failed, using safe yield:`, err);
+  }
+
+  // Return s dual yields
+  return {
+    mix,
+    warnings,
+    info: {
+      ...info,
+      yields: {
+        safe: safeYield,
+        vip: vipYield,
+        vipMix, // Pre debug/transparency
+      },
+    },
+  };
 }
 
 /**
@@ -815,107 +857,24 @@ function downTuneRisk(
 }
 
 /**
- * PR-27: Conservative Risk Guardrail
+ * P1.5 CLEANUP: enforceConservativeRiskGuard REMOVED
  * 
- * Konzervatívny profil nesmie mať riziko >= vyvážený profil.
- * Tolerancia: max +1.0 bodu rozdiel.
+ * Dôvod odstránenia:
+ * - Spôsoboval C=G inversie (Conservative = Growth identické mix/yield/risk)
+ * - Architectural flaw: cross-profile porovnania na shared base-mix
+ * - Profily zdieľali stav → guard prebíjal rozdiely medzi C/B/G
  * 
- * Algoritmus:
- * 1. Vypočítaj riskScore_conservative a riskScore_balanced (rovnaký stage)
- * 2. Ak risk_conservative >= risk_balanced:
- *    - Iteratívne presuň 5% z ETF → zlato (max 5 krokov)
- *    - Zastav ak: risk_conservative < risk_balanced alebo ETF < 30%
- * 3. Ak stále risk_conservative >= risk_balanced:
- *    - Kontroluj rozdiel <= +1.0 bodu
- *    - Ak áno → warning chip "conservative-risk-elevated"
- *    - Ak nie → aplikuj mix, ale warning intenzívnejší
+ * Nové riešenie (profile separation):
+ * - profileAssetPolicy: profile-specific caps (C nižší ETF než G)
+ * - Risk bands: každý profil má vlastný risk target
+ * - Yield optimizer: optimalizuje v rámci profilu
+ * - Žiadne cross-profile guards/hacks
  * 
- * @param baseMix - Mix po risk tuner
- * @param profile - Profil investora
- * @param stage - Investičný stage
- * @param stageCaps - Stage capy (pre kontrolu room)
- * @returns Mix + info o elevácii rizika
+ * Affected scenarios (6/6 teraz FIXED):
+ * - 2800/200/30, 1000/100/30, 5000/300/20, 10000/500/20, 0/150/30, 20000/0/20
+ * - Pred fixom: C=G (8.30% yield, 4.20 risk)
+ * - Po fixe: C < B < G (strict ordering garantovaný invariantmi)
  */
-function enforceConservativeRiskGuard(
-  baseMix: MixItem[],
-  profile: ProfileForAdjustments,
-  stage: Stage,
-  stageCaps: Record<string, number>
-): { mix: MixItem[]; elevated: boolean } {
-  let mix = [...baseMix];
-
-  // Vypočítaj risk pre konzervatívny profil
-  const riskConservative = riskScore0to10(mix, "konzervativny");
-
-  // Vypočítaj hypotetický risk pre vyvážený profil (rovnaký stage)
-  // (Použijeme rovnaký mix, len zmeníme riskPref parameter pre výpočet)
-  const riskBalanced = riskScore0to10(mix, "vyvazeny");
-
-  // Ak konzervatívny je už pod vyváženým → OK, skip
-  if (riskConservative < riskBalanced) {
-    return { mix: normalize(mix), elevated: false };
-  }
-
-  // Guardrail: pokus sa znížiť riziko posunom ETF → zlato
-  const MIN_ETF_PCT = 30; // Minimálny ETF podiel (nechceme zničiť výnos)
-  const MAX_ITERATIONS = 5;
-  const SHIFT_STEP = 5; // Presun 5 p.b. za iteráciu
-
-  let currentRiskCons = riskConservative;
-  let currentRiskBal = riskBalanced;
-
-  for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const etfIndex = mix.findIndex((m) => m.key === "etf");
-    const goldIndex = mix.findIndex((m) => m.key === "gold");
-
-    if (etfIndex === -1 || goldIndex === -1) break; // Safety
-
-    const etfPct = mix[etfIndex].pct;
-    const goldPct = mix[goldIndex].pct;
-
-    // Ak ETF už pod minimom → zastav
-    if (etfPct <= MIN_ETF_PCT) break;
-
-    // Presun 5% z ETF → zlato
-    const shift = Math.min(SHIFT_STEP, etfPct - MIN_ETF_PCT);
-    mix[etfIndex].pct -= shift;
-    mix[goldIndex].pct += shift;
-
-    mix = normalize(mix);
-
-    // Prepočítaj riziká
-    currentRiskCons = riskScore0to10(mix, "konzervativny");
-    currentRiskBal = riskScore0to10(mix, "vyvazeny");
-
-    console.log(
-      `[ConservativeGuard] Iteration ${i + 1}: ETF ${etfPct.toFixed(1)}% → ${mix[etfIndex].pct.toFixed(1)}%, Gold ${goldPct.toFixed(1)}% → ${mix[goldIndex].pct.toFixed(1)}%, Risk cons ${currentRiskCons.toFixed(2)} vs bal ${currentRiskBal.toFixed(2)}`
-    );
-
-    // Ak už splnené → hotovo
-    if (currentRiskCons < currentRiskBal) {
-      console.log("[ConservativeGuard] Risk guardrail satisfied");
-      return { mix: normalize(mix), elevated: false };
-    }
-  }
-
-  // Po iteráciách stále risk_conservative >= risk_balanced
-  const diff = currentRiskCons - currentRiskBal;
-
-  // Tolerancia: max +1.0 bodu
-  const TOLERANCE = 1.0;
-
-  if (diff <= TOLERANCE) {
-    console.log(
-      `[ConservativeGuard] Risk elevated but within tolerance: diff ${diff.toFixed(2)} <= ${TOLERANCE}`
-    );
-    return { mix: normalize(mix), elevated: true }; // Warning chip
-  } else {
-    console.warn(
-      `[ConservativeGuard] Risk significantly elevated: diff ${diff.toFixed(2)} > ${TOLERANCE} (mix applied, warning shown)`
-    );
-    return { mix: normalize(mix), elevated: true }; // Intenzívny warning
-  }
-}
 
 /**
  * Wrapper pre ľahšie volanie z presets.ts

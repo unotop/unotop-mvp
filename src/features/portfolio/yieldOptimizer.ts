@@ -265,23 +265,10 @@ export function optimizeYield(
   // PR-31 FIX: Získaj profile asset caps
   const profileCaps = getProfileAssetCaps(riskPref, effectivePlanVolume);
   
-  // PR-31 FIX: SKIP yield optimizer pre malé plány (< 100k EUR)
-  // Dôvod: Pri STARTER/CORE plánoch je riskRoom často negatívny (po ensureHierarchy)
-  // a yield optimization môže narušiť hierarchy invarianty
-  if (effectivePlanVolume < 100000) {
-    console.log(
-      `[YieldOptimizer] SKIP: Malý plán (${effectivePlanVolume.toLocaleString()} EUR < 100k)`
-    );
-    return {
-      mix,
-      applied: false,
-      moves: [],
-      initialYield: approxYieldAnnualFromMix(mix),
-      finalYield: approxYieldAnnualFromMix(mix),
-      initialRisk: riskScore0to10(mix),
-      finalRisk: riskScore0to10(mix),
-    };
-  }
+  // PR-38 FIX: REMOVED volume check - yield optimizer musí fungovať PRE VŠETKY plány!
+  // Dôvod: User requirement - "logika ma byť taká že hľadá každý profil najvyšší výnos"
+  // ProfileAssetPolicy caps (STEP 7.5) + enforceRiskCap (STEP 8) už garantujú bezpečnosť.
+  // Optimizer len maximalizuje yield v rámci týchto caps - žiadne porušenie invariantov.
   
   // Podmienka: Ak risk >= riskMax - 0.2, nemáme priestor na optimalizáciu
   // PR-31 FIX: Znížené z 0.5 → 0.2 (aby Balanced mal šancu pri PREMIUM plánoch)

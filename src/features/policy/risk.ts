@@ -25,6 +25,20 @@ export const RISK_MAX: Record<RiskPref, number> = {
 };
 
 /**
+ * PR-35 VIP: VIP Risk Max (pre VIP yield calculation)
+ * 
+ * Uvoľnené capy pre maximálny potenciál scenár.
+ * Používa sa len pre VIP yield výpočet, NIE pre default mix odporúčanie.
+ * 
+ * Growth VIP môže ísť až na risk ~9.5 (dyn 35-40%, crypto 10%, ETF 35-40%).
+ */
+export const VIP_RISK_MAX: Record<RiskPref, number> = {
+  konzervativny: 5.5,  // VIP Conservative (mierne uvoľnené, +0.5)
+  vyvazeny: 8.0,       // VIP Balanced (+1.0)
+  rastovy: 9.5,        // VIP Growth (+1.0, KEY CHANGE pre 24% yield)
+};
+
+/**
  * Získaj adaptívny risk target (cieľ) pre daný profil a fázu
  * 
  * Baseline (z assetModel.ts):
@@ -64,4 +78,19 @@ export function getAdaptiveRiskCap(pref: RiskPref, stage: Stage): number {
  */
 export function getRiskMax(pref: RiskPref): number {
   return RISK_MAX[pref];
+}
+
+/**
+ * PR-35: Získaj VIP max riziko (pre VIP yield calculation)
+ * 
+ * Vracia VIP_RISK_MAX - uvoľnené capy pre maximálny potenciál scenár.
+ * Používa sa len pre VIP yield výpočet, NIE pre default mix odporúčanie.
+ * 
+ * Umožňuje agresívnejšie mixe (napr. Growth dyn 35% + crypto 10% = risk ~9.0-9.5).
+ * 
+ * @param pref - Rizikový profil
+ * @returns vipRiskMax (5.5 / 8.0 / 9.5)
+ */
+export function getVipRiskMax(pref: RiskPref): number {
+  return VIP_RISK_MAX[pref];
 }
