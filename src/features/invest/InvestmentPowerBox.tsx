@@ -81,47 +81,65 @@ export default function InvestmentPowerBox({
     0) as number;
 
   // Pomocná funkcia: Vypočítaj metriky pre daný profil (what-if)
-  // PR-34 FIX: Všetky profily v POROVNANÍ používajú ČISTÉ preset mixy (bez volume bands)
-  // Dôvod: Volume bands krčia dyn/crypto pre malé plány → rastový profil má nižšie riziko ako vyvážený
-  // Porovnanie má ukázať "ideálne" rozdiely medzi profilmi, nie volume-adjusted reality
+  // UI-WIRING: Použiť portfolioEngine pre každý profil (volume-aware C < B < G garantované)
   const calculateProfileMetrics = (
     targetProfile: RiskPref
   ): { yield: number; risk: number } => {
-    // ČISTÉ preset mixy (ideálne rozdelenie bez volume caps/asset minima/ProfileAssetPolicy)
-    // Tieto mixy reprezentujú "target allocation" pre daný profil pri neobmedzenom kapitále
-    const presetMixes: Record<RiskPref, MixItem[]> = {
-      konzervativny: [
-        { key: "gold", pct: 20 },
-        { key: "bonds", pct: 50 },
-        { key: "etf", pct: 20 },
-        { key: "cash", pct: 8 },
-        { key: "dyn", pct: 2 },
-      ],
-      vyvazeny: [
-        { key: "gold", pct: 12 },
-        { key: "etf", pct: 40 },
-        { key: "bonds", pct: 20 },
-        { key: "dyn", pct: 20 },
-        { key: "cash", pct: 5 },
-        { key: "crypto", pct: 2 },
-        { key: "real", pct: 1 },
-      ],
-      rastovy: [
-        { key: "gold", pct: 10 },
-        { key: "etf", pct: 50 },
-        { key: "bonds", pct: 15 },
-        { key: "dyn", pct: 20 },
-        { key: "cash", pct: 2 },
-        { key: "crypto", pct: 2 },
-        { key: "real", pct: 1 },
-      ],
-    };
+    try {
+      // Zavolaj engine pre each profil (what-if) - volume-aware mixy
+      const result = computePortfolioFromInputs({
+        lumpSumEur: lumpSumEur || 0,
+        monthlyVklad: monthlyEur || 0,
+        horizonYears: horizonYears || 10,
+        reserveEur: reserveEur || 0,
+        reserveMonths: reserveMonths || 0,
+        riskPref: targetProfile, // ← Testovaný profil (C/B/G)
+      });
 
-    const finalMix = presetMixes[targetProfile];
-    const yieldAnnual = approxYieldAnnualFromMix(finalMix, targetProfile);
-    const risk = riskScore0to10(finalMix, targetProfile);
+      return {
+        yield: result.yieldPa,
+        risk: result.riskScore,
+      };
+    } catch (error) {
+      console.warn(
+        `[InvestmentPowerBox] Engine failed for profile ${targetProfile}:`,
+        error
+      );
+      // Fallback: Hard-coded preset mixy (legacy) - malo by sa nikdy nestať
+      const presetMixes: Record<RiskPref, MixItem[]> = {
+        konzervativny: [
+          { key: "gold", pct: 20 },
+          { key: "bonds", pct: 50 },
+          { key: "etf", pct: 20 },
+          { key: "cash", pct: 8 },
+          { key: "dyn", pct: 2 },
+        ],
+        vyvazeny: [
+          { key: "gold", pct: 12 },
+          { key: "etf", pct: 40 },
+          { key: "bonds", pct: 20 },
+          { key: "dyn", pct: 20 },
+          { key: "cash", pct: 5 },
+          { key: "crypto", pct: 2 },
+          { key: "real", pct: 1 },
+        ],
+        rastovy: [
+          { key: "gold", pct: 10 },
+          { key: "etf", pct: 50 },
+          { key: "bonds", pct: 15 },
+          { key: "dyn", pct: 20 },
+          { key: "cash", pct: 2 },
+          { key: "crypto", pct: 2 },
+          { key: "real", pct: 1 },
+        ],
+      };
 
-    return { yield: yieldAnnual, risk };
+      const finalMix = presetMixes[targetProfile];
+      const yieldAnnual = approxYieldAnnualFromMix(finalMix, targetProfile);
+      const risk = riskScore0to10(finalMix, targetProfile);
+
+      return { yield: yieldAnnual, risk };
+    }
   };
 
   // PR-34 FIX: Aktuálny profil metriky (MAIN UI) - RE-ADJUSTUJE mix cez getAdjustedMix
@@ -173,7 +191,7 @@ export default function InvestmentPowerBox({
       riskPref: riskPref,
     });
 
-    return { yield: result.yieldSafe, risk: result.riskScore };
+    return { yield: result.yieldPa, risk: result.riskScore };
   };
 
   // Aktuálny profil metriky (MAIN UI - zobrazuje reálny mix)
@@ -290,13 +308,20 @@ export default function InvestmentPowerBox({
         <p className="text-slate-300">
           <span className="font-medium">Očakávaný výnos:</span>{" "}
           <span className="font-semibold text-green-300">
-            ~{(currentMetrics.yield * 100).toFixed(1)} % p.a.
+            ~
+            {currentMetrics.yield != null && !isNaN(currentMetrics.yield)
+              ? (currentMetrics.yield * 100).toFixed(1)
+              : "0.0"}{" "}
+            % p.a.
           </span>
         </p>
         <p className="text-slate-300">
           <span className="font-medium">Riziko portfólia:</span>{" "}
           <span className="font-semibold text-amber-300">
-            {currentMetrics.risk.toFixed(1)} / 10
+            {currentMetrics.risk != null && !isNaN(currentMetrics.risk)
+              ? currentMetrics.risk.toFixed(1)
+              : "0.0"}{" "}
+            / 10
           </span>
         </p>
       </div>
@@ -345,9 +370,19 @@ export default function InvestmentPowerBox({
                 </p>
                 <div className="flex items-center justify-between text-slate-300">
                   <span>
-                    Očakávaný výnos: ~{(pm.yield * 100).toFixed(1)} % p.a.
+                    Očakávaný výnos: ~
+                    {pm.yield != null && !isNaN(pm.yield)
+                      ? (pm.yield * 100).toFixed(1)
+                      : "0.0"}{" "}
+                    % p.a.
                   </span>
-                  <span>Riziko: {pm.risk.toFixed(1)} / 10</span>
+                  <span>
+                    Riziko:{" "}
+                    {pm.risk != null && !isNaN(pm.risk)
+                      ? pm.risk.toFixed(1)
+                      : "0.0"}{" "}
+                    / 10
+                  </span>
                 </div>
               </div>
             ))}
