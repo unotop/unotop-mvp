@@ -15,6 +15,7 @@
 import type { MixItem } from '../mix/mix.service';
 import { getAdjustedMix } from './mixAdjustments';
 import { approxYieldAnnualFromMix, riskScore0to10 } from '../mix/assetModel';
+import { RISK_MAX_PER_BAND } from "../policy/risk"; // P1.5: Import z risk.ts
 
 // ──────────────────────────────────────────────────────────────────────────────
 // CACHE / MEMOIZATION
@@ -117,25 +118,6 @@ export const RISK_BANDS: Record<RiskPref, { min: number; max: number }> = {
   rastovy: { min: 7.0, max: 9.0 },
 };
 
-/** Volume-based risk caps (VIP headroom) */
-const RISK_MAX_PER_BAND: Record<VolumeBand, Record<RiskPref, number>> = {
-  STARTER: {
-    konzervativny: 5.0,
-    vyvazeny: 7.0,
-    rastovy: 8.5, // Standard cap
-  },
-  CORE: {
-    konzervativny: 4.5, // P1.5 FIX: Znížené z 5.0 → 4.5 (strict C < B ordering)
-    vyvazeny: 7.0,
-    rastovy: 9.0, // +0.5 headroom
-  },
-  PREMIUM: {
-    konzervativny: 4.5, // P1.5 FIX: Znížené z 5.0 → 4.5 (strict C < B ordering)
-    vyvazeny: 7.0,
-    rastovy: 9.5, // +1.0 headroom (VIP)
-  },
-};
-
 /** Preset mixes pre každý profil (fallback) */
 const PRESET_MIXES: Record<RiskPref, MixItem[]> = {
   konzervativny: [
@@ -233,7 +215,11 @@ function validateRiskBand(
   }
 
   // Check horná hranica (hard base max + VIP headroom)
-  if (risk > effectiveMax + 0.5) {
+  // P1.5 FIX: Rôzna tolerancia pre Growth vs ostatné (Growth ±1.0, iné ±0.5)
+  // Dôvod: yieldOptimizer headroom +0.5 → Growth môže dosiahnuť 9.0, fallback je zbytočný
+  const criticalTolerance = riskPref === 'rastovy' ? 1.0 : 0.5;
+  
+  if (risk > effectiveMax + criticalTolerance) {
     warnings.push({
       level: 'CRITICAL',
       message: `Riziko ${risk.toFixed(1)} prekročilo limit pre ${riskPref} (max ${effectiveMax})`,

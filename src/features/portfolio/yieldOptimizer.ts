@@ -256,9 +256,11 @@ export function optimizeYield(
   mix: MixItem[],
   riskPref: RiskPref,
   effectivePlanVolume: number,
-  maxIterations = 3
+  maxIterations = 3,
+  riskCap?: number // P1.5 FIX: Volume-aware risk cap (RISK_MAX_PER_BAND)
 ): YieldOptimizerResult {
-  const riskMax = getRiskMax(riskPref);
+  // P1.5 FIX: Použiť predaný riskCap (volume-aware), fallback na base riskMax
+  const riskMax = riskCap ?? getRiskMax(riskPref);
   const initialRisk = riskScore0to10(mix);
   const initialYield = approxYieldAnnualFromMix(mix);
   
@@ -296,12 +298,13 @@ export function optimizeYield(
     `Yield ${(initialYield * 100).toFixed(2)}%, Room ${riskRoom.toFixed(2)}`
   );
   
-  // PR-34: Risk headroom pre optimizer (+1.0)
-  // Umožňuje optimizeru využiť riziko aktívnejšie (napr. Balanced/Growth)
-  // Max 9.0 (zabránime extrému)
-  const maxRiskForOptimizer = Math.min(riskMax + 1.0, 9.0);
+  // P1.5 FIX: Znížený headroom z +1.0 → +0.5
+  // Dôvod:Validator generuje CRITICAL ak risk > riskMax + 0.5
+  // Optimizer headroom +1.0 → risk 9.4 → CRITICAL (8.5 + 0.5 = 9.0)
+  // Headroom +0.5 → risk max 9.0 → INFO warning (no CRITICAL)
+  const maxRiskForOptimizer = Math.min(riskMax + 0.5, 9.0);
   console.log(
-    `[YieldOptimizer] Risk limit: ${riskMax.toFixed(1)} (riskCap) → ${maxRiskForOptimizer.toFixed(1)} (optimizer headroom +1.0)`
+    `[YieldOptimizer] Risk limit: ${riskMax.toFixed(1)} (riskCap) → ${maxRiskForOptimizer.toFixed(1)} (optimizer headroom +0.5)`
   );
   
   const appliedMoves: string[] = [];

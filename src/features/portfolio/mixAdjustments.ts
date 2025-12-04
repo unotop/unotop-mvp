@@ -28,7 +28,7 @@ import { enforceStageCaps } from "./presets";
 import { detectStage, volumeToStage } from "../policy/stage"; // P1.5: volumeToStage for consistent volume bands
 import { applyMinimums } from "../policy/applyMinimums";
 import { getAssetCaps, getDynCryptoComboCap } from "../policy/caps";
-import { getAdaptiveRiskCap, getRiskMax, getVipRiskMax } from "../policy/risk"; // PR-35: VIP risk caps
+import { getAdaptiveRiskCap, getRiskMax, getVipRiskMax, getRiskMaxForBand } from "../policy/risk"; // P1.5: getRiskMaxForBand
 import { isAssetAvailable, type AssetAvailabilityProfile } from "../policy/assetMinimums";
 import { 
   calculateEffectivePlanVolume, 
@@ -383,9 +383,10 @@ export function getAdjustedMix(
   // B) UP-TUNE: Zvýši riziko k cieľovému pásmu, ak je príliš nízke
   
   // P1.5 FIX: Stage založený na effective volume (nie raw inputs)
-  // Záruka kompatibility s profileAssetPolicy volume bands (STARTER < 50k, CORE 50-100k, LATE ≥100k)
+  // Záruka kompatibility s profileAssetPolicy volume bands (STARTER < 50k, CORE 50-100k, LATE ≥50k)
   const stage = volumeToStage(effectivePlanVolume);
-  const riskCap = getAdaptiveRiskCap(riskPref, stage);
+  // P1.5 FIX: Použi getRiskMaxForBand pre volume-aware cap (CORE Conservative 4.5, nie 5.0)
+  const riskCap = getRiskMaxForBand(riskPref, stage);
   const stageCaps = getAssetCaps(riskPref, stage);
   
   // Konvertuj Caps na Record<string, number> pre tuner
@@ -532,11 +533,13 @@ export function getAdjustedMix(
   // MOVED after enforceRiskCap: Growth profil môže mať risk > riskMax pred enforce,
   // čo by spôsobilo SKIP (neg. room). Po enforce má normálny room.
   console.log(`[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...`);
+  // P1.5 FIX: Predaj volume-aware riskCap do optimizera (CORE Conservative 4.5, nie 5.0)
   const yieldOptResult: YieldOptimizerResult = optimizeYield(
     mix, 
     riskPref, 
     effectivePlanVolume, 
-    3
+    3,
+    riskCap // Volume-aware cap (RISK_MAX_PER_BAND)
   );
   mix = yieldOptResult.mix;
 

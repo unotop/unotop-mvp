@@ -25,6 +25,30 @@ export const RISK_MAX: Record<RiskPref, number> = {
 };
 
 /**
+ * P1.5: Volume-based risk caps (VIP headroom)
+ * 
+ * STARTER/CORE/PREMIUM majú rôzne caps pre ďalšiu separáciu profilov.
+ * Conservative CORE/PREMIUM má znížený cap (4.5) pre strict C < B ordering.
+ */
+export const RISK_MAX_PER_BAND: Record<'STARTER' | 'CORE' | 'PREMIUM', Record<RiskPref, number>> = {
+  STARTER: {
+    konzervativny: 5.0,
+    vyvazeny: 7.0,
+    rastovy: 8.5, // Standard cap
+  },
+  CORE: {
+    konzervativny: 4.5, // P1.5 FIX: Znížené z 5.0 → 4.5 (strict C < B ordering)
+    vyvazeny: 7.0,
+    rastovy: 9.0, // +0.5 headroom
+  },
+  PREMIUM: {
+    konzervativny: 4.5, // P1.5 FIX: Znížené z 5.0 → 4.5
+    vyvazeny: 7.0,
+    rastovy: 9.5, // +1.0 headroom (VIP)
+  },
+};
+
+/**
  * PR-35 VIP: VIP Risk Max (pre VIP yield calculation)
  * 
  * Uvoľnené capy pre maximálny potenciál scenár.
@@ -37,6 +61,22 @@ export const VIP_RISK_MAX: Record<RiskPref, number> = {
   vyvazeny: 8.0,       // VIP Balanced (+1.0)
   rastovy: 9.5,        // VIP Growth (+1.0, KEY CHANGE pre 24% yield)
 };
+
+/**
+ * P1.5: Získaj volume-aware riskMax pre daný profil a stage
+ * 
+ * Používa RISK_MAX_PER_BAND namiesto base RISK_MAX.
+ * Táto hodnota je HARD LIMIT pre yieldOptimizer a validateRiskBand.
+ * 
+ * @param pref - Rizikový profil
+ * @param stage - Volume band (STARTER/CORE/LATE)
+ * @returns Volume-aware riskMax
+ */
+export function getRiskMaxForBand(pref: RiskPref, stage: Stage): number {
+  // P1.5: Stage LATE → VolumeBand PREMIUM mapping
+  const band = (stage === 'LATE' ? 'PREMIUM' : stage) as 'STARTER' | 'CORE' | 'PREMIUM';
+  return RISK_MAX_PER_BAND[band][pref];
+}
 
 /**
  * Získaj adaptívny risk target (cieľ) pre daný profil a fázu
