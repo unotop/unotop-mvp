@@ -110,8 +110,8 @@ export const useProjection = (inputs: ProjectionInputs): ProjectionResult => {
           reserveMonths: 0,
           riskPref,
         });
-        approxYield = engineResult.approxYieldAnnual;
-        riskScore = engineResult.approxRisk;
+        approxYield = engineResult.yieldPa;
+        riskScore = engineResult.riskScore;
       } catch (error) {
         // Fallback na legacy ak engine zlyhá (edge case)
         console.warn('[useProjection] Engine failed, using legacy helpers:', error);
