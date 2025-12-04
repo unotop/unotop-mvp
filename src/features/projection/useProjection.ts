@@ -18,6 +18,7 @@ import { approxYieldAnnualFromMix, riskScore0to10, type RiskPref } from "../mix/
 import type { MixItem } from "../mix/mix.service";
 import type { Debt } from "../../persist/v3";
 import { scheduleWithExtra } from "../debt/amortization"; // PR-9 Task B: nový engine
+import { computePortfolioFromInputs } from "../portfolio/portfolioEngine"; // UI-WIRING: Single source of truth
 
 export interface ProjectionInputs {
   lumpSumEur: number;
@@ -93,8 +94,35 @@ export const useProjection = (inputs: ProjectionInputs): ProjectionResult => {
     const maxDebtHorizonYears = Math.ceil(maxDebtHorizonMonths / 12);
     const effectiveHorizonYears = Math.max(horizonYears, maxDebtHorizonYears);
 
-    // 1. Výnos z mixu (nie zo scenára!)
-    const approxYield = approxYieldAnnualFromMix(mix, riskPref);
+    // UI-WIRING: Risk/Yield z portfolioEngine (single source of truth)
+    // Ak máme validné vstupy, použij engine; inak fallback na legacy helpers
+    let approxYield: number;
+    let riskScore: number;
+    
+    if ((lumpSumEur > 0 || monthlyVklad > 0) && horizonYears > 0) {
+      try {
+        // Zavolaj engine pre konzistentné risk/yield výpočty
+        const engineResult = computePortfolioFromInputs({
+          lumpSumEur: lumpSumEur || 0,
+          monthlyVklad: monthlyVklad || 0,
+          horizonYears: horizonYears || 10,
+          reserveEur: 0, // useProjection nemá reserve vstupy
+          reserveMonths: 0,
+          riskPref,
+        });
+        approxYield = engineResult.approxYieldAnnual;
+        riskScore = engineResult.approxRisk;
+      } catch (error) {
+        // Fallback na legacy ak engine zlyhá (edge case)
+        console.warn('[useProjection] Engine failed, using legacy helpers:', error);
+        approxYield = approxYieldAnnualFromMix(mix, riskPref);
+        riskScore = riskScore0to10(mix, riskPref, 0);
+      }
+    } else {
+      // Fallback pre 0/0/0 vstupy (edge case: žiadne vklady)
+      approxYield = approxYieldAnnualFromMix(mix, riskPref);
+      riskScore = riskScore0to10(mix, riskPref, 0);
+    }
 
     // 2. FV series (ročne) - použiť effectiveHorizon
     const fvSeries: number[] = [];
@@ -164,8 +192,7 @@ export const useProjection = (inputs: ProjectionInputs): ProjectionResult => {
 
     const totalDebtRemaining = debtSeries[debtSeries.length - 1] || 0;
 
-    // 5. Risk (z mixu)
-    const riskScore = riskScore0to10(mix, riskPref, 0);
+    // UI-WIRING: riskScore už vypočítaný cez engine vyššie (nie znovu tu)
 
     // 6. Goal progress
     const goalProgress = goalAssetsEur > 0 ? Math.min((fvFinal / goalAssetsEur) * 100, 100) : 0;
