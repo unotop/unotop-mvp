@@ -1,14 +1,16 @@
 /**
  * ShareModalWithProjection.tsx
- * 
+ *
  * UI-WIRING FIX: Share modal používa useProjection hook pre konzistentné výpočty
  * Zobrazuje rovnaké FV/výnos/riziko ako ProjectionMetricsPanel
  */
 
 import React from "react";
-import { readV3, type MixItem } from "../persist/v3";
+import { readV3 } from "../persist/v3";
+import type { MixItem } from "../features/mix/mix.service"; // Correct MixItem type
 import { useProjection } from "../features/projection/useProjection";
 import type { RiskPref } from "../features/mix/assetModel";
+import { toRealValue, toRealYield } from "../utils/inflation"; // PR-27: Inflation adjustment
 
 interface ShareModalWithProjectionProps {
   onClose: () => void;
@@ -51,6 +53,22 @@ export function ShareModalWithProjection({
   const { fvFinal, approxYield, goalProgress } = projection;
   const pct = Math.round(goalProgress);
 
+  // PR-27: Apply inflation adjustment (match StickyBottomBar display)
+  const displayFV = toRealValue(fvFinal, horizonYears);
+  const displayYield = toRealYield(approxYield);
+
+  // Helper pre formátovanie majetku (rovnaký ako StickyBottomBar)
+  const formatWealth = (value: number): string => {
+    const absValue = Math.abs(value);
+    if (absValue >= 1_000_000) {
+      return `${(value / 1_000_000).toFixed(2)} M €`;
+    }
+    if (absValue >= 1_000) {
+      return `${(value / 1_000).toFixed(0)} k €`;
+    }
+    return `${value.toFixed(0)} €`;
+  };
+
   // Generate deeplink
   const handleSendEmail = () => {
     const state = {
@@ -78,9 +96,9 @@ pridávam vám moju investičnú projekciu:
 - Cieľ majetku: ${goalAssetsEur.toFixed(0)} €
 
 💰 Projekcia:
-- Hodnota po ${horizonYears} rokoch: ${fvFinal.toFixed(0)} €
+- Hodnota po ${horizonYears} rokoch: ${formatWealth(displayFV)} (reálna hodnota, po inflácii)
 - Progres k cieľu: ${pct}%
-- Odhad výnosu p.a.: ${(approxYield * 100).toFixed(1)}%
+- Odhad výnosu p.a.: ${(displayYield * 100).toFixed(1)}% (reálny, po inflácii)
 
 🔗 Interaktívna projekcia:
 ${deeplink}
@@ -111,7 +129,10 @@ S pozdravom`;
                 Hodnota po {horizonYears} rokoch:
               </span>
               <div className="font-bold text-emerald-400 tabular-nums">
-                {fvFinal.toFixed(0)} €
+                {formatWealth(displayFV)}
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">
+                reálna hodnota (po inflácii)
               </div>
             </div>
             <div>
@@ -135,7 +156,10 @@ S pozdravom`;
             <div>
               <span className="text-slate-400">Odhad výnosu p.a.:</span>
               <div className="font-medium text-blue-400 tabular-nums">
-                {(approxYield * 100).toFixed(1)}%
+                {(displayYield * 100).toFixed(1)}%
+              </div>
+              <div className="text-xs text-slate-500 mt-0.5">
+                reálny (po inflácii)
               </div>
             </div>
           </div>
