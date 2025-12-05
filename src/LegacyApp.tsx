@@ -13,6 +13,7 @@ import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
 import { calculateFutureValue } from "./engine/calculations";
 import { approxYieldAnnualFromMix } from "./features/mix/assetModel";
+import { computePortfolioFromInputs } from "./features/portfolio/portfolioEngine"; // UI-WIRING: Share modal fix
 import { TEST_IDS } from "./testIds";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
 import {
@@ -1073,58 +1074,7 @@ export default function LegacyApp({
           {/* Starý debt UI odstránený - teraz používame standalone section */}
         </section>
       )}
-      {/* DEBUG: Test InvestmentPowerBox priamo v LegacyApp */}
-      {(() => {
-        // ADVISOR DEBUG: typeof check
-        console.log(
-          "[DEBUG] InvestmentPowerBox import typeof:",
-          typeof InvestmentPowerBox
-        );
-        console.log(
-          "[DEBUG] InvestmentPowerBox import value:",
-          InvestmentPowerBox
-        );
-
-        // ADVISOR DEBUG: Inline baseline test
-        const InlineTestBox = () => (
-          <div
-            data-testid="inline-test-box"
-            style={{
-              background: "yellow",
-              padding: "1rem",
-              marginBottom: "1rem",
-              border: "3px solid orange",
-            }}
-          >
-            ✅ INLINE TEST BOX FUNGUJE (baseline)
-          </div>
-        );
-
-        return (
-          <div
-            style={{
-              marginBottom: "1rem",
-              padding: "1rem",
-              border: "2px solid red",
-            }}
-          >
-            <h3 style={{ color: "red", marginBottom: "0.5rem" }}>
-              DEBUG: InvestmentPowerBox Test
-            </h3>
-            <InlineTestBox />
-            <InvestmentPowerBox
-              effectivePlanVolume={calculateEffectivePlanVolume(
-                (readV3() as any).profile?.lumpSumEur || 0,
-                (readV3() as any).monthly || 0,
-                (readV3() as any).profile?.horizonYears || 0
-              )}
-              horizonYears={(readV3() as any).profile?.horizonYears || 0}
-              monthlyEur={(readV3() as any).monthly || 0}
-            />
-          </div>
-        );
-      })()}
-
+      
       {/* sec2: Investičné nastavenia - extracted component */}
       <InvestSection open={open2} onToggle={() => setOpen2((v) => !v)} />
 
@@ -1535,7 +1485,24 @@ export default function LegacyApp({
               const riskPref = (v3Data.profile?.riskPref ||
                 (v3Data as any).riskPref ||
                 "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-              const approx = approxYieldAnnualFromMix(mix, riskPref);
+              
+              // UI-WIRING: Use portfolioEngine (same as useProjection)
+              let approx = 0.06; // fallback
+              try {
+                const engineResult = computePortfolioFromInputs({
+                  lumpSumEur: lump,
+                  monthlyVklad: monthly,
+                  horizonYears: years,
+                  reserveEur: 0,
+                  reserveMonths: 0,
+                  riskPref,
+                });
+                approx = engineResult.yieldPa;
+              } catch (err) {
+                console.warn('[ShareModal] Engine failed, using fallback yield:', err);
+                approx = approxYieldAnnualFromMix(mix, riskPref);
+              }
+              
               const fv = calculateFutureValue(lump, monthly, years, approx);
               const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
 
@@ -1661,7 +1628,24 @@ export default function LegacyApp({
                   const riskPref = (v3Data.profile?.riskPref ||
                     (v3Data as any).riskPref ||
                     "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-                  const approx = approxYieldAnnualFromMix(mix, riskPref);
+                  
+                  // UI-WIRING: Use portfolioEngine (consistent with preview)
+                  let approx = 0.06; // fallback
+                  try {
+                    const engineResult = computePortfolioFromInputs({
+                      lumpSumEur: lump,
+                      monthlyVklad: monthly,
+                      horizonYears: years,
+                      reserveEur: 0,
+                      reserveMonths: 0,
+                      riskPref,
+                    });
+                    approx = engineResult.yieldPa;
+                  } catch (err) {
+                    console.warn('[ShareModal] Engine failed in email, using fallback:', err);
+                    approx = approxYieldAnnualFromMix(mix, riskPref);
+                  }
+                  
                   const fv = calculateFutureValue(lump, monthly, years, approx);
 
                   // Generate deeplink
