@@ -47,7 +47,9 @@ export function RecalculateProfileChip({
   const handleReapply = async () => {
     // Zabráň duplicitnému spusteniu
     if (isProcessingRef.current) {
-      console.warn('[RecalculateChip] Already processing, ignoring duplicate click');
+      console.warn(
+        "[RecalculateChip] Already processing, ignoring duplicate click"
+      );
       return;
     }
 
