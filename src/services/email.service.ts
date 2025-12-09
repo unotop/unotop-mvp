@@ -26,6 +26,7 @@ export interface ProjectionData {
     // Debt payoff info (ak má užívateľ dlhy)
     debtPayoffYears?: number | null; // Počet rokov do splatenia (crossoverIndex)
     debtPayoffCalendarYear?: number | null; // Kalendárny rok splatenia
+    agentRefCode?: string | null; // Referral system: agent code
   };
   metadata?: {
     riskPref?: string;

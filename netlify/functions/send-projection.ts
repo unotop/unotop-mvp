@@ -105,8 +105,9 @@ function validateProjectionData(data: any): { valid: boolean; errors: string[] }
   if (!data.user?.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.user.email)) {
     errors.push("Invalid email");
   }
-  if (!data.user?.phone || !/^\+?[\d\s\-()]+$/.test(data.user.phone)) {
-    errors.push("Invalid phone");
+  // Phone is optional (TASK B: phone voluntary)
+  if (data.user?.phone && !/^\+?[\d\s\-()]+$/.test(data.user.phone)) {
+    errors.push("Invalid phone format");
   }
 
   // Validate projection data (prevent poisoning)
@@ -302,6 +303,7 @@ export const handler: Handler = async (
     <p><strong>Meno:</strong> ${data.user.firstName} ${data.user.lastName}</p>
     <p><strong>Email:</strong> <a href="mailto:${data.user.email}">${data.user.email}</a></p>
     <p><strong>Telefón:</strong> ${data.user.phone ? `<a href="tel:${data.user.phone}">${data.user.phone}</a>` : '<em style="color: #9ca3af;">neuvedeno</em>'}</p>
+    <p><strong>Referral kód poradcu:</strong> ${data.projection.agentRefCode ? `<span style="color: #059669; font-weight: 600;">${data.projection.agentRefCode}</span>` : '<em style="color: #9ca3af;">neuvedené</em>'}</p>
   </div>
 
   <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
@@ -364,7 +366,8 @@ NOVÁ INVESTIČNÁ PROJEKCIA
 KONTAKT:
 ${data.user.firstName} ${data.user.lastName}
 ${data.user.email}
-${data.user.phone}
+${data.user.phone || 'neuvedené'}
+Referral kód poradcu: ${data.projection.agentRefCode || 'neuvedené'}
 
 PROJEKCIA:
 Jednorazový vklad: ${data.projection.lumpSumEur.toLocaleString("sk-SK")} €

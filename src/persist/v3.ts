@@ -53,6 +53,8 @@ export type Profile = {
   autoOptimizeMix?: boolean; // default false
   // PR-27: Voľba zhodnotenia (nominálne vs. reálne po inflácii)
   valuationMode?: 'real' | 'nominal'; // default 'real'
+  // Referral system: agent code (format: ab01, jb01, etc.)
+  agentRefCode?: string;
 };
 
 export type V3 = Partial<{
@@ -191,6 +193,7 @@ export function writeV3(patch: Partial<V3>): V3 {
   if (p.modeUi)                            next.modeUi        = p.modeUi;
     if (p.riskPref)                          next.riskPref      = p.riskPref;
     if (typeof p.crisisBias === 'number')    next.crisisBias    = p.crisisBias;
+    if (p.agentRefCode)                      next.profile = { ...next.profile, agentRefCode: p.agentRefCode };
     // legacy alias mirrors (tests still read these)
     if (typeof p.reserveEur === 'number')    (next as any).current_reserve   = p.reserveEur;
     if (typeof p.reserveMonths === 'number') (next as any).emergency_months  = p.reserveMonths;
