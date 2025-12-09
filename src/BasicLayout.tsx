@@ -240,6 +240,37 @@ export default function BasicLayout({
     );
   }, []);
 
+  // REFERRAL SYSTEM: Čítanie ?ref= z URL (raz pri mount)
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+
+    if (ref) {
+      const normalized = ref.toLowerCase();
+
+      // Validácia: 2 písmená + 2 čísla (ab01, jb01, om01...)
+      if (/^[a-z]{2}\d{2}$/.test(normalized)) {
+        // Ulož do v3 profile
+        const currentV3 = readV3();
+        writeV3({
+          profile: {
+            ...currentV3.profile,
+            agentRefCode: normalized,
+          },
+        });
+
+        console.log(`[Referral] Agent code saved: ${normalized}`);
+      } else {
+        console.warn(`[Referral] Invalid ref format (expected: ab01): ${ref}`);
+      }
+
+      // Vyčisti URL (bez reload)
+      const { origin, pathname, hash } = window.location;
+      const cleanUrl = origin + pathname + hash;
+      window.history.replaceState(null, "", cleanUrl);
+    }
+  }, []); // Prázdne deps = raz pri mount
+
   const handleTourComplete = () => {
     setTourOpen(false);
     // Označiť aktuálny krok ako dokončený
@@ -865,6 +896,9 @@ export default function BasicLayout({
       // Progress k cieľu - VŽDY používame nominal FV (absolútna suma na účte)
       const progressForEmail = goal > 0 ? Math.round((fv / goal) * 100) : 0;
 
+      // Referral system: extract agentRefCode from v3
+      const agentRefCode = v3Data.profile?.agentRefCode || null;
+
       // Prepare projection data
       const projectionData: ProjectionData = {
         user: {
@@ -887,6 +921,7 @@ export default function BasicLayout({
           // Debt payoff info (ak má užívateľ dlhy)
           debtPayoffYears: hasDebts ? crossoverYear : null,
           debtPayoffCalendarYear: hasDebts ? crossoverCalendarYear : null,
+          agentRefCode, // Referral system
         },
         metadata: {
           riskPref,
