@@ -42,12 +42,22 @@ export function RecalculateProfileChip({
   onReapplied,
 }: RecalculateProfileChipProps) {
   const [isRecalculating, setIsRecalculating] = React.useState(false);
+  const isProcessingRef = React.useRef(false); // Guard proti dvojitému spusteniu
 
   const handleReapply = async () => {
+    // Zabráň duplicitnému spusteniu
+    if (isProcessingRef.current) {
+      console.warn(
+        "[RecalculateChip] Already processing, ignoring duplicate click"
+      );
+      return;
+    }
+
+    isProcessingRef.current = true;
     setIsRecalculating(true);
 
-    // Debounce loading state (400-600ms)
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Debounce loading state (300ms - kratšie)
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     try {
       const v3 = readV3();
@@ -116,6 +126,10 @@ export function RecalculateProfileChip({
       });
     } finally {
       setIsRecalculating(false);
+      // Reset processing flag after 1s safety delay
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 1000);
     }
   };
 

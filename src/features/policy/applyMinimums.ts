@@ -65,7 +65,14 @@ export function applyMinimums(
     if (item.pct === 0) continue;
 
     // Preskočiť, ak je aktívum dostupné
-    if (isAssetAvailable(item.key as keyof typeof ASSET_MINIMUMS, profile)) {
+    const isAvailable = isAssetAvailable(item.key as keyof typeof ASSET_MINIMUMS, profile);
+    
+    // DEBUG LOG (PR-34)
+    if (item.key === "dyn" && item.pct > 0) {
+      console.log(`[applyMinimums DEBUG] dyn ${item.pct}%, lump=${profile.lumpSumEur}, monthly=${profile.monthlyEur}, available=${isAvailable}`);
+    }
+    
+    if (isAvailable) {
       continue;
     }
 
@@ -137,7 +144,7 @@ function getAssetLabel(key: string): string {
     bonds: "Dlhopisy",
     bond3y9: "Dlhopisy 3-9r",
     dyn: "Dynamické riadenie",
-    cash: "Hotovosť",
+    cash: "Pracujúca rezerva – IAD DK",
     crypto: "Krypto",
     real: "Reality",
   };

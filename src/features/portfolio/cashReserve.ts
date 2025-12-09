@@ -144,11 +144,11 @@ export function getCashReserveInfo(
 
   let message = "";
   if (currentCashPct < optimalCashPct - 2) {
-    message = `Odporúčame zvýšiť hotovostnú rezervu na ${optimalCashPct.toFixed(1)}% (${Math.round((optimalCashPct / 100) * totalPortfolioEur).toLocaleString("sk-SK")} EUR). To zabezpečí 6 mesačných výdavkov (${Math.round(monthlyBase * 6).toLocaleString("sk-SK")} EUR).`;
+    message = `Odporúčame zvýšiť rezervu na IAD DK na ${optimalCashPct.toFixed(1)}% (${Math.round((optimalCashPct / 100) * totalPortfolioEur).toLocaleString("sk-SK")} EUR). To zabezpečí 6 mesačných výdavkov (${Math.round(monthlyBase * 6).toLocaleString("sk-SK")} EUR).`;
   } else if (currentCashPct > optimalCashPct + 2) {
-    message = `Máte nadmernú hotovosť (${currentCashPct.toFixed(1)}%). Optimálne je ${optimalCashPct.toFixed(1)}% – zvyšok môže pracovať v aktívach s výnosom.`;
+    message = `Rezerva na IAD DK je príliš vysoká (${currentCashPct.toFixed(1)}%). Optimálne je ${optimalCashPct.toFixed(1)}% – zvyšok môže pracovať v aktívach s vyšším výnosom.`;
   } else {
-    message = `Vaša hotovostná rezerva je optimálna (${currentCashPct.toFixed(1)}%).`;
+    message = `Vaša rezerva na IAD DK je optimálna (${currentCashPct.toFixed(1)}%).`;
   }
 
   return {

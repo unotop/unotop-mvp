@@ -3,7 +3,7 @@ import { readV3 } from "../../persist/v3";
 import { createMixListener } from "../../persist/mixEvents";
 import type { MixItem } from "../mix/mix.service";
 import { RiskGauge } from "../../components/RiskGauge";
-import { type RiskPref } from "../mix/assetModel";
+import { type RiskPref, approxVipYieldFromMix } from "../mix/assetModel"; // PR-35: VIP yield
 import { detectStage } from "../policy/stage";
 import { getAdaptiveRiskCap } from "../policy/risk";
 import { useProjection } from "../projection/useProjection"; // PR-10: Use centralized hook
@@ -82,6 +82,9 @@ export function MetricsSection({
     goalProgress: progress,
   } = projection;
 
+  // PR-35: VIP yield (max potenciál scenár)
+  const vipYield = approxVipYieldFromMix(mix);
+
   return (
     <section
       id="sec5"
@@ -124,7 +127,7 @@ export function MetricsSection({
             </div>
           </div>
 
-          {/* Scorecard: Výnos/rok */}
+          {/* Scorecard: Výnos/rok (Safe + VIP) */}
           <div
             className="p-3 rounded-lg bg-slate-800/50 ring-1 ring-white/5 transition-all duration-300"
             data-kpi-card
@@ -144,13 +147,20 @@ export function MetricsSection({
               className="text-lg font-bold tabular-nums"
               title={
                 Array.isArray(mix) && mix.length > 0
-                  ? `${(approxYield * 100).toFixed(2)} % p.a.`
+                  ? `Safe: ${(approxYield * 100).toFixed(2)}% | VIP: ${(vipYield * 100).toFixed(2)}%`
                   : undefined
               }
             >
-              {!Array.isArray(mix) || mix.length === 0
-                ? "– (mix nezadaný)"
-                : `${(approxYield * 100).toFixed(1)} %`}
+              {!Array.isArray(mix) || mix.length === 0 ? (
+                "– (mix nezadaný)"
+              ) : (
+                <>
+                  <div>{(approxYield * 100).toFixed(1)} %</div>
+                  <div className="text-xs text-emerald-400 font-normal mt-0.5">
+                    Max {(vipYield * 100).toFixed(1)}% (VIP)
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

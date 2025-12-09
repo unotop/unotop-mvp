@@ -12,6 +12,23 @@
 export type Stage = "STARTER" | "CORE" | "LATE";
 
 /**
+ * P1.5 FIX: Mapuje effective plan volume na stage
+ * 
+ * Zodpovedá volume bands v profileAssetPolicy.ts:
+ * - STARTER: < 50k EUR
+ * - CORE: 50k - 100k EUR
+ * - LATE: >= 100k EUR
+ * 
+ * @param effectivePlanVolume - Lump + Monthly × 12 × Years
+ * @returns Stage (STARTER/CORE/LATE)
+ */
+export function volumeToStage(effectivePlanVolume: number): Stage {
+  if (effectivePlanVolume < 50_000) return "STARTER";
+  if (effectivePlanVolume < 100_000) return "CORE";
+  return "LATE";
+}
+
+/**
  * Detekuj investičnú fázu používateľa
  * 
  * Pravidlá (PR-14.A - úzky CORE gap):

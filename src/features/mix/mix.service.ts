@@ -7,8 +7,23 @@ export function sum(list: MixItem[]) { return +list.reduce((a,b)=>a+b.pct,0).toF
 export function normalize(list: MixItem[]): MixItem[] {
   const s = sum(list) || 1;
   const out = list.map(i => ({ ...i, pct: +(i.pct / s * 100).toFixed(2) }));
-  const diff = +(100 - sum(out)).toFixed(2);
-  if (Math.abs(diff) > 0) out[out.length-1] = { ...out[out.length-1], pct: +(out[out.length-1].pct + diff).toFixed(2) };
+  
+  // FIX: Presná redistribúcia diffu (po zaokrúhlení môže vzniknúť rounding error)
+  let currentSum = out.reduce((acc, item) => acc + item.pct, 0);
+  const diff = 100 - currentSum;
+  
+  if (Math.abs(diff) > 0.001) {
+    // Redistribuuj diff do najväčšieho assetu (bezpečnejšie ako last item)
+    const largest = out.reduce((max, item) => item.pct > max.pct ? item : max, out[0]);
+    const largestIndex = out.findIndex(i => i === largest);
+    if (largestIndex >= 0) {
+      out[largestIndex] = { 
+        ...out[largestIndex], 
+        pct: +(out[largestIndex].pct + diff).toFixed(2) 
+      };
+    }
+  }
+  
   return out;
 }
 

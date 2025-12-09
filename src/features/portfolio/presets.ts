@@ -44,8 +44,8 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
       { key: "etf", pct: 20 },
       { key: "bonds", pct: 17 },      // 50% z pôvodných 34%
       { key: "bond3y9", pct: 17 },    // 50% z pôvodných 34% (mesačný CF)
-      { key: "dyn", pct: 8 },
-      { key: "cash", pct: 12 },
+      { key: "dyn", pct: 5 },         // PR-31: 5% baseline (profile policy cap upraví pre PREMIUM/STARTER)
+      { key: "cash", pct: 15 },       // Zvýšené z 12% (kompenzácia za znížený dyn)
       { key: "crypto", pct: 0 },
       { key: "real", pct: 6 },
     ],
@@ -58,16 +58,17 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "amber",
     description: "Vyvážený pomer rizika a výnosu. Vhodné pre väčšinu investorov s dlhodobým horizontom.",
     mix: [
-      { key: "gold", pct: 13 },    // Znížené z 14
-      { key: "etf", pct: 32 },     
-      { key: "bonds", pct: 10 },    
-      { key: "bond3y9", pct: 10 },  
-      { key: "dyn", pct: 18 },     
-      { key: "cash", pct: 9 },     
-      { key: "crypto", pct: 4 },   
-      { key: "real", pct: 4 },     // Znížené z 5
+      // PR-34: Zlato znížené z 40% → 12%, dyn zvýšené z 0% → 10%
+      { key: "gold", pct: 12 },    // PR-34: Znížené (stabilita bez extrému)
+      { key: "etf", pct: 50 },     // PR-34: Zvýšené z 45% (hlavný rast)
+      { key: "bonds", pct: 9 },    // Zvýšené z 5% (kompenzácia)
+      { key: "bond3y9", pct: 9 },  // Zvýšené z 5% (mesačný CF)
+      { key: "dyn", pct: 10 },     // PR-34: Zvýšené z 0% (aktívne riadenie)
+      { key: "cash", pct: 5 },     // Minimálna rezerva
+      { key: "crypto", pct: 0 },   // Starter: bez crypto
+      { key: "real", pct: 5 },     // Zvýšené z 0% (diverzifikácia)
     ],
-    targetRisk: { min: 4.5, max: 6.0 },
+    targetRisk: { min: 5.5, max: 6.5 }, // PR-30: Cieľ 5.5-6.5 (pod riskMax 7.0)
   },
   {
     id: "rastovy",
@@ -76,16 +77,17 @@ export const PORTFOLIO_PRESETS: PortfolioPreset[] = [
     color: "green",
     description: "Vyššie riziko, maximálny potenciálny výnos. Vhodné pre skúsených investorov s vysokou toleranciou rizika.",
     mix: [
-      { key: "gold", pct: 12 },    
-      { key: "etf", pct: 35 },     
-      { key: "bonds", pct: 6.5 },   
-      { key: "bond3y9", pct: 6.5 }, 
-      { key: "dyn", pct: 21.5 },    // > 21% (test požiadavka)
-      { key: "cash", pct: 5.5 },    
-      { key: "crypto", pct: 5.5 },  // Znížené z 7 (pre súčet 100%)
-      { key: "real", pct: 7.5 },    // Znížené z 8 (pre súčet 100%)
+      // PR-34: Zlato znížené z 40% → 10%, dyn zvýšené z 0% → 16%, crypto 3% → 6%
+      { key: "gold", pct: 10 },    // PR-34: Znížené (minimálna stabilita)
+      { key: "etf", pct: 52 },     // PR-34: Zvýšené z 47% (hlavný rast)
+      { key: "bonds", pct: 4 },    // Zvýšené z 2.5% (stabilita)
+      { key: "bond3y9", pct: 4 },  // Zvýšené z 2.5% (mesačný CF)
+      { key: "dyn", pct: 16 },     // PR-34: Zvýšené z 0% (aktívne riadenie)
+      { key: "cash", pct: 2 },     // Znížené z 5% (minimalizácia hotovosti)
+      { key: "crypto", pct: 6 },   // PR-34: Zvýšené z 3% (agresívny rast)
+      { key: "real", pct: 6 },     // Zvýšené z 0% (diverzifikácia)
     ],
-    targetRisk: { min: 6.5, max: 7.5 },
+    targetRisk: { min: 7.0, max: 8.0 }, // PR-30: Cieľ 7-8 (nad Balanced, pod riskMax 8.0)
   },
 ];
 
@@ -161,6 +163,9 @@ export function enforceStageCaps(
       overflow += item.pct - cap;
       item.pct = cap;
       adjustmentsMade = true;
+      
+      // DEBUG LOG (PR-34)
+      console.log(`[enforceStageCaps] ${item.key} clamped ${pctBefore.toFixed(1)}% → ${cap}% (stage=${stage}, riskPref=${riskPref})`);
       
       // Track individual asset cap enforcement
       trackPolicyAdjustment({

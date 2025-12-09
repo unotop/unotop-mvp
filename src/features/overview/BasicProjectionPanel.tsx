@@ -87,7 +87,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   riskPref,
   mode = "BASIC", // PR-4: Default to BASIC
   debts = [], // PR-26: Default to empty array
-  valuationMode = "real", // PR-27: Default to real (po inflácii)
+  valuationMode = "nominal", // PR-27: Default to nominal (primárny pohľad)
   onValuationModeChange, // PR-27: Callback for mode changes
 }) => {
   // PR-9 Task A: Validate riskPref PRED defaultMix
@@ -150,14 +150,10 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const displayYield =
     valuationMode === "real" ? toRealYield(approxYield) : approxYield;
 
-  // PR-27: Progress k cieľu - porovnávame v rovnakom "svete"
-  // Real mode: FV_real vs goal_real (goal je zadaný v dnešných cenách)
-  // Nominal mode: FV_nom vs goal_nom (prepočítame goal do budúcich cien)
-  const displayGoal =
-    valuationMode === "real"
-      ? goalAssetsEur
-      : toNominalGoal(goalAssetsEur, horizonYears);
-  const displayProgress = displayGoal > 0 ? (displayFV / displayGoal) * 100 : 0;
+  // Progress k cieľu - VŽDY používame nominal FV (absolútna suma na účte)
+  // Real mode zobrazuje len kúpnu silu, ale cieľ sa hodnotí podľa nominal
+  const nominalProgress = goalAssetsEur > 0 ? (fv / goalAssetsEur) * 100 : 0;
+  const displayProgress = nominalProgress; // Vždy rovnaký progress (nominal aj real)
 
   // Detect investment stage for adaptive caps
   const stage = detectStage(
@@ -167,7 +163,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
     goalAssetsEur
   );
   const riskCap = getAdaptiveRiskCap(validRiskPref, stage);
-  const isOverRisk = riskScore > riskCap;
+  // Risk warning vypnutý v BASIC režime (PR-38)
 
   // Risk profile label
   const riskLabel = {
@@ -304,14 +300,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                 <div className="text-2xl font-bold text-white tabular-nums mb-1">
                   +{(displayYield * 100).toFixed(1)} %
                 </div>
-                <div className="text-xs text-blue-300/70">
-                  {riskLabel}
-                  {isOverRisk && (
-                    <span className="text-amber-400 ml-2">
-                      ⚠️ Vysoké riziko
-                    </span>
-                  )}
-                </div>
+                <div className="text-xs text-blue-300/70">{riskLabel}</div>
               </>
             ) : (
               <>
@@ -350,9 +339,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                     displayProgress >= 100 ? "text-emerald-300" : ""
                   }`}
                 >
-                  {remaining > 0
-                    ? `${formatLargeNumber(remaining)} €`
-                    : "Splnené ✓"}
+                  {displayProgress >= 100
+                    ? "Splnené ✓"
+                    : `${formatLargeNumber(goalAssetsEur - displayFV)} €`}
                 </div>
                 <div
                   className={`text-xs ${
@@ -366,6 +355,11 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                       ? "Cieľ splnený"
                       : `Prekročený o ${(displayProgress - 100).toFixed(0)}%`
                     : `Progres: ${displayProgress.toFixed(0)}%`}
+                  {valuationMode === "real" && displayProgress >= 100 && (
+                    <span className="block mt-0.5 text-[11px] text-emerald-400/60">
+                      (v dnešných cenách ako {formatLargeNumber(displayFV)} €)
+                    </span>
+                  )}
                 </div>
               </>
             ) : (
@@ -415,7 +409,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
               <p className="font-semibold text-slate-200 mb-1">
                 {cashReserveInfo.current < cashReserveInfo.optimal
                   ? "Rezerva pod optimom"
-                  : "Nadmerná hotovosť"}
+                  : "Nadmerná rezerva na IAD DK"}
               </p>
               <p className="text-slate-400 text-xs mb-2">
                 Aktuálne: {cashReserveInfo.current.toFixed(1)}% | Optimálne:{" "}
@@ -521,170 +515,49 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
         </div>
       </div>
 
-      {/* Odporúčania - kompaktné, edukatívne */}
+      {/* CTA: Odoslať projekciu - BASIC režim (kompaktný, bez tipov) */}
       {shouldShowRecommendations && (
         <div className="rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 space-y-3">
           <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-            <span>💡</span>
-            <span>Čo ďalej?</span>
+            <span>📧</span>
+            <span>Chcete profesionálnu pomoc?</span>
           </h3>
 
-          <div className="space-y-2">
-            {/* PR-13B: Priorita -1: Rezerva najprv hint */}
-            {showReserveHint && expenses > 0 && (
-              <div className="flex items-start gap-2 text-sm bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-                <span className="text-blue-400 shrink-0 text-lg">🛡️</span>
-                <div className="text-slate-300">
-                  <strong className="text-blue-300">
-                    Najprv si vybudujte rezervu 3–6 mesiacov.
-                  </strong>{" "}
-                  Vaše mesačné výdavky sú ~{formatNumber(expenses)} €,
-                  odporúčaná rezerva {formatNumber(reserveLow)}–
-                  {formatNumber(reserveHigh)} €. Keď bude rezerva hotová, vieme
-                  ju investovať a zvýšiť dlhodobé zhodnotenie. Rád vám to
-                  vysvetlím osobne.
-                </div>
-              </div>
-            )}
+          <p className="text-sm text-slate-400">
+            Naši experti vám pomôžu optimalizovať plán a nájsť riešenia na
+            mieru.
+          </p>
 
-            {/* Priorita 0: Unutilized reserve (ak existuje, zobraz info) */}
-            {hasUnutilizedReserve && unutilizedReserveCopy && (
-              <div className="flex items-start gap-2 text-sm">
-                <span className="text-blue-500 shrink-0">💵</span>
-                <div className="text-slate-300">{unutilizedReserveCopy}</div>
-              </div>
-            )}
-
-            {/* Priorita 1: Vysoké riziko (VŽDY prvé ak existuje) */}
-            {isOverRisk && (
-              <div className="flex items-start gap-2 text-sm">
-                <span className="text-amber-500 shrink-0">⚠️</span>
-                <div className="text-slate-300">
-                  <strong>Pozor!</strong> Portfólio rizikové (
-                  {riskScore.toFixed(1)}/{riskCap.toFixed(1)}). Znížte dyn.
-                  riadenie alebo krypto.
-                </div>
-              </div>
-            )}
-
-            {/* Priorita 2: Cieľ splnený (ak nie je riziko) */}
-            {!isOverRisk && displayProgress >= 100 && (
-              <div className="flex items-start gap-2 text-sm">
-                <span className="text-emerald-500 shrink-0">🎉</span>
-                <div className="text-slate-300">
-                  <strong>Gratulujeme!</strong> Váš cieľ bude splnený.
-                </div>
-              </div>
-            )}
-
-            {/* Priorita 3: Edukatívne odporúčania (ak cieľ nie je splnený) */}
-            {!isOverRisk &&
-              goalAssetsEur > 0 &&
-              displayProgress < 100 &&
-              remaining > 0 && (
-                <div className="flex items-start gap-2 text-sm">
-                  <span className="text-blue-500 shrink-0">💡</span>
-                  <div className="text-slate-300">
-                    <strong>Ako dosiahnuť cieľ?</strong> Chýba vám{" "}
-                    {formatLargeNumber(remaining)} €. Možnosti:
-                    <ul className="mt-1 ml-4 text-xs space-y-0.5 text-slate-400">
-                      {/* Smart odporúčanie vkladu - len ak je realistické */}
-                      {monthlyVklad > 0 &&
-                        horizonYears > 0 &&
-                        (() => {
-                          const requiredMonthly = Math.ceil(
-                            monthlyVklad + remaining / (horizonYears * 12)
-                          );
-                          const currentIncome =
-                            (v3.profile?.monthlyIncome as any) || 0;
-                          const increaseRatio =
-                            requiredMonthly / Math.max(monthlyVklad, 1);
-                          const incomeRatio =
-                            currentIncome > 0
-                              ? requiredMonthly / currentIncome
-                              : 999;
-
-                          // Zobraz len ak je realistické (<2× súčasný vklad ALEBO <40% príjmu)
-                          const isRealistic =
-                            increaseRatio < 2 && incomeRatio < 0.4;
-
-                          if (isRealistic) {
-                            return (
-                              <li>
-                                ✅ Zvýšte mesačný vklad na{" "}
-                                <strong className="text-blue-400">
-                                  {requiredMonthly} €
-                                </strong>
-                              </li>
-                            );
-                          }
-                          return null;
-                        })()}
-                      <li>✅ Optimalizujte výdavky (fixné/variabilné)</li>
-                      {horizonYears < 15 && (
-                        <li>
-                          ✅ Predĺžte horizont na {horizonYears + 5} rokov
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-            {/* Priorita 4: Pozitívna spätná väzba (default - ak nie sú iné odporúčania) */}
-            {!isOverRisk &&
-              (displayProgress >= 100 || displayProgress === 0) && (
-                <div className="flex items-start gap-2 text-sm">
-                  <span className="text-emerald-500 shrink-0">✓</span>
-                  <div className="text-slate-300">
-                    <strong>Skvelé!</strong> Portfólio vyvážené a zodpovedá
-                    profilu.
-                  </div>
-                </div>
-              )}
-
-            {/* CTA: VŽDY viditeľný */}
-            <div className="mt-3 pt-2 border-t border-white/5">
-              <div className="flex items-start gap-2 text-sm">
-                <span className="text-emerald-500 shrink-0">📧</span>
-                <div className="text-slate-300">
-                  <strong>Odoslať agentovi</strong> → nezáväzne pomôžeme
-                  dosiahnuť ciele.
-                </div>
-              </div>
-
-              {/* PR-11: Collab opt-in checkbox */}
-              <label
-                htmlFor="collab-opt-in-checkbox"
-                className="flex items-center gap-2 mt-2 text-xs text-slate-400 cursor-pointer hover:text-slate-300 transition-colors"
-              >
-                <input
-                  id="collab-opt-in-checkbox"
-                  type="checkbox"
-                  checked={!!(v3.profile as any)?.collabOptIn}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    writeV3({
-                      profile: { ...v3.profile, collabOptIn: checked } as any,
-                    });
-                    // Track telemetry (PR-10)
-                    import("../../services/telemetry").then((t) =>
-                      t.trackCollabInterest({
-                        checked,
-                        stage,
-                        riskPref: validRiskPref,
-                        monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
-                        monthlyVklad,
-                      })
-                    );
-                  }}
-                  aria-label="Zvýšiť príjem (collab opt-in)"
-                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50 cursor-pointer flex-shrink-0"
-                />
-                <span className="select-none">{getCollabOptInCopy()}</span>
-              </label>
-            </div>
-          </div>
+          {/* PR-11: Collab opt-in checkbox */}
+          <label
+            htmlFor="collab-opt-in-checkbox"
+            className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer hover:text-slate-300 transition-colors"
+          >
+            <input
+              id="collab-opt-in-checkbox"
+              type="checkbox"
+              checked={!!(v3.profile as any)?.collabOptIn}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                writeV3({
+                  profile: { ...v3.profile, collabOptIn: checked } as any,
+                });
+                // Track telemetry (PR-10)
+                import("../../services/telemetry").then((t) =>
+                  t.trackCollabInterest({
+                    checked,
+                    stage,
+                    riskPref: validRiskPref,
+                    monthlyIncome: (v3.profile?.monthlyIncome as any) || 0,
+                    monthlyVklad,
+                  })
+                );
+              }}
+              aria-label="Zvýšiť príjem (collab opt-in)"
+              className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-2 focus:ring-emerald-500/50 cursor-pointer flex-shrink-0"
+            />
+            <span className="select-none">{getCollabOptInCopy()}</span>
+          </label>
         </div>
       )}
     </div>

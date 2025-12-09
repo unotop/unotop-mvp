@@ -44,7 +44,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
   riskPref,
   onSubmitClick,
   hasDriftBlocking = false, // Default false
-  valuationMode = "real", // PR-27: Default to real (po inflácii)
+  valuationMode = "nominal", // PR-27: Default to nominal (primárny pohľad)
 }) => {
   const v3 = readV3();
   const debts = v3.debts || [];
@@ -138,7 +138,11 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             >
               <span className="text-slate-400">Ročný výnos:</span>
               <span className="font-bold text-blue-400 tabular-nums">
-                +{(displayYield * 100).toFixed(1)} %
+                +
+                {displayYield != null && !isNaN(displayYield)
+                  ? (displayYield * 100).toFixed(1)
+                  : "0.0"}{" "}
+                %
               </span>
             </div>
 
@@ -164,7 +168,10 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
             >
               <span className="text-slate-400">Riziko:</span>
               <span className="font-bold text-slate-300 tabular-nums">
-                {riskScore.toFixed(1)} / 10
+                {riskScore != null && !isNaN(riskScore)
+                  ? riskScore.toFixed(1)
+                  : "0.0"}{" "}
+                / 10
               </span>
             </div>
           </div>

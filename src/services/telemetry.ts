@@ -52,7 +52,7 @@ export function trackPolicyAdjustment(params: PolicyAdjustmentParams): void {
   };
 
   // Console log for development
-  if (import.meta.env.DEV) {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`[Telemetry] ${eventName}:`, eventData);
   }
 
@@ -86,7 +86,7 @@ export function trackWarningShown(params: WarningShownParams): void {
   };
 
   // Console log for development
-  if (import.meta.env.DEV) {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`[Telemetry] ${eventName}:`, eventData);
   }
 
@@ -124,7 +124,7 @@ export function trackCollabInterest(params: CollabInterestParams): void {
   };
 
   // Console log for development
-  if (import.meta.env.DEV) {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log(`[Telemetry] ${eventName}:`, eventData);
   }
 
@@ -197,3 +197,4 @@ export function initTelemetry(): void {
     console.log("[Telemetry] GA4 initialized");
   }
 }
+

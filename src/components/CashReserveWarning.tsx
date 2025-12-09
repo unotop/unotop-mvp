@@ -17,7 +17,7 @@ export function CashReserveWarning({
   message,
   onApply,
 }: Props) {
-  // PR-13: Tri stavy pre hotovosť
+  // PR-13: Tri stavy pre IAD DK (pracujúcu rezervu)
   const TOLERANCE = 1.0; // ±1 p.b. tolerancia
   const isLow = current < optimal - TOLERANCE;
   const isHigh = current > optimal + TOLERANCE;
@@ -31,10 +31,10 @@ export function CashReserveWarning({
           <span className="text-2xl">✅</span>
           <div className="flex-1">
             <p className="font-semibold text-slate-200 mb-2">
-              Rezerva je v optimálnom pásme
+              Pracujúca rezerva je v optimálnom pásme
             </p>
             <p className="text-slate-300">
-              Vaša hotovostná rezerva ({current.toFixed(1)}%) je blízko
+              Vaša rezerva na IAD DK ({current.toFixed(1)}%) je blízko
               odporúčanej úrovne ({optimal.toFixed(1)}%). Môžete pokračovať v
               investovaní.
             </p>
@@ -57,20 +57,20 @@ export function CashReserveWarning({
         <div className="flex-1">
           <p className="font-semibold text-slate-200 mb-2">
             {isLow
-              ? "Nižšia hotovosť – zváž doplniť rezervu 3–6 mes."
-              : "Nadmerná hotovosť"}
+              ? "Nižšia rezerva – zváž doplniť na 3–6 mes."
+              : "Nadmerná rezerva na IAD DK"}
           </p>
           <p className="text-slate-300 mb-3">{message}</p>
 
           <div className="flex items-center gap-4 mb-3">
             <div className="flex-1">
-              <p className="text-xs text-slate-500 mb-1">Súčasná cash %</p>
+              <p className="text-xs text-slate-500 mb-1">Súčasná IAD DK %</p>
               <p className="text-lg font-bold text-white">
                 {current.toFixed(1)}%
               </p>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-slate-500 mb-1">Optimálna cash %</p>
+              <p className="text-xs text-slate-500 mb-1">Optimálna IAD DK %</p>
               <p
                 className={`text-lg font-bold ${
                   isLow ? "text-blue-400" : "text-purple-400"

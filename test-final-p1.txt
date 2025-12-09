@@ -1,0 +1,2215 @@
+﻿
+> unotop-mvp@0.9.0 test
+> npm run test:clean && vitest run portfolio-engine-qa-matrix
+
+
+> unotop-mvp@0.9.0 test:clean
+> rimraf node_modules/.vitest || true
+
+
+[7m[1m[36m RUN [39m[22m[27m [36mv1.6.1[39m [90mC:/Users/Adam/Desktop/unotop-mvp[39m
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ STARTER[22m[39m
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +1.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 10%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"dyn","p":"40.2"},{"k":"etf","p":"7.2"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[enforceStageCaps] gold clamped 40.2% ΓåÆ 40% (stage=STARTER, riskPref=vyvazeny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'STARTER'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'gold_cap'[39m,
+  asset: [32m'gold'[39m,
+  pct_before: [33m40.17[39m,
+  pct_after: [33m40[39m,
+  cap: [33m40[39m,
+  timestamp: [32m'2025-12-01T14:49:06.707Z'[39m
+}
+[enforceStageCaps] dyn clamped 40.2% ΓåÆ 18% (stage=STARTER, riskPref=vyvazeny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'STARTER'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m40.16[39m,
+  pct_after: [33m18[39m,
+  cap: [33m18[39m,
+  timestamp: [32m'2025-12-01T14:49:06.708Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 0.0%), ETF 0.0% (room 20.5%)
+[CashCapPolicy] Applied for vyvazeny: 7.0% ΓåÆ 7% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 40.0% ΓåÆ 15.0% (cap enforced, overflow 25.0%)
+[ProfileAssetPolicy] crypto: 5.7% ΓåÆ 5.0% (cap enforced, overflow 0.7%)
+[ProfileAssetPolicy] Redistributing 25.6% overflow to core assets: gold, etf, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +3.7% (room 20.5%)
+[ProfileAssetPolicy]   ΓåÆ bonds +18.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.04% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold, crypto capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] START: Risk 6.28 / 7.0, Yield 19.92%, Room 0.72
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.40)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.52)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.52)
+[YieldOptimizer] DONE: 3 moves applied, Yield 19.92% ΓåÆ 20.46% (+0.54%), Risk 6.28 ΓåÆ 7.52
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 19.92% ΓåÆ 20.46%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] VIP yield: Safe 20.46% ΓåÆ VIP 24.55%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mPREMIUM-2 (0/300/30) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 10%, lump=0, monthly=300, available=true
+[Telemetry] warning_shown: {
+  type: [32m'info'[39m,
+  scope: [32m'minimums'[39m,
+  dedupeKey: [32m'minimum-bonds'[39m,
+  message: [32m'Dlhopisy nedostupn├⌐ pri va┼íich vkladoch (min. 2┬á500 Γé¼ jednorazovo). Alok├ícia presunut├í: ETF, Pracuj├║ca rezerva ΓÇô IAD DK.'[39m,
+  timestamp: [32m'2025-12-01T14:49:06.713Z'[39m
+}
+[Telemetry] warning_shown: {
+  type: [32m'info'[39m,
+  scope: [32m'minimums'[39m,
+  dedupeKey: [32m'minimum-real'[39m,
+  message: [32m'Reality nedostupn├⌐ pri va┼íich vkladoch (min. 300┬á000 Γé¼ jednorazovo). Alok├ícia presunut├í: ETF, Pracuj├║ca rezerva ΓÇô IAD DK.'[39m,
+  timestamp: [32m'2025-12-01T14:49:06.713Z'[39m
+}
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"dyn","p":"39.3"},{"k":"etf","p":"8.8"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"4.8"}]
+[enforceStageCaps] gold clamped 40.2% ΓåÆ 40% (stage=LATE, riskPref=vyvazeny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'gold_cap'[39m,
+  asset: [32m'gold'[39m,
+  pct_before: [33m40.17[39m,
+  pct_after: [33m40[39m,
+  cap: [33m40[39m,
+  timestamp: [32m'2025-12-01T14:49:06.716Z'[39m
+}
+[enforceStageCaps] dyn clamped 39.3% ΓåÆ 16% (stage=LATE, riskPref=vyvazeny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m39.32[39m,
+  pct_after: [33m16[39m,
+  cap: [33m16[39m,
+  timestamp: [32m'2025-12-01T14:49:06.716Z'[39m
+}
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'dyn_crypto_combo'[39m,
+  pct_before: [33m20.77[39m,
+  pct_after: [33m18[39m,
+  combo_cap: [33m18[39m,
+  timestamp: [32m'2025-12-01T14:49:06.716Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"14.1"},{"k":"etf","p":"35.0"},{"k":"cash","p":"7.1"},{"k":"crypto","p":"3.9"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"14.1"},{"k":"etf","p":"35.0"},{"k":"cash","p":"7.1"},{"k":"crypto","p":"3.9"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 108,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] dyn: 14.1% ΓåÆ 12.0% (cap enforced, overflow 2.1%)
+[ProfileAssetPolicy] Redistributing 2.1% overflow to core assets: gold, etf, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +0.2% (room 15.0%)
+[ProfileAssetPolicy]   ΓåÆ bonds +1.5% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 99.63% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.1"},{"k":"dyn","p":"12.0"},{"k":"etf","p":"35.4"},{"k":"bonds","p":"1.5"},{"k":"cash","p":"7.1"},{"k":"crypto","p":"4.0"}]
+[EnforceRiskCap] Initial risk: 7.34 / max 7.00
+[EnforceRiskCap] Iteration 1: dyn 12.04% ΓåÆ 9.64% (-2.41 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.96 p.b. (weight 0.40, room 38.5%)
+[EnforceRiskCap]   ΓåÆ gold FULL (40.1% >= 20% cap), skip
+[EnforceRiskCap]   ΓåÆ cash +0.14 p.b. (weight 0.10, room 22.9%)
+[EnforceRiskCap] After iteration 1: risk 7.09
+[EnforceRiskCap] dyn 9.8% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 2: crypto 4.01% ΓåÆ 2.01% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.80 p.b. (weight 0.40, room 37.5%)
+[EnforceRiskCap]   ΓåÆ gold FULL (40.7% >= 20% cap), skip
+[EnforceRiskCap]   ΓåÆ cash +0.12 p.b. (weight 0.10, room 22.6%)
+[EnforceRiskCap] After iteration 2: risk 7.08
+[EnforceRiskCap] dyn 9.9% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 3: crypto 2.03% ΓåÆ 0.03% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.80 p.b. (weight 0.40, room 36.7%)
+[EnforceRiskCap]   ΓåÆ gold FULL (41.1% >= 20% cap), skip
+[EnforceRiskCap]   ΓåÆ cash +0.12 p.b. (weight 0.10, room 22.4%)
+[EnforceRiskCap] After iteration 3: risk 7.07
+[EnforceRiskCap] dyn 10.0% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 4: crypto 0.03% ΓåÆ 0.00% (-0.03 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.01 p.b. (weight 0.40, room 35.9%)
+[EnforceRiskCap]   ΓåÆ gold FULL (41.6% >= 20% cap), skip
+[EnforceRiskCap] After iteration 4: risk 7.07
+[EnforceRiskCap] dyn 10.0% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 5: etf 36.62% ΓåÆ 31.62% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +2.00 p.b. (weight 0.40, room 35.8%)
+[EnforceRiskCap]   ΓåÆ gold FULL (41.6% >= 20% cap), skip
+[EnforceRiskCap]   ΓåÆ cash +0.30 p.b. (weight 0.10, room 22.2%)
+[EnforceRiskCap] After iteration 5: risk 7.05
+[EnforceRiskCap] dyn 10.3% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 6: etf 32.50% ΓåÆ 27.50% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +2.00 p.b. (weight 0.40, room 33.7%)
+[EnforceRiskCap]   ΓåÆ gold FULL (42.7% >= 20% cap), skip
+[EnforceRiskCap]   ΓåÆ cash +0.30 p.b. (weight 0.10, room 21.7%)
+[EnforceRiskCap] After iteration 6: risk 6.47
+[EnforceRiskCap] Final: 7.34 ΓåÆ 6.47 (6 iterations)
+[MixAdjustments] Risk cap enforced: 7.34 ΓåÆ 6.47 (6 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"43.9"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"28.3"},{"k":"bonds","p":"8.6"},{"k":"cash","p":"8.8"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 108,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 6.47 / 7.0, Yield 13.69%, Room 0.53
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] No beneficial move found, stopping
+node.exe : [90mstderr[2m | 
+tests/portfolio-engine-qa-matrix.test.tsx[2m > 
+[22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mVolume band classification[2m > [22m[2mPREMIUM-2 
+(0/300/30) ΓåÆ PREMIUM[22m[39m
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~
+    + CategoryInfo          : NotSpecified: ([90mstderr[2m... 
+   EMIUM[22m[39m:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[CashCapPolicy] No room in gold/ETF for reallocation, keeping 
+excess 0.1% in cash
+[EnforceRiskCap] Cannot redistribute 1.30 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.08 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.08 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.70 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.70 p.b. (will retry or 
+switch to direct cut)
+
+[YieldOptimizer Safety] Clamped gold 43.9% ΓåÆ 20%
+[YieldOptimizer Safety] Redistributed 11.96 p.b. ΓåÆ bonds
+[YieldOptimizer Safety] Redistributed 3.59 p.b. ΓåÆ gold
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"23.6"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"28.3"},{"k":"bonds","p":"20.5"},{"k":"cash","p":"8.8"}]
+[MixAdjustments Clamp] Deficit 8.37% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"24.5"},{"k":"dyn","p":"10.9"},{"k":"etf","p":"29.4"},{"k":"bonds","p":"26.1"},{"k":"cash","p":"9.2"}]
+[MixAdjustments] VIP yield: Safe 14.03% ΓåÆ VIP 16.84%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mCORE-0 (60k/150/15) ΓåÆ CORE[22m[39m
+[applyMinimums DEBUG] dyn 10%, lump=60000, monthly=150, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"40.0"},{"k":"bonds","p":"21.6"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[enforceStageCaps] etf clamped 40.0% ΓåÆ 35% (stage=LATE, riskPref=vyvazeny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'etf_cap'[39m,
+  asset: [32m'etf'[39m,
+  pct_before: [33m39.98[39m,
+  pct_after: [33m35[39m,
+  cap: [33m35[39m,
+  timestamp: [32m'2025-12-01T14:49:06.719Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 21.3%), ETF 0.0% (room 0.0%)
+[CashCapPolicy] Applied for vyvazeny: 7.0% ΓåÆ 7% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] dyn: 10.5% ΓåÆ 8.0% (cap enforced, overflow 2.5%)
+[ProfileAssetPolicy] Redistributing 2.5% overflow to core assets: gold, etf, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ gold +0.4% (room 21.3%)
+[ProfileAssetPolicy]   ΓåÆ etf +0.3% (room 15.0%)
+[ProfileAssetPolicy]   ΓåÆ bonds +1.4% (room 73.5%)
+[ProfileAssetPolicy] Normalized: 99.61% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"19.2"},{"k":"dyn","p":"8.0"},{"k":"etf","p":"35.4"},{"k":"bonds","p":"28.1"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.93 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"19.2"},{"k":"dyn","p":"8.0"},{"k":"etf","p":"35.4"},{"k":"bonds","p":"28.1"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] START: Risk 4.93 / 7.0, Yield 13.46%, Room 2.07
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.05)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.17)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.29)
+[YieldOptimizer] DONE: 3 moves applied, Yield 13.46% ΓåÆ 14.00% (+0.54%), Risk 4.93 ΓåÆ 6.29
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 13.46% ΓåÆ 14.00%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"19.2"},{"k":"dyn","p":"8.0"},{"k":"etf","p":"41.4"},{"k":"bonds","p":"28.1"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"19.2"},{"k":"dyn","p":"8.0"},{"k":"etf","p":"41.4"},{"k":"bonds","p":"28.1"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 14.00% ΓåÆ VIP 16.80%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mCORE-1 (10k/300/30) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 10%, lump=10000, monthly=300, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"40.0"},{"k":"bonds","p":"21.6"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 118,000 EUR ΓåÆ Band: PREMIUM
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 5.05 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 118,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.05 / 7.0, Yield 14.74%, Room 1.95
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.17)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.29)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.35)
+[YieldOptimizer] DONE: 3 moves applied, Yield 14.74% ΓåÆ 15.28% (+0.54%), Risk 5.05 ΓåÆ 6.35
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 14.74% ΓåÆ 15.28%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 15.28% ΓåÆ VIP 18.34%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mCORE-2 (10k/500/20) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 10%, lump=10000, monthly=500, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"40.0"},{"k":"bonds","p":"21.6"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 130,000 EUR ΓåÆ Band: PREMIUM
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 5.05 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 130,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.05 / 7.0, Yield 14.74%, Room 1.95
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.17)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.29)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.35)
+[YieldOptimizer] DONE: 3 moves applied, Yield 14.74% ΓåÆ 15.28% (+0.54%), Risk 5.05 ΓåÆ 6.35
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 14.74% ΓåÆ 15.28%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 15.28% ΓåÆ VIP 18.34%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mCORE-3 (20k/600/25) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 10%, lump=20000, monthly=600, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"40.0"},{"k":"bonds","p":"21.6"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 200,000 EUR ΓåÆ Band: PREMIUM
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 5.05 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 200,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.05 / 7.0, Yield 14.74%, Room 1.95
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.17)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.29)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.35)
+[YieldOptimizer] DONE: 3 moves applied, Yield 14.74% ΓåÆ 15.28% (+0.54%), Risk 5.05 ΓåÆ 6.35
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 14.74% ΓåÆ 15.28%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 15.28% ΓåÆ VIP 18.34%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mPREMIUM-1 (50k/1000/15) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 10%, lump=50000, monthly=1000, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"40.0"},{"k":"bonds","p":"21.6"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 230,000 EUR ΓåÆ Band: PREMIUM
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 5.05 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 230,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.05 / 7.0, Yield 14.74%, Room 1.95
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.17)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.29)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.35)
+[YieldOptimizer] DONE: 3 moves applied, Yield 14.74% ΓåÆ 15.28% (+0.54%), Risk 5.05 ΓåÆ 6.35
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 14.74% ΓåÆ 15.28%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"18.7"},{"k":"dyn","p":"10.5"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"26.5"},{"k":"cash","p":"1.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 15.28% ΓåÆ VIP 18.34%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mPREMIUM-2 (100k/2000/20) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 9.15%, lump=100000, monthly=2000, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"9.5"},{"k":"etf","p":"39.9"},{"k":"bonds","p":"22.9"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[enforceStageCaps] etf clamped 39.9% ΓåÆ 35% (stage=LATE, riskPref=vyvazeny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'vyvazeny'[39m,
+  reason: [32m'etf_cap'[39m,
+  asset: [32m'etf'[39m,
+  pct_before: [33m39.85[39m,
+  pct_after: [33m35[39m,
+  cap: [33m35[39m,
+  timestamp: [32m'2025-12-01T14:49:06.729Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"9.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 21.2%), ETF 0.0% (room 0.0%)
+[CashCapPolicy] Applied for vyvazeny: 7.0% ΓåÆ 7% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"9.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 580,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 9.5% ΓåÆ 10% (adding 0.5% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"6.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[EnforceRiskCap] Initial risk: 5.00 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"6.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 580,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.00 / 7.0, Yield 14.44%, Room 2.00
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.12)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.24)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.30)
+[YieldOptimizer] DONE: 3 moves applied, Yield 14.44% ΓåÆ 14.98% (+0.54%), Risk 5.00 ΓåÆ 6.30
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 14.44% ΓåÆ 14.98%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"0.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"0.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] VIP yield: Safe 14.98% ΓåÆ VIP 17.98%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mVolume band classification[2m > [22m[2mPREMIUM-3 (200k/3000/20) ΓåÆ PREMIUM[22m[39m
+[applyMinimums DEBUG] dyn 9.15%, lump=200000, monthly=3000, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"9.5"},{"k":"etf","p":"39.9"},{"k":"bonds","p":"22.9"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"9.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"9.5"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 920,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 9.5% ΓåÆ 10% (adding 0.5% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"6.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[EnforceRiskCap] Initial risk: 5.00 / max 7.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"6.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 920,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.00 / 7.0, Yield 14.44%, Room 2.00
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.12)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.24)
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mVolume band classification[2m > [22m[2mCORE-1 
+(10k/300/30) ΓåÆ PREMIUM[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mVolume band classification[2m > [22m[2mCORE-2 
+(10k/500/20) ΓåÆ PREMIUM[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mVolume band classification[2m > [22m[2mCORE-3 
+(20k/600/25) ΓåÆ PREMIUM[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mVolume band classification[2m > [22m[2mPREMIUM-1 
+(50k/1000/15) ΓåÆ PREMIUM[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mVolume band classification[2m > [22m[2mPREMIUM-3 
+(200k/3000/20) ΓåÆ PREMIUM[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.30)
+[YieldOptimizer] DONE: 3 moves applied, Yield 14.44% ΓåÆ 14.98% (+0.54%), Risk 5.00 ΓåÆ 6.30
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 14.44% ΓåÆ 14.98%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"0.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"18.8"},{"k":"dyn","p":"10.0"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"27.8"},{"k":"cash","p":"0.5"},{"k":"crypto","p":"1.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] VIP yield: Safe 14.98% ΓåÆ VIP 17.98%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mSTARTER-1 (0/200/20) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[AssetMinima] Locked real: 5.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 5.00% ΓåÆ gold +3.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 5.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"etf","p":"49.7"},{"k":"cash","p":"10.1"},{"k":"real","p":"0.0"}]
+[ConservativeGuard] Iteration 1: ETF 49.7% ΓåÆ 44.7%, Gold 40.2% ΓåÆ 45.2%, Risk cons 9.18 vs bal 9.18
+[ConservativeGuard] Iteration 2: ETF 44.7% ΓåÆ 39.7%, Gold 45.2% ΓåÆ 50.2%, Risk cons 8.43 vs bal 8.43
+[ConservativeGuard] Iteration 3: ETF 39.7% ΓåÆ 34.7%, Gold 50.2% ΓåÆ 55.2%, Risk cons 9.36 vs bal 9.36
+[ConservativeGuard] Iteration 4: ETF 34.7% ΓåÆ 30.0%, Gold 55.2% ΓåÆ 59.9%, Risk cons 9.78 vs bal 9.78
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[enforceStageCaps] gold clamped 59.9% ΓåÆ 40% (stage=STARTER, riskPref=konzervativny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'STARTER'[39m,
+  riskPref: [32m'konzervativny'[39m,
+  reason: [32m'gold_cap'[39m,
+  asset: [32m'gold'[39m,
+  pct_before: [33m59.92[39m,
+  pct_after: [33m40[39m,
+  cap: [33m40[39m,
+  timestamp: [32m'2025-12-01T14:49:06.734Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"49.9"},{"k":"cash","p":"10.1"},{"k":"real","p":"0.0"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 0.0%), ETF 0.1% (room 0.1%)
+[CashCapPolicy] Applied for konzervativny: 10.1% ΓåÆ 10% (excess 0.1% ΓåÆ 0.0% gold + 0.1% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.1% reallocated (0.0% gold + 0.1% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] etf: 50.0% ΓåÆ 30.0% (cap enforced, overflow 20.0%)
+[ProfileAssetPolicy] real: 0.0% ΓåÆ 0.0% (cap enforced, overflow 0.0%)
+[ProfileAssetPolicy] Redistributing 20.0% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +16.0% (room 100.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +1.6% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 97.60% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: etf, real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.01 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments Clamp] gold 41.0% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 0.98% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.2"},{"k":"etf","p":"30.9"},{"k":"bonds","p":"16.9"},{"k":"cash","p":"12.0"}]
+[MixAdjustments Clamp] gold 40.2% ΓåÆ 40%
+[MixAdjustments] VIP yield: Safe 8.15% ΓåÆ VIP 9.79%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mSTARTER-1 (0/200/20) + vyvazeny ΓåÆ risk v p├ísme[22m[39m
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +1.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 10%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"dyn","p":"40.2"},{"k":"etf","p":"7.2"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 40.0% ΓåÆ 15.0% (cap enforced, overflow 25.0%)
+[ProfileAssetPolicy] crypto: 5.7% ΓåÆ 5.0% (cap enforced, overflow 0.7%)
+[ProfileAssetPolicy] Redistributing 25.6% overflow to core assets: gold, etf, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +3.7% (room 20.5%)
+[ProfileAssetPolicy]   ΓåÆ bonds +18.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.04% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold, crypto capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] START: Risk 6.28 / 7.0, Yield 19.92%, Room 0.72
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.40)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.52)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.52)
+[YieldOptimizer] DONE: 3 moves applied, Yield 19.92% ΓåÆ 20.46% (+0.54%), Risk 6.28 ΓåÆ 7.52
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 19.92% ΓåÆ 20.46%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] VIP yield: Safe 20.46% ΓåÆ VIP 24.55%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mSTARTER-1 (0/200/20) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +0.90%, ETF +2.10%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 20%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"26.9"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"39.9"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"40.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[enforceStageCaps] dyn clamped 25.9% ΓåÆ 18% (stage=STARTER, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'STARTER'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m25.95[39m,
+  pct_after: [33m18[39m,
+  cap: [33m18[39m,
+  timestamp: [32m'2025-12-01T14:49:06.739Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[CashCapPolicy] Applied for rastovy: 5.0% ΓåÆ 5% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 26.4% ΓåÆ 8.0% (cap enforced, overflow 18.4%)
+[ProfileAssetPolicy] Redistributing 18.4% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +0.9% (room 6.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +14.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.51% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (9.49 > 8.5 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 51.1% ΓåÆ 50%
+[MixAdjustments Clamp] Deficit 1.07% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"50.2"},{"k":"bonds","p":"15.2"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 50.2% ΓåÆ 50%
+[MixAdjustments] VIP yield: Safe 19.90% ΓåÆ VIP 23.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-2 (0/300/30) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"93.6"},{"k":"etf","p":"0.0"},{"k":"cash","p":"10.1"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[enforceStageCaps] gold clamped 93.6% ΓåÆ 40% (stage=LATE, riskPref=konzervativny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'konzervativny'[39m,
+  reason: [32m'gold_cap'[39m,
+  asset: [32m'gold'[39m,
+  pct_before: [33m93.61[39m,
+  pct_after: [33m40[39m,
+  cap: [33m40[39m,
+  timestamp: [32m'2025-12-01T14:49:06.741Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"35.0"},{"k":"cash","p":"28.7"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"35.0"},{"k":"cash","p":"28.7"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 108,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[ProfileAssetPolicy] etf: 35.0% ΓåÆ 20.0% (cap enforced, overflow 15.0%)
+[ProfileAssetPolicy] cash: 23.7% ΓåÆ 20.0% (cap enforced, overflow 3.7%)
+[ProfileAssetPolicy] Redistributing 18.7% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +16.7% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 98.00% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: dyn, etf, cash capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.8"},{"k":"dyn","p":"5.1"},{"k":"etf","p":"20.4"},{"k":"bonds","p":"17.0"},{"k":"cash","p":"20.4"}]
+[EnforceRiskCap] Initial risk: 5.15 / max 5.00
+[EnforceRiskCap] dyn 5.1% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 1: etf 20.41% ΓåÆ 16.33% (-4.08 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +1.22 p.b. (weight 0.30, room 18.0%)
+[EnforceRiskCap]   ΓåÆ cash +0.29 p.b. (weight 0.10, room 9.6%)
+[EnforceRiskCap] After iteration 1: risk 5.20
+[EnforceRiskCap] dyn 5.2% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 2: etf 16.76% ΓåÆ 13.41% (-3.35 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +1.01 p.b. (weight 0.30, room 16.3%)
+[EnforceRiskCap]   ΓåÆ cash +0.23 p.b. (weight 0.10, room 8.8%)
+[EnforceRiskCap] After iteration 2: risk 5.25
+[EnforceRiskCap] dyn 5.3% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 3: etf 13.70% ΓåÆ 10.96% (-2.74 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.82 p.b. (weight 0.30, room 14.8%)
+[EnforceRiskCap]   ΓåÆ cash +0.19 p.b. (weight 0.10, room 8.1%)
+[EnforceRiskCap] After iteration 3: risk 5.29
+[EnforceRiskCap] dyn 5.4% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 4: etf 11.15% ΓåÆ 8.92% (-2.23 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.67 p.b. (weight 0.30, room 13.6%)
+[EnforceRiskCap]   ΓåÆ cash +0.16 p.b. (weight 0.10, room 7.5%)
+[EnforceRiskCap] After iteration 4: risk 5.33
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mSTARTER-1 (0/200/20) + vyvazeny ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mPREMIUM-2 (0/300/30) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[CashCapPolicy] No room in gold/ETF for reallocation, keeping 
+excess 18.7% in cash
+[EnforceRiskCap] Cannot redistribute 2.57 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.11 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.73 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.40 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.26 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.26 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.26 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.26 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] DIRECT CUT MODE (iteration 9): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] DIRECT CUT MODE (iteration 10): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] HARD STOP po 10 iter├íci├ích (risk 6.11 / 5.0)
+[EnforceRiskCap] ΓÜá∩╕Å Risk bl├¡zko horn├⌐ho limitu profilu 
+(6.1 / 5.0)
+[MixAdjustments] ΓÜá∩╕Å Risk bl├¡zko horn├⌐ho limitu profilu 
+(6.1 / 5.0)
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mPREMIUM-2 (0/300/30) + rastovy ΓåÆ risk v 
+p├ísme[22m[39m
+[CashCapPolicy] No room in gold/ETF for reallocation, keeping 
+excess 2.0% in cash
+
+[EnforceRiskCap] dyn 5.5% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 5: etf 9.05% ΓåÆ 7.05% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.60 p.b. (weight 0.30, room 12.7%)
+[EnforceRiskCap]   ΓåÆ cash +0.14 p.b. (weight 0.10, room 7.0%)
+[EnforceRiskCap] After iteration 5: risk 5.37
+[EnforceRiskCap] dyn 5.6% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 6: etf 7.14% ΓåÆ 5.14% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.60 p.b. (weight 0.30, room 11.8%)
+[EnforceRiskCap]   ΓåÆ cash +0.14 p.b. (weight 0.10, room 6.6%)
+[EnforceRiskCap] After iteration 6: risk 5.41
+[EnforceRiskCap] dyn 5.7% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 7: etf 5.21% ΓåÆ 3.21% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.60 p.b. (weight 0.30, room 10.9%)
+[EnforceRiskCap]   ΓåÆ cash +0.14 p.b. (weight 0.10, room 6.1%)
+[EnforceRiskCap] After iteration 7: risk 5.45
+[EnforceRiskCap] dyn 5.7% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 8: etf 3.25% ΓåÆ 1.25% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.60 p.b. (weight 0.30, room 9.9%)
+[EnforceRiskCap]   ΓåÆ cash +0.14 p.b. (weight 0.10, room 5.7%)
+[EnforceRiskCap] After iteration 8: risk 5.49
+[EnforceRiskCap] dyn 5.8% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 9: etf 1.27% ΓåÆ 0.00% (-1.27 p.b.)
+[EnforceRiskCap]   ΓåÆ dyn -2.9% (direct cut 50%)
+[EnforceRiskCap]   ΓåÆ bonds +1.4% (direct cut redistribution)
+[EnforceRiskCap] After iteration 9: risk 5.55
+[EnforceRiskCap] dyn 3.0% <= profile cap 10%, skip ┼íkrtania
+[EnforceRiskCap] Iteration 10: bonds 28.20% ΓåÆ 23.20% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ dyn -1.5% (direct cut 50%)
+[EnforceRiskCap]   ΓåÆ bonds +0.7% (direct cut redistribution)
+[EnforceRiskCap] After iteration 10: risk 6.11
+[EnforceRiskCap] Final: 5.15 ΓåÆ 6.11 (10 iterations)
+[MixAdjustments] Risk cap enforced: 5.15 ΓåÆ 6.11 (10 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"50.7"},{"k":"dyn","p":"1.6"},{"k":"bonds","p":"25.4"},{"k":"cash","p":"27.0"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 108,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.11 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"50.7"},{"k":"dyn","p":"1.6"},{"k":"bonds","p":"25.4"},{"k":"cash","p":"27.0"}]
+[MixAdjustments Clamp] gold 50.7% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 10.67% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"42.7"},{"k":"dyn","p":"1.7"},{"k":"bonds","p":"31.7"},{"k":"cash","p":"28.9"}]
+[MixAdjustments Clamp] gold 42.7% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 2.74% ΓåÆ redistributed to safety sinks
+[MixAdjustments] VIP yield: Safe 6.75% ΓåÆ VIP 8.10%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-2 (0/300/30) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 20%, lump=0, monthly=300, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"36.8"},{"k":"dyn","p":"54.9"},{"k":"etf","p":"0.1"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"3.1"},{"k":"real","p":"0.0"}]
+[enforceStageCaps] dyn clamped 54.9% ΓåÆ 16% (stage=LATE, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m54.9[39m,
+  pct_after: [33m16[39m,
+  cap: [33m16[39m,
+  timestamp: [32m'2025-12-01T14:49:06.744Z'[39m
+}
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'dyn_crypto_combo'[39m,
+  pct_before: [33m19.14[39m,
+  pct_after: [33m18[39m,
+  combo_cap: [33m18[39m,
+  timestamp: [32m'2025-12-01T14:49:06.744Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"15.2"},{"k":"etf","p":"35.0"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.8"},{"k":"real","p":"0.0"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"15.2"},{"k":"etf","p":"35.0"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"2.8"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 108,000 EUR ΓåÆ Band: PREMIUM
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-0 (60k/150/15) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[EnforceRiskCap] Cannot redistribute 2.65 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.18 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 0.24 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] DIRECT CUT MODE (iteration 9): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] DIRECT CUT MODE (iteration 10): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] HARD STOP po 10 iter├íci├ích (risk 6.95 / 5.0)
+[EnforceRiskCap] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+[MixAdjustments] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+
+[ProfileAssetPolicy] gold: 40.0% ΓåÆ 12.0% (cap enforced, overflow 28.0%)
+[ProfileAssetPolicy] Redistributing 28.0% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +3.7% (room 20.0%)
+[ProfileAssetPolicy]   ΓåÆ bonds +18.7% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 94.40% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.7"},{"k":"dyn","p":"16.1"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"19.8"},{"k":"cash","p":"7.4"},{"k":"crypto","p":"3.0"},{"k":"real","p":"0.0"}]
+[EnforceRiskCap] Initial risk: 7.00 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.7"},{"k":"dyn","p":"16.1"},{"k":"etf","p":"41.0"},{"k":"bonds","p":"19.8"},{"k":"cash","p":"7.4"},{"k":"crypto","p":"3.0"},{"k":"real","p":"0.1"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 108,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 7.00 / 8.5, Yield 18.22%, Room 1.50
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.43)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.88)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 8.35)
+[YieldOptimizer] DONE: 3 moves applied, Yield 18.22% ΓåÆ 18.76% (+0.54%), Risk 7.00 ΓåÆ 8.35
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 18.22% ΓåÆ 18.76%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"12.7"},{"k":"dyn","p":"16.1"},{"k":"etf","p":"47.0"},{"k":"bonds","p":"19.8"},{"k":"cash","p":"1.4"},{"k":"crypto","p":"3.0"},{"k":"real","p":"0.1"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"12.7"},{"k":"dyn","p":"16.1"},{"k":"etf","p":"47.0"},{"k":"bonds","p":"19.8"},{"k":"cash","p":"1.4"},{"k":"crypto","p":"3.0"},{"k":"real","p":"0.1"}]
+[MixAdjustments] VIP yield: Safe 18.76% ΓåÆ VIP 22.51%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-0 (60k/150/15) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[enforceStageCaps] bonds clamped 68.3% ΓåÆ 35% (stage=LATE, riskPref=konzervativny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'konzervativny'[39m,
+  reason: [32m'bonds_cap'[39m,
+  asset: [32m'bonds'[39m,
+  pct_before: [33m68.3[39m,
+  pct_after: [33m35[39m,
+  cap: [33m35[39m,
+  timestamp: [32m'2025-12-01T14:49:06.746Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 0.0%), ETF 0.0% (room 20.3%)
+[CashCapPolicy] Applied for konzervativny: 10.0% ΓåÆ 10% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] real: 0.3% ΓåÆ 0.0% (cap enforced, overflow 0.3%)
+[ProfileAssetPolicy] Redistributing 0.3% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +0.2% (room 65.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +0.0% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 99.94% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.2"},{"k":"cash","p":"10.0"}]
+[EnforceRiskCap] Initial risk: 5.30 / max 5.00
+[EnforceRiskCap] Iteration 1: etf 14.72% ΓåÆ 11.78% (-2.94 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.29 p.b. (weight 0.10, room 20.0%)
+[EnforceRiskCap] After iteration 1: risk 5.40
+[EnforceRiskCap] Iteration 2: etf 12.10% ΓåÆ 9.68% (-2.42 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.24 p.b. (weight 0.10, room 19.4%)
+[EnforceRiskCap] After iteration 2: risk 5.49
+[EnforceRiskCap] Iteration 3: etf 9.90% ΓåÆ 7.90% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.9%)
+[EnforceRiskCap] After iteration 3: risk 5.57
+[EnforceRiskCap] Iteration 4: etf 8.04% ΓåÆ 6.04% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.5%)
+[EnforceRiskCap] After iteration 4: risk 5.66
+[EnforceRiskCap] Iteration 5: etf 6.15% ΓåÆ 4.15% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.1%)
+[EnforceRiskCap] After iteration 5: risk 5.75
+[EnforceRiskCap] Iteration 6: etf 4.23% ΓåÆ 2.23% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.7%)
+[EnforceRiskCap] After iteration 6: risk 5.85
+[EnforceRiskCap] Iteration 7: etf 2.27% ΓåÆ 0.27% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.2%)
+[EnforceRiskCap] After iteration 7: risk 6.83
+[EnforceRiskCap] Iteration 8: etf 0.27% ΓåÆ 0.00% (-0.27 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.03 p.b. (weight 0.10, room 16.8%)
+[EnforceRiskCap] After iteration 8: risk 6.85
+[EnforceRiskCap] Iteration 9: bonds 40.61% ΓåÆ 35.61% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 9: risk 6.42
+[EnforceRiskCap] Iteration 10: bonds 37.48% ΓåÆ 32.48% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 10: risk 6.95
+[EnforceRiskCap] Final: 5.30 ΓåÆ 6.95 (10 iterations)
+[MixAdjustments] Risk cap enforced: 5.30 ΓåÆ 6.95 (10 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.95 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments Clamp] gold 51.1% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 11.12% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"42.9"},{"k":"bonds","p":"41.4"},{"k":"cash","p":"15.7"}]
+[MixAdjustments Clamp] gold 42.9% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 2.86% ΓåÆ redistributed to safety sinks
+[MixAdjustments] VIP yield: Safe 6.58% ΓåÆ VIP 7.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-0 (60k/150/15) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 20%, lump=60000, monthly=150, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"29.9"},{"k":"bonds","p":"12.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"12.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[enforceStageCaps] dyn clamped 26.0% ΓåÆ 16% (stage=LATE, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m25.97[39m,
+  pct_after: [33m16[39m,
+  cap: [33m16[39m,
+  timestamp: [32m'2025-12-01T14:49:06.748Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[CashCapPolicy] Applied for rastovy: 5.0% ΓåÆ 5% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] gold: 23.9% ΓåÆ 15.0% (cap enforced, overflow 8.9%)
+[ProfileAssetPolicy] Redistributing 8.9% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +1.4% (room 19.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +5.6% (room 77.7%)
+[ProfileAssetPolicy] Normalized: 98.19% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"15.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"32.4"},{"k":"bonds","p":"28.5"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[EnforceRiskCap] Initial risk: 5.54 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"15.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"32.4"},{"k":"bonds","p":"28.5"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] START: Risk 5.54 / 8.5, Yield 17.78%, Room 2.96
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: Zlato ΓåÆ ETF (+0.10% yield, risk 5.64)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.76)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.88)
+[YieldOptimizer] DONE: 3 moves applied, Yield 17.78% ΓåÆ 18.24% (+0.46%), Risk 5.54 ΓåÆ 5.88
+[MixAdjustments] Yield optimized: Zlato ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 17.78% ΓåÆ 18.24%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"13.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"38.4"},{"k":"bonds","p":"28.5"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"13.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"38.4"},{"k":"bonds","p":"28.5"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] VIP yield: Safe 18.24% ΓåÆ VIP 21.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-1 (10k/300/30) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 118,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.80 / max 5.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 118,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 4.80 / 5.0, Yield 10.37%, Room 0.20
+[YieldOptimizer] Risk limit: 5.0 (riskCap) ΓåÆ 6.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.88)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.96)
+[YieldOptimizer] No beneficial move found, stopping
+[YieldOptimizer] DONE: 2 moves applied, Yield 10.37% ΓåÆ 10.73% (+0.36%), Risk 4.80 ΓåÆ 4.96
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 10.37% ΓåÆ 10.73%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 10.73% ΓåÆ VIP 12.88%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-1 (10k/300/30) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 20%, lump=10000, monthly=300, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"29.9"},{"k":"bonds","p":"12.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"12.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 118,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] gold: 23.9% ΓåÆ 12.0% (cap enforced, overflow 11.9%)
+[ProfileAssetPolicy] Redistributing 11.9% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +2.2% (room 24.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +7.0% (room 77.7%)
+[ProfileAssetPolicy] Normalized: 97.31% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[EnforceRiskCap] Initial risk: 6.19 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 118,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 6.19 / 8.5, Yield 17.92%, Room 2.31
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.31)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.43)
+[YieldOptimizer] Move 3: Zlato ΓåÆ ETF (+0.10% yield, risk 6.53)
+[YieldOptimizer] DONE: 3 moves applied, Yield 17.92% ΓåÆ 18.38% (+0.46%), Risk 6.19 ΓåÆ 6.53
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, Zlato ΓåÆ ETF (Yield 17.92% ΓåÆ 18.38%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] VIP yield: Safe 18.38% ΓåÆ VIP 22.06%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-2 (10k/500/20) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 130,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.80 / max 5.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 130,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 4.80 / 5.0, Yield 10.37%, Room 0.20
+[YieldOptimizer] Risk limit: 5.0 (riskCap) ΓåÆ 6.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.88)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.96)
+[YieldOptimizer] No beneficial move found, stopping
+[YieldOptimizer] DONE: 2 moves applied, Yield 10.37% ΓåÆ 10.73% (+0.36%), Risk 4.80 ΓåÆ 4.96
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 10.37% ΓåÆ 10.73%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 10.73% ΓåÆ VIP 12.88%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-2 (10k/500/20) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 20%, lump=10000, monthly=500, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"29.9"},{"k":"bonds","p":"12.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"12.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 130,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] gold: 23.9% ΓåÆ 12.0% (cap enforced, overflow 11.9%)
+[ProfileAssetPolicy] Redistributing 11.9% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +2.2% (room 24.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +7.0% (room 77.7%)
+[ProfileAssetPolicy] Normalized: 97.31% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[EnforceRiskCap] Initial risk: 6.19 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 130,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 6.19 / 8.5, Yield 17.92%, Room 2.31
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.31)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.43)
+[YieldOptimizer] Move 3: Zlato ΓåÆ ETF (+0.10% yield, risk 6.53)
+[YieldOptimizer] DONE: 3 moves applied, Yield 17.92% ΓåÆ 18.38% (+0.46%), Risk 6.19 ΓåÆ 6.53
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, Zlato ΓåÆ ETF (Yield 17.92% ΓåÆ 18.38%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] VIP yield: Safe 18.38% ΓåÆ VIP 22.06%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-3 (20k/600/25) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 200,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.80 / max 5.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 200,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 4.80 / 5.0, Yield 10.37%, Room 0.20
+[YieldOptimizer] Risk limit: 5.0 (riskCap) ΓåÆ 6.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.88)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.96)
+[YieldOptimizer] No beneficial move found, stopping
+[YieldOptimizer] DONE: 2 moves applied, Yield 10.37% ΓåÆ 10.73% (+0.36%), Risk 4.80 ΓåÆ 4.96
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 10.37% ΓåÆ 10.73%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 10.73% ΓåÆ VIP 12.88%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mCORE-3 (20k/600/25) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 20%, lump=20000, monthly=600, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"29.9"},{"k":"bonds","p":"12.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"12.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 200,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] gold: 23.9% ΓåÆ 12.0% (cap enforced, overflow 11.9%)
+[ProfileAssetPolicy] Redistributing 11.9% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +2.2% (room 24.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +7.0% (room 77.7%)
+[ProfileAssetPolicy] Normalized: 97.31% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[EnforceRiskCap] Initial risk: 6.19 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 200,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 6.19 / 8.5, Yield 17.92%, Room 2.31
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.31)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.43)
+[YieldOptimizer] Move 3: Zlato ΓåÆ ETF (+0.10% yield, risk 6.53)
+[YieldOptimizer] DONE: 3 moves applied, Yield 17.92% ΓåÆ 18.38% (+0.46%), Risk 6.19 ΓåÆ 6.53
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, Zlato ΓåÆ ETF (Yield 17.92% ΓåÆ 18.38%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] VIP yield: Safe 18.38% ΓåÆ VIP 22.06%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-1 (50k/1000/15) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 230,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.80 / max 5.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 230,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 4.80 / 5.0, Yield 10.37%, Room 0.20
+[YieldOptimizer] Risk limit: 5.0 (riskCap) ΓåÆ 6.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.88)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.96)
+[YieldOptimizer] No beneficial move found, stopping
+[YieldOptimizer] DONE: 2 moves applied, Yield 10.37% ΓåÆ 10.73% (+0.36%), Risk 4.80 ΓåÆ 4.96
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 10.37% ΓåÆ 10.73%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 10.73% ΓåÆ VIP 12.88%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-1 (50k/1000/15) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 20%, lump=50000, monthly=1000, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"29.9"},{"k":"bonds","p":"12.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"26.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"12.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"23.9"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"30.4"},{"k":"bonds","p":"22.3"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 230,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] gold: 23.9% ΓåÆ 12.0% (cap enforced, overflow 11.9%)
+[ProfileAssetPolicy] Redistributing 11.9% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +2.2% (room 24.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +7.0% (room 77.7%)
+[ProfileAssetPolicy] Normalized: 97.31% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[EnforceRiskCap] Initial risk: 6.19 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"33.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 230,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 6.19 / 8.5, Yield 17.92%, Room 2.31
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.31)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.43)
+[YieldOptimizer] Move 3: Zlato ΓåÆ ETF (+0.10% yield, risk 6.53)
+[YieldOptimizer] DONE: 3 moves applied, Yield 17.92% ΓåÆ 18.38% (+0.46%), Risk 6.19 ΓåÆ 6.53
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, Zlato ΓåÆ ETF (Yield 17.92% ΓåÆ 18.38%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"39.5"},{"k":"bonds","p":"30.1"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.4"}]
+[MixAdjustments] VIP yield: Safe 18.38% ΓåÆ VIP 22.06%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-2 (100k/2000/20) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"19.0"},{"k":"etf","p":"0.3"},{"k":"bonds","p":"70.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[enforceStageCaps] bonds clamped 70.3% ΓåÆ 35% (stage=LATE, riskPref=konzervativny)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'konzervativny'[39m,
+  reason: [32m'bonds_cap'[39m,
+  asset: [32m'bonds'[39m,
+  pct_before: [33m70.35[39m,
+  pct_after: [33m35[39m,
+  cap: [33m35[39m,
+  timestamp: [32m'2025-12-01T14:49:06.774Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 0.0%), ETF 0.0% (room 20.3%)
+[CashCapPolicy] Applied for konzervativny: 10.0% ΓåÆ 10% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 580,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.80 / max 5.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 580,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 4.80 / 5.0, Yield 10.37%, Room 0.20
+[YieldOptimizer] Risk limit: 5.0 (riskCap) ΓåÆ 6.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.88)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.96)
+[YieldOptimizer] No beneficial move found, stopping
+[YieldOptimizer] DONE: 2 moves applied, Yield 10.37% ΓåÆ 10.73% (+0.36%), Risk 4.80 ΓåÆ 4.96
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 10.37% ΓåÆ 10.73%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 10.73% ΓåÆ VIP 12.88%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-2 (100k/2000/20) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 15.55%, lump=100000, monthly=2000, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"dyn","p":"18.2"},{"k":"etf","p":"39.8"},{"k":"bonds","p":"13.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"21.0"},{"k":"dyn","p":"18.2"},{"k":"etf","p":"39.8"},{"k":"bonds","p":"13.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[enforceStageCaps] dyn clamped 18.2% ΓåÆ 16% (stage=LATE, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m18.18[39m,
+  pct_after: [33m16[39m,
+  cap: [33m16[39m,
+  timestamp: [32m'2025-12-01T14:49:06.776Z'[39m
+}
+[enforceStageCaps] etf clamped 39.8% ΓåÆ 35% (stage=LATE, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'etf_cap'[39m,
+  asset: [32m'etf'[39m,
+  pct_before: [33m39.78[39m,
+  pct_after: [33m35[39m,
+  cap: [33m35[39m,
+  timestamp: [32m'2025-12-01T14:49:06.776Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"21.0"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"20.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 19.0%), ETF 0.0% (room 0.0%)
+[CashCapPolicy] Applied for rastovy: 5.0% ΓåÆ 5% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"21.0"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"20.8"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 580,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] gold: 21.0% ΓåÆ 12.0% (cap enforced, overflow 9.0%)
+[ProfileAssetPolicy] Redistributing 9.0% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +1.4% (room 20.0%)
+[ProfileAssetPolicy]   ΓåÆ bonds +5.5% (room 79.2%)
+[ProfileAssetPolicy] Normalized: 97.90% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"37.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 5.79 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"37.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 580,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.79 / 8.5, Yield 18.01%, Room 2.71
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.91)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.00)
+[YieldOptimizer] Move 3: Zlato ΓåÆ ETF (+0.10% yield, risk 7.40)
+[YieldOptimizer] DONE: 3 moves applied, Yield 18.01% ΓåÆ 18.47% (+0.46%), Risk 5.79 ΓåÆ 7.40
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, Zlato ΓåÆ ETF (Yield 18.01% ΓåÆ 18.47%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"43.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"43.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 18.47% ΓåÆ VIP 22.17%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-3 (200k/3000/20) + konzervativny ΓåÆ risk v p├ísme[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"19.0"},{"k":"etf","p":"0.3"},{"k":"bonds","p":"70.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 920,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] PREMIUM boost: dyn 0.0% ΓåÆ 5% (adding 5.0% from cash/bonds)
+[MixAdjustments] Profile policy applied: dyn capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 4.80 / max 5.00
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"5.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 920,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 4.80 / 5.0, Yield 10.37%, Room 0.20
+[YieldOptimizer] Risk limit: 5.0 (riskCap) ΓåÆ 6.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.88)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 4.96)
+[YieldOptimizer] No beneficial move found, stopping
+[YieldOptimizer] DONE: 2 moves applied, Yield 10.37% ΓåÆ 10.73% (+0.36%), Risk 4.80 ΓåÆ 4.96
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 10.37% ΓåÆ 10.73%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.0"},{"k":"dyn","p":"5.0"},{"k":"etf","p":"18.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"1.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 10.73% ΓåÆ VIP 12.88%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mRisk bands (all scenarios ├ù profiles)[2m > [22m[2mPREMIUM-3 (200k/3000/20) + rastovy ΓåÆ risk v p├ísme[22m[39m
+[applyMinimums DEBUG] dyn 14.85%, lump=200000, monthly=3000, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.1"},{"k":"dyn","p":"17.2"},{"k":"etf","p":"40.5"},{"k":"bonds","p":"14.1"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[enforceStageCaps] dyn clamped 17.2% ΓåÆ 16% (stage=LATE, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'dyn_cap'[39m,
+  asset: [32m'dyn'[39m,
+  pct_before: [33m17.17[39m,
+  pct_after: [33m16[39m,
+  cap: [33m16[39m,
+  timestamp: [32m'2025-12-01T14:49:06.779Z'[39m
+}
+[enforceStageCaps] etf clamped 40.5% ΓåÆ 35% (stage=LATE, riskPref=rastovy)
+[Telemetry] policy_adjustment: {
+  stage: [32m'LATE'[39m,
+  riskPref: [32m'rastovy'[39m,
+  reason: [32m'etf_cap'[39m,
+  asset: [32m'etf'[39m,
+  pct_before: [33m40.45[39m,
+  pct_after: [33m35[39m,
+  cap: [33m35[39m,
+  timestamp: [32m'2025-12-01T14:49:06.780Z'[39m
+}
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"21.1"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"20.7"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[CashCapPolicy] Stage caps hit ΓåÆ reallocating: gold 0.0% (room 18.9%), ETF 0.0% (room 0.0%)
+[CashCapPolicy] Applied for rastovy: 5.0% ΓåÆ 5% (excess 0.0% ΓåÆ 0.0% gold + 0.0% ETF)
+[MixAdjustments] FINAL Cash cap applied: 0.0% reallocated (0.0% gold + 0.0% ETF)
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"21.1"},{"k":"dyn","p":"16.0"},{"k":"etf","p":"35.0"},{"k":"bonds","p":"20.7"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 920,000 EUR ΓåÆ Band: PREMIUM
+[ProfileAssetPolicy] gold: 21.1% ΓåÆ 12.0% (cap enforced, overflow 9.1%)
+[ProfileAssetPolicy] Redistributing 9.1% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +1.4% (room 20.0%)
+[ProfileAssetPolicy]   ΓåÆ bonds +5.6% (room 79.3%)
+[ProfileAssetPolicy] Normalized: 97.88% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.3"},{"k":"etf","p":"37.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[EnforceRiskCap] Initial risk: 5.79 / max 8.50
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"12.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"37.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"5.1"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 920,000 EUR ΓåÆ Band: PREMIUM
+[YieldOptimizer] START: Risk 5.79 / 8.5, Yield 17.99%, Room 2.71
+[YieldOptimizer] Risk limit: 8.5 (riskCap) ΓåÆ 9.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 5.91)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.00)
+[YieldOptimizer] Move 3: Zlato ΓåÆ ETF (+0.10% yield, risk 7.40)
+[YieldOptimizer] DONE: 3 moves applied, Yield 17.99% ΓåÆ 18.45% (+0.46%), Risk 5.79 ΓåÆ 7.40
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, Zlato ΓåÆ ETF (Yield 17.99% ΓåÆ 18.45%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"43.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"10.3"},{"k":"dyn","p":"16.4"},{"k":"etf","p":"43.2"},{"k":"bonds","p":"26.9"},{"k":"cash","p":"1.1"},{"k":"crypto","p":"1.9"},{"k":"real","p":"0.3"}]
+[MixAdjustments] VIP yield: Safe 18.45% ΓåÆ VIP 22.15%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ C < B < G (risk)[22m[39m
+[AssetMinima] Locked real: 5.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 5.00% ΓåÆ gold +3.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 5.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"etf","p":"49.7"},{"k":"cash","p":"10.1"},{"k":"real","p":"0.0"}]
+[ConservativeGuard] Iteration 1: ETF 49.7% ΓåÆ 44.7%, Gold 40.2% ΓåÆ 45.2%, Risk cons 9.18 vs bal 9.18
+[ConservativeGuard] Iteration 2: ETF 44.7% ΓåÆ 39.7%, Gold 45.2% ΓåÆ 50.2%, Risk cons 8.43 vs bal 8.43
+[ConservativeGuard] Iteration 3: ETF 39.7% ΓåÆ 34.7%, Gold 50.2% ΓåÆ 55.2%, Risk cons 9.36 vs bal 9.36
+[ConservativeGuard] Iteration 4: ETF 34.7% ΓåÆ 30.0%, Gold 55.2% ΓåÆ 59.9%, Risk cons 9.78 vs bal 9.78
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] etf: 50.0% ΓåÆ 30.0% (cap enforced, overflow 20.0%)
+[ProfileAssetPolicy] real: 0.0% ΓåÆ 0.0% (cap enforced, overflow 0.0%)
+[ProfileAssetPolicy] Redistributing 20.0% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +16.0% (room 100.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +1.6% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 97.60% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: etf, real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.01 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments Clamp] gold 41.0% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 0.98% ΓåÆ redistributed to safety sinks
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-1 (10k/300/30) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-1 (10k/300/30) + rastovy ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-2 (10k/500/20) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-2 (10k/500/20) + rastovy ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-3 (20k/600/25) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mCORE-3 (20k/600/25) + rastovy ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mPREMIUM-1 (50k/1000/15) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mPREMIUM-1 (50k/1000/15) + rastovy ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mRisk bands (all scenarios ├ù profiles)[2m > 
+[22m[2mPREMIUM-3 (200k/3000/20) + konzervativny ΓåÆ risk v 
+p├ísme[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.2"},{"k":"etf","p":"30.9"},{"k":"bonds","p":"16.9"},{"k":"cash","p":"12.0"}]
+[MixAdjustments Clamp] gold 40.2% ΓåÆ 40%
+[MixAdjustments] VIP yield: Safe 8.15% ΓåÆ VIP 9.79%
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +1.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 10%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"dyn","p":"40.2"},{"k":"etf","p":"7.2"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 40.0% ΓåÆ 15.0% (cap enforced, overflow 25.0%)
+[ProfileAssetPolicy] crypto: 5.7% ΓåÆ 5.0% (cap enforced, overflow 0.7%)
+[ProfileAssetPolicy] Redistributing 25.6% overflow to core assets: gold, etf, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +3.7% (room 20.5%)
+[ProfileAssetPolicy]   ΓåÆ bonds +18.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.04% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold, crypto capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] START: Risk 6.28 / 7.0, Yield 19.92%, Room 0.72
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.40)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.52)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.52)
+[YieldOptimizer] DONE: 3 moves applied, Yield 19.92% ΓåÆ 20.46% (+0.54%), Risk 6.28 ΓåÆ 7.52
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 19.92% ΓåÆ 20.46%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] VIP yield: Safe 20.46% ΓåÆ VIP 24.55%
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +0.90%, ETF +2.10%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 20%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"26.9"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"39.9"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"40.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 26.4% ΓåÆ 8.0% (cap enforced, overflow 18.4%)
+[ProfileAssetPolicy] Redistributing 18.4% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +0.9% (room 6.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +14.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.51% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (9.49 > 8.5 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 51.1% ΓåÆ 50%
+[MixAdjustments Clamp] Deficit 1.07% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"50.2"},{"k":"bonds","p":"15.2"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 50.2% ΓåÆ 50%
+[MixAdjustments] VIP yield: Safe 19.90% ΓåÆ VIP 23.89%
+Γ£à STARTER-1 (0/200/20): C=4.05 Γëñ B=4.05 Γëñ G=7.24 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ C < B < G (yield)[22m[39m
+[AssetMinima] Locked real: 5.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 5.00% ΓåÆ gold +3.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 5.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"etf","p":"49.7"},{"k":"cash","p":"10.1"},{"k":"real","p":"0.0"}]
+[ConservativeGuard] Iteration 1: ETF 49.7% ΓåÆ 44.7%, Gold 40.2% ΓåÆ 45.2%, Risk cons 9.18 vs bal 9.18
+[ConservativeGuard] Iteration 2: ETF 44.7% ΓåÆ 39.7%, Gold 45.2% ΓåÆ 50.2%, Risk cons 8.43 vs bal 8.43
+[ConservativeGuard] Iteration 3: ETF 39.7% ΓåÆ 34.7%, Gold 50.2% ΓåÆ 55.2%, Risk cons 9.36 vs bal 9.36
+[ConservativeGuard] Iteration 4: ETF 34.7% ΓåÆ 30.0%, Gold 55.2% ΓåÆ 59.9%, Risk cons 9.78 vs bal 9.78
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] etf: 50.0% ΓåÆ 30.0% (cap enforced, overflow 20.0%)
+[ProfileAssetPolicy] real: 0.0% ΓåÆ 0.0% (cap enforced, overflow 0.0%)
+[ProfileAssetPolicy] Redistributing 20.0% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +16.0% (room 100.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +1.6% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 97.60% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: etf, real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.01 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments Clamp] gold 41.0% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 0.98% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.2"},{"k":"etf","p":"30.9"},{"k":"bonds","p":"16.9"},{"k":"cash","p":"12.0"}]
+[MixAdjustments Clamp] gold 40.2% ΓåÆ 40%
+[MixAdjustments] VIP yield: Safe 8.15% ΓåÆ VIP 9.79%
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +1.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 10%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"dyn","p":"40.2"},{"k":"etf","p":"7.2"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mProfile hierarchy: Conservative < Balanced < 
+Growth[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ C < B < G 
+(risk)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mProfile hierarchy: Conservative < Balanced < 
+Growth[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ C < B < G 
+(yield)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"29.5"},{"k":"cash","p":"7.0"},{"k":"crypto","p":"5.7"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 40.0% ΓåÆ 15.0% (cap enforced, overflow 25.0%)
+[ProfileAssetPolicy] crypto: 5.7% ΓåÆ 5.0% (cap enforced, overflow 0.7%)
+[ProfileAssetPolicy] Redistributing 25.6% overflow to core assets: gold, etf, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +3.7% (room 20.5%)
+[ProfileAssetPolicy]   ΓåÆ bonds +18.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.04% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold, crypto capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"34.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"7.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: vyvazeny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] START: Risk 6.28 / 7.0, Yield 19.92%, Room 0.72
+[YieldOptimizer] Risk limit: 7.0 (riskCap) ΓåÆ 8.0 (optimizer headroom +1.0)
+[YieldOptimizer] Move 1: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.40)
+[YieldOptimizer] Move 2: IAD DK ΓåÆ ETF (+0.18% yield, risk 6.52)
+[YieldOptimizer] Move 3: IAD DK ΓåÆ ETF (+0.18% yield, risk 7.52)
+[YieldOptimizer] DONE: 3 moves applied, Yield 19.92% ΓåÆ 20.46% (+0.54%), Risk 6.28 ΓåÆ 7.52
+[MixAdjustments] Yield optimized: IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF, IAD DK ΓåÆ ETF (Yield 19.92% ΓåÆ 20.46%)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"15.6"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"40.6"},{"k":"bonds","p":"18.7"},{"k":"cash","p":"1.3"},{"k":"crypto","p":"5.2"}]
+[MixAdjustments] VIP yield: Safe 20.46% ΓåÆ VIP 24.55%
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +0.90%, ETF +2.10%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 20%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"26.9"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"39.9"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"40.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 26.4% ΓåÆ 8.0% (cap enforced, overflow 18.4%)
+[ProfileAssetPolicy] Redistributing 18.4% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +0.9% (room 6.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +14.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.51% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (9.49 > 8.5 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mProfile hierarchy: Conservative < Balanced < 
+Growth[2m > [22m[2mCORE-0 (60k/150/15) ΓåÆ C < B < G 
+(risk)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[EnforceRiskCap] Cannot redistribute 2.65 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.18 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 0.24 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] DIRECT CUT MODE (iteration 9): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] DIRECT CUT MODE (iteration 10): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] HARD STOP po 10 iter├íci├ích (risk 6.95 / 5.0)
+[EnforceRiskCap] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+[MixAdjustments] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+
+[MixAdjustments Clamp] etf 51.1% ΓåÆ 50%
+[MixAdjustments Clamp] Deficit 1.07% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"50.2"},{"k":"bonds","p":"15.2"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 50.2% ΓåÆ 50%
+[MixAdjustments] VIP yield: Safe 19.90% ΓåÆ VIP 23.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mPREMIUM-2 (0/300/30) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à PREMIUM-2 (0/300/30): C=5.07 Γëñ B=4.07 Γëñ G=8.35 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mCORE-0 (60k/150/15) ΓåÆ C < B < G (risk)[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] real: 0.3% ΓåÆ 0.0% (cap enforced, overflow 0.3%)
+[ProfileAssetPolicy] Redistributing 0.3% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +0.2% (room 65.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +0.0% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 99.94% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.2"},{"k":"cash","p":"10.0"}]
+[EnforceRiskCap] Initial risk: 5.30 / max 5.00
+[EnforceRiskCap] Iteration 1: etf 14.72% ΓåÆ 11.78% (-2.94 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.29 p.b. (weight 0.10, room 20.0%)
+[EnforceRiskCap] After iteration 1: risk 5.40
+[EnforceRiskCap] Iteration 2: etf 12.10% ΓåÆ 9.68% (-2.42 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.24 p.b. (weight 0.10, room 19.4%)
+[EnforceRiskCap] After iteration 2: risk 5.49
+[EnforceRiskCap] Iteration 3: etf 9.90% ΓåÆ 7.90% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.9%)
+[EnforceRiskCap] After iteration 3: risk 5.57
+[EnforceRiskCap] Iteration 4: etf 8.04% ΓåÆ 6.04% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.5%)
+[EnforceRiskCap] After iteration 4: risk 5.66
+[EnforceRiskCap] Iteration 5: etf 6.15% ΓåÆ 4.15% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.1%)
+[EnforceRiskCap] After iteration 5: risk 5.75
+[EnforceRiskCap] Iteration 6: etf 4.23% ΓåÆ 2.23% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.7%)
+[EnforceRiskCap] After iteration 6: risk 5.85
+[EnforceRiskCap] Iteration 7: etf 2.27% ΓåÆ 0.27% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.2%)
+[EnforceRiskCap] After iteration 7: risk 6.83
+[EnforceRiskCap] Iteration 8: etf 0.27% ΓåÆ 0.00% (-0.27 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.03 p.b. (weight 0.10, room 16.8%)
+[EnforceRiskCap] After iteration 8: risk 6.85
+[EnforceRiskCap] Iteration 9: bonds 40.61% ΓåÆ 35.61% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 9: risk 6.42
+[EnforceRiskCap] Iteration 10: bonds 37.48% ΓåÆ 32.48% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 10: risk 6.95
+[EnforceRiskCap] Final: 5.30 ΓåÆ 6.95 (10 iterations)
+[MixAdjustments] Risk cap enforced: 5.30 ΓåÆ 6.95 (10 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.95 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments Clamp] gold 51.1% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 11.12% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"42.9"},{"k":"bonds","p":"41.4"},{"k":"cash","p":"15.7"}]
+[MixAdjustments Clamp] gold 42.9% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 2.86% ΓåÆ redistributed to safety sinks
+[MixAdjustments] VIP yield: Safe 6.58% ΓåÆ VIP 7.89%
+Γ£à CORE-0 (60k/150/15): C=4.05 Γëñ B=6.29 Γëñ G=5.88 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mCORE-0 (60k/150/15) ΓåÆ C < B < G (yield)[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] real: 0.3% ΓåÆ 0.0% (cap enforced, overflow 0.3%)
+[ProfileAssetPolicy] Redistributing 0.3% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +0.2% (room 65.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +0.0% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 99.94% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.2"},{"k":"cash","p":"10.0"}]
+[EnforceRiskCap] Initial risk: 5.30 / max 5.00
+[EnforceRiskCap] Iteration 1: etf 14.72% ΓåÆ 11.78% (-2.94 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.29 p.b. (weight 0.10, room 20.0%)
+[EnforceRiskCap] After iteration 1: risk 5.40
+[EnforceRiskCap] Iteration 2: etf 12.10% ΓåÆ 9.68% (-2.42 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.24 p.b. (weight 0.10, room 19.4%)
+[EnforceRiskCap] After iteration 2: risk 5.49
+[EnforceRiskCap] Iteration 3: etf 9.90% ΓåÆ 7.90% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.9%)
+[EnforceRiskCap] After iteration 3: risk 5.57
+[EnforceRiskCap] Iteration 4: etf 8.04% ΓåÆ 6.04% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.5%)
+[EnforceRiskCap] After iteration 4: risk 5.66
+[EnforceRiskCap] Iteration 5: etf 6.15% ΓåÆ 4.15% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.1%)
+[EnforceRiskCap] After iteration 5: risk 5.75
+[EnforceRiskCap] Iteration 6: etf 4.23% ΓåÆ 2.23% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.7%)
+[EnforceRiskCap] After iteration 6: risk 5.85
+[EnforceRiskCap] Iteration 7: etf 2.27% ΓåÆ 0.27% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.2%)
+[EnforceRiskCap] After iteration 7: risk 6.83
+[EnforceRiskCap] Iteration 8: etf 0.27% ΓåÆ 0.00% (-0.27 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.03 p.b. (weight 0.10, room 16.8%)
+[EnforceRiskCap] After iteration 8: risk 6.85
+[EnforceRiskCap] Iteration 9: bonds 40.61% ΓåÆ 35.61% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 9: risk 6.42
+[EnforceRiskCap] Iteration 10: bonds 37.48% ΓåÆ 32.48% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 10: risk 6.95
+[EnforceRiskCap] Final: 5.30 ΓåÆ 6.95 (10 iterations)
+[MixAdjustments] Risk cap enforced: 5.30 ΓåÆ 6.95 (10 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.95 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments Clamp] gold 51.1% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 11.12% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"42.9"},{"k":"bonds","p":"41.4"},{"k":"cash","p":"15.7"}]
+[MixAdjustments Clamp] gold 42.9% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 2.86% ΓåÆ redistributed to safety sinks
+[MixAdjustments] VIP yield: Safe 6.58% ΓåÆ VIP 7.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mCORE-1 (10k/300/30) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à CORE-1 (10k/300/30): C=4.96 Γëñ B=6.35 Γëñ G=6.53 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mCORE-2 (10k/500/20) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à CORE-2 (10k/500/20): C=4.96 Γëñ B=6.35 Γëñ G=6.53 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mCORE-3 (20k/600/25) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à CORE-3 (20k/600/25): C=4.96 Γëñ B=6.35 Γëñ G=6.53 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mPREMIUM-1 (50k/1000/15) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à PREMIUM-1 (50k/1000/15): C=4.96 Γëñ B=6.35 Γëñ G=6.53 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mPREMIUM-2 (100k/2000/20) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à PREMIUM-2 (100k/2000/20): C=4.96 Γëñ B=6.30 Γëñ G=7.40 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mProfile hierarchy: Conservative < Balanced < Growth[2m > [22m[2mPREMIUM-3 (200k/3000/20) ΓåÆ C < B < G (risk)[22m[39m
+Γ£à PREMIUM-3 (200k/3000/20): C=4.96 Γëñ B=6.30 Γëñ G=7.40 (C┬▒1.5, B┬▒0.5 tolerance)
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m > [22m[2mCORE-0 (60k/150/15) + konzervativny ΓåÆ no CRITICAL warnings[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] real: 0.3% ΓåÆ 0.0% (cap enforced, overflow 0.3%)
+[ProfileAssetPolicy] Redistributing 0.3% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +0.2% (room 65.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +0.0% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 99.94% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.2"},{"k":"cash","p":"10.0"}]
+[EnforceRiskCap] Initial risk: 5.30 / max 5.00
+[EnforceRiskCap] Iteration 1: etf 14.72% ΓåÆ 11.78% (-2.94 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.29 p.b. (weight 0.10, room 20.0%)
+[EnforceRiskCap] After iteration 1: risk 5.40
+[EnforceRiskCap] Iteration 2: etf 12.10% ΓåÆ 9.68% (-2.42 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.24 p.b. (weight 0.10, room 19.4%)
+[EnforceRiskCap] After iteration 2: risk 5.49
+[EnforceRiskCap] Iteration 3: etf 9.90% ΓåÆ 7.90% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.9%)
+[EnforceRiskCap] After iteration 3: risk 5.57
+[EnforceRiskCap] Iteration 4: etf 8.04% ΓåÆ 6.04% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.5%)
+[EnforceRiskCap] After iteration 4: risk 5.66
+[EnforceRiskCap] Iteration 5: etf 6.15% ΓåÆ 4.15% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.1%)
+[EnforceRiskCap] After iteration 5: risk 5.75
+[EnforceRiskCap] Iteration 6: etf 4.23% ΓåÆ 2.23% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.7%)
+[EnforceRiskCap] After iteration 6: risk 5.85
+[EnforceRiskCap] Iteration 7: etf 2.27% ΓåÆ 0.27% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.2%)
+[EnforceRiskCap] After iteration 7: risk 6.83
+[EnforceRiskCap] Iteration 8: etf 0.27% ΓåÆ 0.00% (-0.27 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.03 p.b. (weight 0.10, room 16.8%)
+[EnforceRiskCap] After iteration 8: risk 6.85
+[EnforceRiskCap] Iteration 9: bonds 40.61% ΓåÆ 35.61% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 9: risk 6.42
+[EnforceRiskCap] Iteration 10: bonds 37.48% ΓåÆ 32.48% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 10: risk 6.95
+[EnforceRiskCap] Final: 5.30 ΓåÆ 6.95 (10 iterations)
+[MixAdjustments] Risk cap enforced: 5.30 ΓåÆ 6.95 (10 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.95 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments Clamp] gold 51.1% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 11.12% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"42.9"},{"k":"bonds","p":"41.4"},{"k":"cash","p":"15.7"}]
+[MixAdjustments Clamp] gold 42.9% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 2.86% ΓåÆ redistributed to safety sinks
+[MixAdjustments] VIP yield: Safe 6.58% ΓåÆ VIP 7.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mSanity: No inverted profiles[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ Growth risk ΓëÑ 5.8 (nie 3-4)[22m[39m
+[AssetMinima] Locked real: 3.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 3.00% ΓåÆ gold +0.90%, ETF +2.10%
+[MixAdjustments] Asset minima applied: 3.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[applyMinimums DEBUG] dyn 20%, lump=0, monthly=200, available=true
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"26.9"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"39.9"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 5.5B UP-TUNE] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"25.9"},{"k":"etf","p":"40.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"26.4"},{"k":"dyn","p":"18.0"},{"k":"etf","p":"48.4"},{"k":"cash","p":"5.0"},{"k":"crypto","p":"2.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] gold: 26.4% ΓåÆ 8.0% (cap enforced, overflow 18.4%)
+[ProfileAssetPolicy] Redistributing 18.4% overflow to core assets: etf, gold, bonds, bond3y9
+[ProfileAssetPolicy]   ΓåÆ etf +0.9% (room 6.6%)
+[ProfileAssetPolicy]   ΓåÆ bonds +14.0% (room 100.0%)
+[ProfileAssetPolicy] Normalized: 96.51% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: gold capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: rastovy, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (9.49 > 8.5 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"51.1"},{"k":"bonds","p":"14.5"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 51.1% ΓåÆ 50%
+[MixAdjustments Clamp] Deficit 1.07% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"8.3"},{"k":"dyn","p":"18.7"},{"k":"etf","p":"50.2"},{"k":"bonds","p":"15.2"},{"k":"cash","p":"5.2"},{"k":"crypto","p":"2.1"},{"k":"real","p":"0.3"}]
+[MixAdjustments Clamp] etf 50.2% ΓåÆ 50%
+[MixAdjustments] VIP yield: Safe 19.90% ΓåÆ VIP 23.89%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mSanity: No inverted profiles[2m > [22m[2mSTARTER-1 (0/200/20) ΓåÆ Conservative risk Γëñ 6.0 (nie 7-9)[22m[39m
+[AssetMinima] Locked real: 5.00% (min 50000 Γé¼, current 48000 Γé¼)
+[AssetMinima] Realloc 5.00% ΓåÆ gold +3.50%, ETF +1.50%
+[MixAdjustments] Asset minima applied: 5.0% reallocated (effectivePlanVolume 48000 Γé¼)
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"40.2"},{"k":"etf","p":"49.7"},{"k":"cash","p":"10.1"},{"k":"real","p":"0.0"}]
+[ConservativeGuard] Iteration 1: ETF 49.7% ΓåÆ 44.7%, Gold 40.2% ΓåÆ 45.2%, Risk cons 9.18 vs bal 9.18
+[ConservativeGuard] Iteration 2: ETF 44.7% ΓåÆ 39.7%, Gold 45.2% ΓåÆ 50.2%, Risk cons 8.43 vs bal 8.43
+[ConservativeGuard] Iteration 3: ETF 39.7% ΓåÆ 34.7%, Gold 50.2% ΓåÆ 55.2%, Risk cons 9.36 vs bal 9.36
+[ConservativeGuard] Iteration 4: ETF 34.7% ΓåÆ 30.0%, Gold 55.2% ΓåÆ 59.9%, Risk cons 9.78 vs bal 9.78
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mProfile hierarchy: Conservative < Balanced < 
+Growth[2m > [22m[2mCORE-0 (60k/150/15) ΓåÆ C < B < G 
+(yield)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[EnforceRiskCap] Cannot redistribute 2.65 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.18 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 0.24 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] DIRECT CUT MODE (iteration 9): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] DIRECT CUT MODE (iteration 10): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] HARD STOP po 10 iter├íci├ích (risk 6.95 / 5.0)
+[EnforceRiskCap] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+[MixAdjustments] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m 
+> [22m[2mPREMIUM-2 (0/300/30) + vyvazeny ΓåÆ no CRITICAL 
+warnings[22m[39m
+ΓÜá∩╕Å PREMIUM-2 (0/300/30) + vyvazeny m├í 1 CRITICAL warnings: 
+[ [32m'Riziko 4.1 je pr├¡li┼í n├¡zke pre profil vyvazeny (min 
+5)'[39m ]
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m 
+> [22m[2mCORE-0 (60k/150/15) + konzervativny ΓåÆ no CRITICAL 
+warnings[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[EnforceRiskCap] Cannot redistribute 2.65 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.18 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 0.24 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] DIRECT CUT MODE (iteration 9): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] DIRECT CUT MODE (iteration 10): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] HARD STOP po 10 iter├íci├ích (risk 6.95 / 5.0)
+[EnforceRiskCap] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+[MixAdjustments] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+ΓÜá∩╕Å CORE-0 (60k/150/15) + konzervativny m├í 2 CRITICAL 
+warnings: [
+  [32m'Riziko 6.3 prekro─ìilo limit pre konzervativny (max 
+5)'[39m,
+  [32m'Pou┼╛it├╜ fallback mix (konzervativny) kv├┤li vysok├⌐mu 
+riziku'[39m
+]
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m 
+> [22m[2mCORE-0 (60k/150/15) + rastovy ΓåÆ no CRITICAL 
+warnings[22m[39m
+ΓÜá∩╕Å CORE-0 (60k/150/15) + rastovy m├í 1 CRITICAL warnings: [ 
+[32m'Riziko 5.9 je pr├¡li┼í n├¡zke pre profil rastovy (min 
+7)'[39m ]
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mSanity: No inverted profiles[2m > [22m[2mSTARTER-1 
+(0/200/20) ΓåÆ Growth risk ΓëÑ 5.8 (nie 3-4)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mSanity: No inverted profiles[2m > [22m[2mSTARTER-1 
+(0/200/20) ΓåÆ Conservative risk Γëñ 6.0 (nie 7-9)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+
+[90mstderr[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m 
+> [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > 
+[22m[2mSanity: No inverted profiles[2m > [22m[2mCORE-0 
+(60k/150/15) ΓåÆ Conservative risk Γëñ 6.0 (nie 7-9)[22m[39m
+[enforceStageCaps] LOOP DETECTED (same mix processed again), 
+returning cached result
+[EnforceRiskCap] Cannot redistribute 2.65 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 2.18 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 1.80 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] Cannot redistribute 0.24 p.b. (will retry or 
+switch to direct cut)
+[EnforceRiskCap] DIRECT CUT MODE (iteration 9): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] DIRECT CUT MODE (iteration 10): Force cut 
+high-risk assets ΓåÆ bonds/bond9 ONLY
+[EnforceRiskCap] HARD STOP po 10 iter├íci├ích (risk 6.95 / 5.0)
+[EnforceRiskCap] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+[MixAdjustments] ΓÜá∩╕Å CRITICAL: Risk prekro─ìil limit aj po 
+10 iter├íci├ích (6.9 / 5.0)
+
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"50.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.0"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[ProfileAssetPolicy] etf: 50.0% ΓåÆ 30.0% (cap enforced, overflow 20.0%)
+[ProfileAssetPolicy] real: 0.0% ΓåÆ 0.0% (cap enforced, overflow 0.0%)
+[ProfileAssetPolicy] Redistributing 20.0% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +16.0% (room 100.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +1.6% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 97.60% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: etf, real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] Mal├╜ pl├ín (48000Γé¼) - enforceRiskCap SKIPPED (natural profile separation)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 48,000 EUR ΓåÆ Band: STARTER
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.01 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"41.0"},{"k":"etf","p":"30.7"},{"k":"bonds","p":"16.4"},{"k":"cash","p":"11.9"}]
+[MixAdjustments Clamp] gold 41.0% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 0.98% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"40.2"},{"k":"etf","p":"30.9"},{"k":"bonds","p":"16.9"},{"k":"cash","p":"12.0"}]
+[MixAdjustments Clamp] gold 40.2% ΓåÆ 40%
+[MixAdjustments] VIP yield: Safe 8.15% ΓåÆ VIP 9.79%
+
+[90mstdout[2m | tests/portfolio-engine-qa-matrix.test.tsx[2m > [22m[2mPortfolio Engine: QA Matrix (P1.2)[2m > [22m[2mSanity: No inverted profiles[2m > [22m[2mCORE-0 (60k/150/15) ΓåÆ Conservative risk Γëñ 6.0 (nie 7-9)[22m[39m
+[DEBUG STEP 5.5A DOWN-TUNE] [{"k":"gold","p":"21.0"},{"k":"etf","p":"0.4"},{"k":"bonds","p":"68.3"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[ConservativeGuard] Risk elevated but within tolerance: diff 0.00 <= 1
+[DEBUG STEP 6 enforceStageCaps] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[DEBUG STEP 7 applyCashCap] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.0"},{"k":"cash","p":"10.0"},{"k":"real","p":"0.3"}]
+[MixAdjustments] STEP 7.5: Applying profile asset policy...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[ProfileAssetPolicy] real: 0.3% ΓåÆ 0.0% (cap enforced, overflow 0.3%)
+[ProfileAssetPolicy] Redistributing 0.3% overflow to core assets: gold, bonds, bond3y9, cash
+[ProfileAssetPolicy]   ΓåÆ bonds +0.2% (room 65.0%)
+[ProfileAssetPolicy]   ΓåÆ cash +0.0% (room 10.0%)
+[ProfileAssetPolicy] Normalized: 99.94% ΓåÆ 100.00%
+[MixAdjustments] Profile policy applied: real capped
+[DEBUG STEP 7.5 applyProfileAssetPolicy] [{"k":"gold","p":"40.0"},{"k":"etf","p":"14.7"},{"k":"bonds","p":"35.2"},{"k":"cash","p":"10.0"}]
+[EnforceRiskCap] Initial risk: 5.30 / max 5.00
+[EnforceRiskCap] Iteration 1: etf 14.72% ΓåÆ 11.78% (-2.94 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.29 p.b. (weight 0.10, room 20.0%)
+[EnforceRiskCap] After iteration 1: risk 5.40
+[EnforceRiskCap] Iteration 2: etf 12.10% ΓåÆ 9.68% (-2.42 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.24 p.b. (weight 0.10, room 19.4%)
+[EnforceRiskCap] After iteration 2: risk 5.49
+[EnforceRiskCap] Iteration 3: etf 9.90% ΓåÆ 7.90% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.9%)
+[EnforceRiskCap] After iteration 3: risk 5.57
+[EnforceRiskCap] Iteration 4: etf 8.04% ΓåÆ 6.04% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.5%)
+[EnforceRiskCap] After iteration 4: risk 5.66
+[EnforceRiskCap] Iteration 5: etf 6.15% ΓåÆ 4.15% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 18.1%)
+[EnforceRiskCap] After iteration 5: risk 5.75
+[EnforceRiskCap] Iteration 6: etf 4.23% ΓåÆ 2.23% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.7%)
+[EnforceRiskCap] After iteration 6: risk 5.85
+[EnforceRiskCap] Iteration 7: etf 2.27% ΓåÆ 0.27% (-2.00 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.20 p.b. (weight 0.10, room 17.2%)
+[EnforceRiskCap] After iteration 7: risk 6.83
+[EnforceRiskCap] Iteration 8: etf 0.27% ΓåÆ 0.00% (-0.27 p.b.)
+[EnforceRiskCap]   ΓåÆ cash +0.03 p.b. (weight 0.10, room 16.8%)
+[EnforceRiskCap] After iteration 8: risk 6.85
+[EnforceRiskCap] Iteration 9: bonds 40.61% ΓåÆ 35.61% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 9: risk 6.42
+[EnforceRiskCap] Iteration 10: bonds 37.48% ΓåÆ 32.48% (-5.00 p.b.)
+[EnforceRiskCap]   ΓåÆ bonds +0.0% (direct cut redistribution)
+[EnforceRiskCap] After iteration 10: risk 6.95
+[EnforceRiskCap] Final: 5.30 ΓåÆ 6.95 (10 iterations)
+[MixAdjustments] Risk cap enforced: 5.30 ΓåÆ 6.95 (10 iterations)
+[DEBUG STEP 8 enforceRiskCap] [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments] STEP 10: Yield optimization (after risk enforcement)...
+[ProfileAssetPolicy] Profile: konzervativny, Volume: 87,000 EUR ΓåÆ Band: CORE
+[YieldOptimizer] SKIP: Risk v├╜znamne nad limitom (6.95 > 5.0 + 0.5)
+[MixAdjustments] FINAL STEP: normalizeAndClampMix...
+[MixAdjustments DEBUG] PRED normalizeAndClampMix: [{"k":"gold","p":"51.1"},{"k":"bonds","p":"34.2"},{"k":"cash","p":"14.7"}]
+[MixAdjustments Clamp] gold 51.1% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 11.12% ΓåÆ redistributed to safety sinks
+[MixAdjustments DEBUG] PO normalizeAndClampMix: [{"k":"gold","p":"42.9"},{"k":"bonds","p":"41.4"},{"k":"cash","p":"15.7"}]
+[MixAdjustments Clamp] gold 42.9% ΓåÆ 40%
+[MixAdjustments Clamp] Deficit 2.86% ΓåÆ redistributed to safety sinks
+[MixAdjustments] VIP yield: Safe 6.58% ΓåÆ VIP 7.89%
+
+ [33mΓ¥»[39m tests/portfolio-engine-qa-matrix.test.tsx [2m ([22m[2m96 tests[22m [2m|[22m [31m4 failed[39m[2m)[22m[90m 128[2mms[22m[39m
+[31m   [33mΓ¥»[31m tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio Engine: QA Matrix (P1.2)[2m > [22mRisk bands (all scenarios ├ù profiles)[2m > [22mCORE-0 (60k/150/15) + rastovy ΓåÆ risk v p├ísme[39m
+[31m     ΓåÆ expected 5.8767000000000005 to be greater than or equal to 6[39m
+[31m   [33mΓ¥»[31m tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio Engine: QA Matrix (P1.2)[2m > [22mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m > [22mPREMIUM-2 (0/300/30) + vyvazeny ΓåÆ no CRITICAL warnings[39m
+[31m     ΓåÆ expected 1 to be +0 // Object.is equality[39m
+[31m   [33mΓ¥»[31m tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio Engine: QA Matrix (P1.2)[2m > [22mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m > [22mCORE-0 (60k/150/15) + konzervativny ΓåÆ no CRITICAL warnings[39m
+[31m     ΓåÆ expected 2 to be +0 // Object.is equality[39m
+[31m   [33mΓ¥»[31m tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio Engine: QA Matrix (P1.2)[2m > [22mCRITICAL warnings (should be rare in CORE/PREMIUM)[2m > [22mCORE-0 (60k/150/15) + rastovy ΓåÆ no CRITICAL warnings[39m
+[31m     ΓåÆ expected 1 to be +0 // Object.is equality[39m
+
+[31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1m[7m Failed Tests 4 
+[27m[22mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[39m
+
+[31m[1m[7m FAIL [27m[22m[39m 
+tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio 
+Engine: QA Matrix (P1.2)[2m > [22mRisk bands (all scenarios 
+├ù profiles)[2m > [22mCORE-0 (60k/150/15) + rastovy ΓåÆ risk 
+v p├ísme
+[31m[1mAssertionError[22m: expected 5.8767000000000005 to be 
+greater than or equal to 6[39m
+[36m [2mΓ¥»[22m 
+tests/portfolio-engine-qa-matrix.test.tsx:[2m185:36[22m[39m
+    [90m183| [39m          [35mconst[39m maxTolerance 
+[33m=[39m effectiveMax [33m+[39m [34m1.0[39m[33m;[39m
+    [90m184| [39m
+    [90m185| [39m          [34mexpect[39m(result[33m.[39mr
+iskScore)[33m.[39m[34mtoBeGreaterThanOrEqual[39m(minToleranc
+eΓÇª
+    [90m   | [39m                                   
+[31m^[39m
+    [90m186| [39m          [34mexpect[39m(result[33m.[39mr
+iskScore)[33m.[39m[34mtoBeLessThanOrEqual[39m(maxTolerance)
+[33m;[39m
+    [90m187| [39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/4]ΓÄ»[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m 
+tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio 
+Engine: QA Matrix (P1.2)[2m > [22mCRITICAL warnings (should 
+be rare in CORE/PREMIUM)[2m > [22mPREMIUM-2 (0/300/30) + 
+vyvazeny ΓåÆ no CRITICAL warnings
+[31m[1m[7m FAIL [27m[22m[39m 
+tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio 
+Engine: QA Matrix (P1.2)[2m > [22mCRITICAL warnings (should 
+be rare in CORE/PREMIUM)[2m > [22mCORE-0 (60k/150/15) + 
+rastovy ΓåÆ no CRITICAL warnings
+[31m[1mAssertionError[22m: expected 1 to be +0 // Object.is 
+equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 1[39m
+
+[36m [2mΓ¥»[22m 
+tests/portfolio-engine-qa-matrix.test.tsx:[2m281:43[22m[39m
+    [90m279| [39m          }
+    [90m280| [39m
+    [90m281| [39m          [34mexpect[39m(criticalWarnings[
+33m.[39mlength)[33m.[39m[34mtoBe[39m([34m0[39m)[33m;[39
+m
+    [90m   | [39m                                          
+[31m^[39m
+    [90m282| [39m        })[33m;[39m
+    [90m283| [39m      })[33m;[39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/4]ΓÄ»[22m[39m
+
+[31m[1m[7m FAIL [27m[22m[39m 
+tests/portfolio-engine-qa-matrix.test.tsx[2m > [22mPortfolio 
+Engine: QA Matrix (P1.2)[2m > [22mCRITICAL warnings (should 
+be rare in CORE/PREMIUM)[2m > [22mCORE-0 (60k/150/15) + 
+konzervativny ΓåÆ no CRITICAL warnings
+[31m[1mAssertionError[22m: expected 2 to be +0 // Object.is 
+equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 0[39m
+[31m+ 2[39m
+
+[36m [2mΓ¥»[22m 
+tests/portfolio-engine-qa-matrix.test.tsx:[2m281:43[22m[39m
+    [90m279| [39m          }
+    [90m280| [39m
+    [90m281| [39m          [34mexpect[39m(criticalWarnings[
+33m.[39mlength)[33m.[39m[34mtoBe[39m([34m0[39m)[33m;[39
+m
+    [90m   | [39m                                          
+[31m^[39m
+    [90m282| [39m        })[33m;[39m
+    [90m283| [39m      })[33m;[39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»Γ
+Ä»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/4]ΓÄ»[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m92 passed[39m[22m[90m (96)[39m
+[2m   Start at [22m 15:49:05
+[2m   Duration [22m 1.81s[2m (transform 200ms, setup 132ms, collect 249ms, tests 128ms, environment 514ms, prepare 361ms)[22m
+

@@ -4,6 +4,8 @@ import { useUncontrolledValueInput } from "../_hooks/useUncontrolledValueInput";
 import { calculateFutureValue } from "../../engine/calculations";
 import { approxYieldAnnualFromMix } from "../mix/assetModel";
 import type { MixItem } from "../mix/mix.service";
+import { calculateEffectivePlanVolume } from "../portfolio/assetMinima"; // PR-28 Phase B
+import InvestmentPowerBox from "./InvestmentPowerBox"; // PR-28 Phase B
 
 interface InvestSectionProps {
   open: boolean;
@@ -19,6 +21,11 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
   onToggle,
 }) => {
   const seed = readV3();
+
+  // Extract riskPref early (needed for InvestmentPowerBox)
+  const riskPref = (seed.profile?.riskPref ||
+    (seed as any).riskPref ||
+    "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
 
   // Local state (synced to persist)
   const [lumpSumEur, setLumpSumEur] = React.useState(
@@ -85,9 +92,7 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
       { key: "real", pct: 1 },
     ]) as MixItem[];
 
-    const riskPref = (v3.profile?.riskPref ||
-      (v3 as any).riskPref ||
-      "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
+    // Use riskPref from component scope (already extracted)
     const approx = approxYieldAnnualFromMix(mix, riskPref);
     const fv = calculateFutureValue(lump, monthly, years, approx);
 
@@ -168,8 +173,22 @@ export const InvestSection: React.FC<InvestSectionProps> = ({
           aria-labelledby="invest-title"
           className="w-full min-w-0 rounded-2xl ring-1 ring-white/5 bg-slate-900/60 p-4 md:p-5 transition-all duration-300"
         >
+          {/* PR-28 Phase B: Investment Power Box */}
+          <InvestmentPowerBox
+            lumpSumEur={lumpSumEur || 0}
+            monthlyEur={(readV3() as any).monthly || 0}
+            horizonYears={horizonYears || 0}
+            goalAssetsEur={goalAssetsEur || 100_000}
+            effectivePlanVolume={calculateEffectivePlanVolume(
+              lumpSumEur || 0,
+              (readV3() as any).monthly || 0,
+              horizonYears || 0
+            )}
+            riskPref={riskPref}
+          />
+
           {/* Note: Mesačný vklad nastavte v sekcii Cashflow */}
-          <p className="text-xs text-slate-400 italic mb-4">
+          <p className="text-xs text-slate-400 italic mb-4 mt-4">
             💡 Mesačný vklad nastavte v sekcii{" "}
             <strong>Cashflow &amp; rezerva</strong>
           </p>

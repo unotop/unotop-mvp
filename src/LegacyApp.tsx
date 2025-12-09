@@ -6,11 +6,11 @@ import { MixPanel } from "./features/mix/MixPanel";
 import PortfolioSelector from "./features/portfolio/PortfolioSelector";
 import { ProfileSection } from "./features/profile/ProfileSection";
 import { InvestSection } from "./features/invest/InvestSection";
+import InvestmentPowerBox from "./features/invest/InvestmentPowerBox";
+import { calculateEffectivePlanVolume } from "./features/portfolio/assetMinima";
 import { ProjectionMetricsPanel } from "./features/overview/ProjectionMetricsPanel";
 import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 import { createMixListener } from "./persist/mixEvents";
-import { calculateFutureValue } from "./engine/calculations";
-import { approxYieldAnnualFromMix } from "./features/mix/assetModel";
 import { TEST_IDS } from "./testIds";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
 import {
@@ -23,6 +23,7 @@ import { RiskGauge } from "./components/RiskGauge";
 import { MetricsSection } from "./features/metrics/MetricsSection";
 import { ProjectionChart } from "./features/projection/ProjectionChart";
 import { EditDebtModal } from "./components/EditDebtModal";
+import { ShareModalWithProjection } from "./components/ShareModalWithProjection";
 // PR-12: AdminConsole moved to RootLayout (global), keep isProUnlocked
 import { isProUnlocked } from "./features/admin/AdminConsole";
 
@@ -1071,6 +1072,7 @@ export default function LegacyApp({
           {/* Starý debt UI odstránený - teraz používame standalone section */}
         </section>
       )}
+
       {/* sec2: Investičné nastavenia - extracted component */}
       <InvestSection open={open2} onToggle={() => setOpen2((v) => !v)} />
 
@@ -1462,211 +1464,22 @@ export default function LegacyApp({
         )}
       </div>
       {shareOpen && (
-        <div
-          role="dialog"
-          aria-label="Zdieľať nastavenie"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-        >
-          <div className="bg-slate-900 rounded-xl p-6 ring-1 ring-white/10 w-full max-w-lg space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold">📧 Odoslať projekciu</h2>
-
-            {/* Preview FV + Mix */}
-            {(() => {
-              const v3Data = readV3();
-              const mix: MixItem[] = (v3Data.mix as any) || [];
-              const lump = (v3Data.profile?.lumpSumEur as any) || 0;
-              const monthly = (v3Data as any).monthly || 0;
-              const years = (v3Data.profile?.horizonYears as any) || 10;
-              const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
-              const riskPref = (v3Data.profile?.riskPref ||
-                (v3Data as any).riskPref ||
-                "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-              const approx = approxYieldAnnualFromMix(mix, riskPref);
-              const fv = calculateFutureValue(lump, monthly, years, approx);
-              const pct = goal > 0 ? Math.round((fv / goal) * 100) : 0;
-
-              return (
-                <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
-                  <div className="font-medium text-slate-300">
-                    Vaša projekcia:
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-slate-400">
-                        Hodnota po {years} rokoch:
-                      </span>
-                      <div className="font-bold text-emerald-400 tabular-nums">
-                        {fv.toFixed(0)} €
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Progres k cieľu:</span>
-                      <div className="font-bold text-amber-400 tabular-nums">
-                        {pct}%
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Jednorazový vklad:</span>
-                      <div className="font-medium tabular-nums">
-                        {lump.toFixed(0)} €
-                      </div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">Mesačný vklad:</span>
-                      <div className="font-medium tabular-nums">
-                        {monthly.toFixed(0)} €
-                      </div>
-                    </div>
-                  </div>
-                  {mix.length > 0 && (
-                    <div className="pt-2 border-t border-white/5">
-                      <div className="text-slate-400 mb-1">Mix portfólia:</div>
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                        {mix
-                          .filter((i) => i.pct > 0)
-                          .map((item) => {
-                            const labels: Record<string, string> = {
-                              gold: "🥇 Zlato",
-                              dyn: "📊 Dyn. riadenie",
-                              etf: "🌍 ETF svet",
-                              bonds: "📜 Dlhopis 7,5% (5r)",
-                              bond3y9: "💰 Dlhopis 9% (3r)",
-                              cash: "💵 Hotovosť",
-                              crypto: "₿ Krypto",
-                              real: "🏘️ Reality",
-                              other: "📦 Ostatné",
-                            };
-                            return (
-                              <div
-                                key={item.key}
-                                className="flex justify-between"
-                              >
-                                <span className="text-slate-300">
-                                  {labels[item.key] || item.key}
-                                </span>
-                                <span className="font-medium tabular-nums">
-                                  {item.pct.toFixed(1)}%
-                                </span>
-                              </div>
-                            );
-                          })}
-                      </div>
-                      {/* Info o dlhopisoch ak sú oba prítomné */}
-                      {mix.some((m) => m.key === "bonds" && m.pct > 0) &&
-                        mix.some((m) => m.key === "bond3y9" && m.pct > 0) && (
-                          <div className="mt-2 pt-2 border-t border-white/10 text-xs text-slate-400 space-y-1">
-                            <div className="flex items-start gap-1">
-                              <span className="shrink-0">📜</span>
-                              <span>
-                                Dlhopis 7,5%: korporátny, krytý biznisom firmy,
-                                5-ročná splatnosť
-                              </span>
-                            </div>
-                            <div className="flex items-start gap-1">
-                              <span className="shrink-0">💰</span>
-                              <span>
-                                Dlhopis 9%: mesačné výplaty po dobu 36 mesiacov,
-                                lepšia likvidita
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Email input */}
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-300">
-                Email finančného advisora
-              </span>
-              <input
-                autoFocus
-                aria-label="Email agenta"
-                type="email"
-                placeholder="advisor@example.com"
-                className="w-full bg-slate-800 rounded-lg px-4 py-2.5 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
-              />
-            </label>
-
-            {/* CTA buttons */}
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
-                onClick={() => {
-                  // TODO: Generate mailto link with template + deeplink
-                  const v3Data = readV3();
-                  const mix: MixItem[] = (v3Data.mix as any) || [];
-                  const lump = (v3Data.profile?.lumpSumEur as any) || 0;
-                  const monthly = (v3Data as any).monthly || 0;
-                  const years = (v3Data.profile?.horizonYears as any) || 10;
-                  const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
-                  const riskPref = (v3Data.profile?.riskPref ||
-                    (v3Data as any).riskPref ||
-                    "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-                  const approx = approxYieldAnnualFromMix(mix, riskPref);
-                  const fv = calculateFutureValue(lump, monthly, years, approx);
-
-                  // Generate deeplink
-                  const state = {
-                    profile: {
-                      lumpSumEur: lump,
-                      horizonYears: years,
-                      goalAssetsEur: goal,
-                    },
-                    monthly,
-                    mix,
-                  };
-                  const encoded = btoa(JSON.stringify(state));
-                  const deeplink = `${window.location.origin}${window.location.pathname}#state=${encodeURIComponent(encoded)}`;
-
-                  // Email template
-                  const subject = "Investičná projekcia - Unotop";
-                  const body = `Dobrý deň,
-
-pridávam vám moju investičnú projekciu:
-
-📊 Parametre:
-- Jednorazový vklad: ${lump.toFixed(0)} €
-- Mesačný vklad: ${monthly.toFixed(0)} €
-- Investičný horizont: ${years} rokov
-- Cieľ majetku: ${goal.toFixed(0)} €
-
-💰 Projekcia:
-- Hodnota po ${years} rokoch: ${fv.toFixed(0)} €
-- Progres k cieľu: ${goal > 0 ? Math.round((fv / goal) * 100) : 0}%
-- Odhad výnosu p.a.: ${(approx * 100).toFixed(1)}%
-
-🔗 Interaktívna projekcia:
-${deeplink}
-
-S pozdravom`;
-
-                  const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                  window.location.href = mailtoLink;
-
-                  setShareOpen(false);
-                  setTimeout(() => shareBtnRef.current?.focus(), 0);
-                }}
-              >
-                📨 Odoslať email
-              </button>
-              <button
-                type="button"
-                className="px-4 py-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm transition-colors"
-                onClick={() => {
-                  setShareOpen(false);
-                  setTimeout(() => shareBtnRef.current?.focus(), 0);
-                }}
-              >
-                Zrušiť
-              </button>
-            </div>
-          </div>
-        </div>
+        <ShareModalWithProjection
+          onClose={() => {
+            setShareOpen(false);
+            setTimeout(() => shareBtnRef.current?.focus(), 0);
+          }}
+          lumpSumEur={investParams.lumpSumEur}
+          monthlyVklad={investParams.monthlyVklad}
+          horizonYears={investParams.horizonYears}
+          goalAssetsEur={investParams.goalAssetsEur}
+          riskPref={
+            seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+          }
+          valuationMode={
+            (readV3().profile?.valuationMode as "real" | "nominal") || "real"
+          }
+        />
       )}
 
       {/* PR-10 Priorita 4: Edit Debt Modal */}

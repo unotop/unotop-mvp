@@ -23,6 +23,9 @@ export interface ProjectionData {
     mix: Array<{ key: string; pct: number }>;
     deeplink: string;
     bonuses?: string[]; // PR-13 HOTFIX: Bonusy pre email
+    // Debt payoff info (ak má užívateľ dlhy)
+    debtPayoffYears?: number | null; // Počet rokov do splatenia (crossoverIndex)
+    debtPayoffCalendarYear?: number | null; // Kalendárny rok splatenia
   };
   metadata?: {
     riskPref?: string;

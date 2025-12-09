@@ -11,10 +11,21 @@ export default function WelcomeModal({
   onOpenPrivacy,
 }: WelcomeModalProps) {
   const [hideNext, setHideNext] = React.useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     // Lock scroll when modal is open
     document.body.style.overflow = "hidden";
+
+    // PR-34 FINAL FIX: Scroll wrapper (not window) - wrapper má overflow-y-auto
+    requestAnimationFrame(() => {
+      if (wrapperRef.current) {
+        wrapperRef.current.scrollTop = 0;
+      }
+      // Backup: window scroll (ak by wrapper nebol scrollable)
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -50,6 +61,7 @@ export default function WelcomeModal({
 
   return (
     <div
+      ref={wrapperRef}
       className="fixed inset-0 z-[9999] flex items-start justify-center bg-slate-950/95 backdrop-blur-sm p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"

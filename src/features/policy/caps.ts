@@ -35,35 +35,40 @@ export type Caps = Partial<Record<AssetKey, number>>;
  * @returns Caps objekt s limitmi pre každé aktívum
  */
 export function getAssetCaps(pref: RiskPref, stage: Stage): Caps {
-  // PR-14.B: CORE baseline zmäkčený (stred medzi STARTER/LATE) - menej redistribution conflicts
+  // P1.5 FIX: Profile-specific caps (Conservative < Balanced/Growth)
   const base: Caps = {
-    etf: 45,   // 45% (bolo 40%) - stred medzi STARTER 50% a LATE 35%
-    dyn: 13,   // 13% (bolo 15%) - stred medzi STARTER 15% a LATE 12%
-    crypto: 6,
+    etf: pref === 'konzervativny' ? 30 : 50,  // P1.5: C=30%, B/G=50%
+    dyn: pref === 'konzervativny' ? 0 : (pref === 'vyvazeny' ? 15 : 22), // P1.5: C=0%, B=15%, G=22%
+    crypto: pref === 'konzervativny' ? 0 : 12, // P1.5: C=0%, B/G=12%
     gold: 40,
     bonds: 40,
     bond3y9: 40,
-    cash: 35,  // 35% (bolo 40%) - stred medzi STARTER 50% a LATE 30%
-    real: 20,
+    cash: 35,
+    real: pref === 'konzervativny' ? 5 : 20, // P1.5: C=5%, B/G=20%
   };
 
-  // Výnimka: v konzervatívnom profilu "bonds" max 35%
-  if (pref === "konzervativny") {
-    base.bonds = 35;
-  }
-
-  // STARTER: povoľ rastové ťahúne, ale drž rozum v dynamike
+  // STARTER: povoľ rastové ťahúne (ale rešpektuj profile separation)
   if (stage === "STARTER") {
-    base.etf = 50;   // +5 p.b. z CORE 45%
-    base.dyn = 15;   // +2 p.b. z CORE 13%
-    base.cash = 50;  // +15 p.b. z CORE 35%
+    if (pref !== 'konzervativny') {
+      base.etf = 55;   // B/G: +5 p.b. boost
+      base.dyn = pref === 'vyvazeny' ? 18 : 25; // B=18%, G=25%
+    }
+    base.cash = 50;
+    
+    if (pref === "rastovy") {
+      base.real = 12;
+    }
   }
 
-  // LATE: jemne ukrojiť volatilitu, chrániť kapitál
+  // LATE: znížiť volatilitu (ale rešpektuj profile separation)
   if (stage === "LATE") {
-    base.etf = 35;   // -10 p.b. z CORE 45%
-    base.dyn = 12;   // -1 p.b. z CORE 13%
-    base.cash = 30;  // -5 p.b. z CORE 35%
+    if (pref === 'konzervativny') {
+      base.etf = 25;  // C: ešte konzervatívnejšie
+    } else {
+      base.etf = 50;  // B/G: stále vyššie než C
+      base.dyn = pref === 'vyvazeny' ? 16 : 22;
+    }
+    base.cash = 30;
   }
 
   return base;
