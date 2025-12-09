@@ -45,7 +45,7 @@ export function ProjectionChart({
   debts,
   goalAssetsEur,
   hideDebts = false,
-  valuationMode = "real", // PR-27: Default to real
+  valuationMode = "nominal", // PR-27: Default to nominal
 }: ProjectionChartProps) {
   // Validate riskPref
   const validRiskPref: RiskPref =

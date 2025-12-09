@@ -1476,6 +1476,9 @@ export default function LegacyApp({
           riskPref={
             seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
           }
+          valuationMode={
+            (readV3().profile?.valuationMode as "real" | "nominal") || "real"
+          }
         />
       )}
 

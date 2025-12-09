@@ -162,11 +162,11 @@ export default function BasicLayout({
   const [bonusesExpanded, setBonusesExpanded] = React.useState(false); // PR-17: Collapsible bonuses
   const shareBtnRef = React.useRef<HTMLButtonElement>(null);
 
-  // PR-27: Valuation mode state (real = po inflácii, nominal = bez odpočtu inflácie)
+  // PR-27: Valuation mode state (nominal = primárny, real = kúpna sila)
   const [valuationMode, setValuationMode] = React.useState<"real" | "nominal">(
     () => {
       const v3 = readV3();
-      return v3.profile?.valuationMode || "real";
+      return v3.profile?.valuationMode || "nominal";
     }
   );
 
@@ -227,53 +227,18 @@ export default function BasicLayout({
     }
   };
 
-  // PR-13: Počúvaj na zatvorenie welcome modalu a spusti tour
+  // TASK A: Onboarding Tour je teraz DOBROVOĽNÝ - auto-spustenie vypnuté
+  // Tour sa spúšťa len cez tlačidlo "🎓 Sprievodca" v topbare
+  // Welcome modal ostáva bez zmeny (stále auto-zobrazenie pri prvom vstupe)
   React.useEffect(() => {
-    // Check flag on mount (ak WelcomeModal sa zatvoril pred BasicLayout mount)
-    const shouldStartTour = sessionStorage.getItem(
-      "unotop_startTourAfterWelcome"
+    // Cleanup session flags (už sa nepoužívajú pre auto-spustenie)
+    sessionStorage.removeItem("unotop_startTourAfterWelcome");
+    sessionStorage.removeItem("unotop_skipTourAfterIntro");
+
+    console.log(
+      "[Tour] Auto-start disabled - use 'Sprievodca' button to start tour"
     );
-
-    const handleWelcomeClosed = () => {
-      // Skip ak GDPR link bol kliknutý v intro
-      const skipTour = sessionStorage.getItem("unotop_skipTourAfterIntro");
-      if (skipTour) {
-        sessionStorage.removeItem("unotop_skipTourAfterIntro");
-        console.log("[Tour] Skipping tour after GDPR link in Intro");
-        return;
-      }
-
-      // PR-13 Fix: Skip ak tour už raz bezel (uložené v localStorage)
-      const tourWasStarted = localStorage.getItem("unotop:tour_started");
-      if (tourWasStarted === "true") {
-        console.log("[Tour] Tour was already started before, skipping");
-        sessionStorage.removeItem("unotop_startTourAfterWelcome");
-        return;
-      }
-
-      console.log("[Tour] Welcome modal closed, auto-starting tour in 2s...");
-      sessionStorage.removeItem("unotop_startTourAfterWelcome");
-
-      // Označ že tour už bol spustený (aby sa neopakoval)
-      localStorage.setItem("unotop:tour_started", "true");
-
-      setTimeout(() => {
-        setCurrentTourStep(1);
-        setTourOpen(true);
-      }, 2000);
-    };
-
-    // Ak flag existuje, spusti tour hneď
-    if (shouldStartTour === "true") {
-      handleWelcomeClosed();
-    }
-
-    // Listener pre prípad live event
-    window.addEventListener("welcomeClosed", handleWelcomeClosed);
-    return () => {
-      window.removeEventListener("welcomeClosed", handleWelcomeClosed);
-    };
-  }, []); // PR-13 Fix: Odstránené completedSteps z dependencies
+  }, []);
 
   const handleTourComplete = () => {
     setTourOpen(false);
@@ -420,6 +385,17 @@ export default function BasicLayout({
       horizonYears: (v3.profile?.horizonYears as any) || 10,
       goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
     };
+  });
+
+  // UI-WIRING: useProjection pre ShareModal preview (single source of truth)
+  const shareModalProjection = useProjection({
+    lumpSumEur: investParams.lumpSumEur,
+    monthlyVklad: investParams.monthlyVklad,
+    horizonYears: investParams.horizonYears,
+    goalAssetsEur: investParams.goalAssetsEur,
+    mix,
+    debts: seed.debts || [],
+    riskPref: (seed.profile?.riskPref as any) || "vyvazeny",
   });
 
   React.useEffect(() => {
@@ -823,7 +799,7 @@ export default function BasicLayout({
       const nn = String(Math.floor(Math.random() * 100)).padStart(2, "0");
       const referenceCode = `UNOTOP-${yy}${mm}${dd}-${hh}${min}-${nn}`;
 
-      // Generate projection data
+      // Generate projection data (UI-WIRING: Use shareModalProjection for consistency)
       const v3Data = readV3();
       const mix: MixItem[] = (v3Data.mix as any) || [];
       const lump = (v3Data.profile?.lumpSumEur as any) || 0;
@@ -833,8 +809,22 @@ export default function BasicLayout({
       const riskPref = (v3Data.profile?.riskPref ||
         (v3Data as any).riskPref ||
         "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-      const approx = approxYieldAnnualFromMix(mix, riskPref);
-      const fv = calculateFutureValue(lump, monthly, years, approx);
+
+      // UI-WIRING: Use shareModalProjection (single source of truth)
+      const {
+        fvFinal,
+        approxYield: approx,
+        goalProgress,
+        crossoverIndex,
+      } = shareModalProjection;
+      const fv = fvFinal; // Nominal FV (email template will apply inflation if needed)
+
+      // Debt payoff info
+      const currentYear = new Date().getFullYear();
+      const crossoverYear = crossoverIndex !== null ? crossoverIndex : null;
+      const crossoverCalendarYear =
+        crossoverYear !== null ? Math.round(currentYear + crossoverYear) : null;
+      const hasDebts = (v3Data.debts || []).length > 0;
 
       // Generate deeplink
       const state = {
@@ -872,6 +862,9 @@ export default function BasicLayout({
         formatBonusForStorage(id, formData.refiDeadline)
       );
 
+      // Progress k cieľu - VŽDY používame nominal FV (absolútna suma na účte)
+      const progressForEmail = goal > 0 ? Math.round((fv / goal) * 100) : 0;
+
       // Prepare projection data
       const projectionData: ProjectionData = {
         user: {
@@ -886,11 +879,14 @@ export default function BasicLayout({
           horizonYears: years,
           goalAssetsEur: goal,
           futureValue: fv,
-          progressPercent: goal > 0 ? Math.round((fv / goal) * 100) : 0,
+          progressPercent: progressForEmail, // FIX: Use valuationMode-aware progress calculation
           yieldAnnual: approx,
           mix: mix.filter((i) => i.pct > 0),
           deeplink,
           bonuses: formattedBonuses, // PR-13 HOTFIX
+          // Debt payoff info (ak má užívateľ dlhy)
+          debtPayoffYears: hasDebts ? crossoverYear : null,
+          debtPayoffCalendarYear: hasDebts ? crossoverCalendarYear : null,
         },
         metadata: {
           riskPref,
@@ -1253,29 +1249,30 @@ export default function BasicLayout({
               const monthly = (v3Data as any).monthly || 0;
               const years = (v3Data.profile?.horizonYears as any) || 10;
               const goal = (v3Data.profile?.goalAssetsEur as any) || 0;
-              const riskPref = (v3Data.profile?.riskPref ||
-                (v3Data as any).riskPref ||
-                "vyvazeny") as "konzervativny" | "vyvazeny" | "rastovy";
-              const approx = approxYieldAnnualFromMix(mix, riskPref);
-              const fvNominal = calculateFutureValue(
-                lump,
-                monthly,
-                years,
-                approx
-              );
-              // PR-27: Transformácia podľa valuationMode
+
+              // UI-WIRING: Použiť useProjection (rovnaký calculation ako StickyBottomBar)
+              const { fvFinal, goalProgress, crossoverIndex, debtPayoffMonth } =
+                shareModalProjection;
+
+              // PR-27: Transformácia podľa valuationMode (SINGLE SOURCE OF TRUTH)
               const displayFV =
                 valuationMode === "real"
-                  ? toRealValue(fvNominal, years)
-                  : fvNominal;
-              const displayGoal =
-                valuationMode === "real" && goal > 0
-                  ? toNominalGoal(goal, years)
-                  : goal;
-              const pct =
-                displayGoal > 0
-                  ? Math.round((displayFV / displayGoal) * 100)
-                  : 0;
+                  ? toRealValue(fvFinal, years)
+                  : fvFinal;
+
+              // Progress k cieľu - VŽDY používame nominal FV (absolútna suma na účte)
+              const nominalProgress = goal > 0 ? (fvFinal / goal) * 100 : 0;
+              const pct = Math.round(nominalProgress);
+
+              // Debt payoff info
+              const currentYear = new Date().getFullYear();
+              const crossoverYear =
+                crossoverIndex !== null ? crossoverIndex : null;
+              const crossoverCalendarYear =
+                crossoverYear !== null
+                  ? Math.round(currentYear + crossoverYear)
+                  : null;
+              const hasDebts = (v3Data.debts || []).length > 0;
 
               return (
                 <div className="p-4 rounded-lg bg-slate-800/50 ring-1 ring-white/5 space-y-3 text-sm">
@@ -1310,6 +1307,27 @@ export default function BasicLayout({
                       </div>
                     </div>
                   </div>
+
+                  {/* Debt payoff info - zobrazuje sa len ak má užívateľ dlhy */}
+                  {hasDebts && crossoverYear !== null && (
+                    <div className="pt-2 border-t border-white/5">
+                      <div className="text-slate-400 text-xs mb-1">
+                        💡 Predčasné splatenie dlhov:
+                      </div>
+                      <div className="text-sm text-emerald-400 font-medium">
+                        {crossoverYear === 0 ? (
+                          <>Už teraz máte dostatok aktív na splatenie dlhov.</>
+                        ) : (
+                          <>
+                            Vaše dlhy budete môcť predčasne vyplatiť o{" "}
+                            {crossoverYear.toFixed(1)} rokov (v roku{" "}
+                            {crossoverCalendarYear}).
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {mix.length > 0 && (
                     <div className="pt-2 border-t border-white/5">
                       <div className="text-slate-400 mb-1">Mix portfólia:</div>
@@ -1447,13 +1465,12 @@ export default function BasicLayout({
 
               <label className="block space-y-1">
                 <span className="text-xs font-medium text-slate-300">
-                  Telefónne číslo *
+                  Telefón (nepovinné – ak chcete, aby som vám zavolal)
                 </span>
                 <input
                   type="tel"
                   name="tel"
                   autoComplete="tel"
-                  required
                   value={formData.phone}
                   onChange={(e) => {
                     setFormData({ ...formData, phone: e.target.value });
@@ -1465,11 +1482,19 @@ export default function BasicLayout({
                     }
                   }}
                   onBlur={() => {
-                    if (formData.phone && !validatePhone(formData.phone)) {
+                    // TASK B: Telefón nepovinný - validuj len ak vyplnený
+                    if (
+                      formData.phone.trim() !== "" &&
+                      !validatePhone(formData.phone)
+                    ) {
                       setValidationErrors({
                         ...validationErrors,
                         phone: "Neplatný formát (napr. +421 900 123 456)",
                       });
+                    } else if (formData.phone.trim() === "") {
+                      // Vyčisti error ak používateľ vymazal telefón
+                      const { phone, ...rest } = validationErrors;
+                      setValidationErrors(rest);
                     }
                   }}
                   className="w-full bg-slate-800 rounded-lg px-3 py-2 text-sm ring-1 ring-white/5 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
@@ -1716,10 +1741,11 @@ export default function BasicLayout({
                   !formData.firstName ||
                   !formData.lastName ||
                   !formData.email ||
-                  !formData.phone ||
                   !formData.gdprConsent ||
                   !validateEmail(formData.email) ||
-                  !validatePhone(formData.phone)
+                  // TASK B: Telefón nepovinný - validuj len ak vyplnený
+                  (formData.phone.trim() !== "" &&
+                    !validatePhone(formData.phone))
                 }
                 className="flex-1 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
@@ -1728,7 +1754,11 @@ export default function BasicLayout({
                   if (!validateEmail(formData.email)) {
                     errors.email = "Neplatný formát emailu";
                   }
-                  if (!validatePhone(formData.phone)) {
+                  // TASK B: Telefón nepovinný - validuj len ak vyplnený
+                  if (
+                    formData.phone.trim() !== "" &&
+                    !validatePhone(formData.phone)
+                  ) {
                     errors.phone = "Neplatný formát (napr. +421 900 123 456)";
                   }
                   if (Object.keys(errors).length > 0) {

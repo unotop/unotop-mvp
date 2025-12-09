@@ -25,6 +25,9 @@ interface ProjectionPayload {
     yieldAnnual: number;
     mix: Array<{ key: string; pct: number }>;
     deeplink: string;
+    // Debt payoff info
+    debtPayoffYears?: number | null;
+    debtPayoffCalendarYear?: number | null;
   };
   bonuses?: string[]; // PR-13: Selected bonuses
   recipients: string[];
@@ -183,6 +186,22 @@ export default async function handler(
     <p style="margin-top: 15px;"><strong>Odhad výnosu p.a.:</strong> ${(payload.projection.yieldAnnual * 100).toFixed(1)}%</p>
   </div>
 
+  ${payload.projection.debtPayoffYears !== null && payload.projection.debtPayoffYears !== undefined ? `
+  <div class="section" style="background: linear-gradient(to right, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border-left: 3px solid #10b981;">
+    <h3>💡 Predčasné splatenie dlhov</h3>
+    ${payload.projection.debtPayoffYears === 0 ? `
+      <p style="font-size: 16px; color: #059669; font-weight: 600;">
+        ✅ Klient už teraz má dostatok aktív na splatenie dlhov.
+      </p>
+    ` : `
+      <p style="font-size: 16px; color: #059669; font-weight: 600;">
+        Dlhy môže predčasne vyplatiť o <strong>${payload.projection.debtPayoffYears.toFixed(1)} rokov</strong> 
+        (v roku <strong>${payload.projection.debtPayoffCalendarYear}</strong>).
+      </p>
+    `}
+  </div>
+  ` : ''}
+
   <div class="section">
     <h3>🎯 Zloženie portfólia</h3>
     ${payload.projection.mix.map(item => `
@@ -241,6 +260,15 @@ PROJEKCIA
 Hodnota po ${payload.projection.horizonYears} rokoch: ${payload.projection.futureValue.toFixed(0)} €
 Progres k cieľu: ${payload.projection.progressPercent}%
 Odhad výnosu p.a.: ${(payload.projection.yieldAnnual * 100).toFixed(1)}%
+
+${payload.projection.debtPayoffYears !== null && payload.projection.debtPayoffYears !== undefined ? `
+PREDČASNÉ SPLATENIE DLHOV
+--------------------------
+${payload.projection.debtPayoffYears === 0 
+  ? '✅ Klient už teraz má dostatok aktív na splatenie dlhov.'
+  : `Dlhy môže predčasne vyplatiť o ${payload.projection.debtPayoffYears.toFixed(1)} rokov (v roku ${payload.projection.debtPayoffCalendarYear}).`
+}
+` : ''}
 
 ZLOŽENIE PORTFÓLIA
 ------------------

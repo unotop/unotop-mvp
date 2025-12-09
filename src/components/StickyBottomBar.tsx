@@ -44,7 +44,7 @@ export const StickyBottomBar: React.FC<StickyBottomBarProps> = ({
   riskPref,
   onSubmitClick,
   hasDriftBlocking = false, // Default false
-  valuationMode = "real", // PR-27: Default to real (po inflácii)
+  valuationMode = "nominal", // PR-27: Default to nominal (primárny pohľad)
 }) => {
   const v3 = readV3();
   const debts = v3.debts || [];

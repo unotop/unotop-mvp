@@ -908,12 +908,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       disabled={!validationState?.cashflowComplete}
                       className="w-full px-3 py-2 rounded-lg bg-slate-800 text-sm font-semibold ring-1 ring-amber-500/30 focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
-                    {/* PR-4: Slider pre Cieľ majetku (5k - 1M, krok 500) */}
+                    {/* PR-4: Slider pre Cieľ majetku (5k - 10M, krok 500) */}
                     <div className="flex items-center gap-2">
                       <input
                         type="range"
                         min={5000}
-                        max={1000000}
+                        max={10000000}
                         step={500}
                         value={goalAssetsEur}
                         data-testid={TEST_IDS.GOAL_SLIDER}
@@ -932,7 +932,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                         }}
                         aria-label="Cieľ majetku slider"
                         aria-valuemin={5000}
-                        aria-valuemax={1000000}
+                        aria-valuemax={10000000}
                         aria-valuenow={goalAssetsEur}
                         aria-valuetext={`${goalAssetsEur.toLocaleString("sk-SK")} eur`}
                         className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"

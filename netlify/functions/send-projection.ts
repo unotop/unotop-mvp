@@ -301,7 +301,7 @@ export const handler: Handler = async (
     <h3 style="margin-top: 0; color: #059669;">👤 Kontaktné údaje</h3>
     <p><strong>Meno:</strong> ${data.user.firstName} ${data.user.lastName}</p>
     <p><strong>Email:</strong> <a href="mailto:${data.user.email}">${data.user.email}</a></p>
-    <p><strong>Telefón:</strong> <a href="tel:${data.user.phone}">${data.user.phone}</a></p>
+    <p><strong>Telefón:</strong> ${data.user.phone ? `<a href="tel:${data.user.phone}">${data.user.phone}</a>` : '<em style="color: #9ca3af;">neuvedeno</em>'}</p>
   </div>
 
   <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
@@ -314,6 +314,22 @@ export const handler: Handler = async (
     <p><strong>Progres k cieľu:</strong> ${data.projection.progressPercent}%</p>
     <p><strong>Výnos p.a.:</strong> ${(data.projection.yieldAnnual * 100).toFixed(1)}%</p>
   </div>
+
+  ${data.projection.debtPayoffYears !== null && data.projection.debtPayoffYears !== undefined ? `
+  <div style="background: linear-gradient(to right, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #059669;">💡 Predčasné splatenie dlhov</h3>
+    ${data.projection.debtPayoffYears === 0 ? `
+      <p style="font-size: 16px; color: #059669; font-weight: 600;">
+        ✅ Klient už teraz má dostatok aktív na splatenie dlhov.
+      </p>
+    ` : `
+      <p style="font-size: 16px; color: #059669; font-weight: 600;">
+        Dlhy môže predčasne vyplatiť o <strong>${data.projection.debtPayoffYears.toFixed(1)} rokov</strong> 
+        (v roku <strong>${data.projection.debtPayoffCalendarYear}</strong>).
+      </p>
+    `}
+  </div>
+  ` : ''}
 
   <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
     <h3 style="margin-top: 0; color: #059669;">🎯 Zloženie portfólia</h3>
@@ -404,6 +420,22 @@ Deeplink: ${data.projection.deeplink}
     <p><strong>Progres k cieľu:</strong> ${data.projection.progressPercent}%</p>
     <p><strong>Výnos p.a.:</strong> ${(data.projection.yieldAnnual * 100).toFixed(1)}%</p>
   </div>
+
+  ${data.projection.debtPayoffYears !== null && data.projection.debtPayoffYears !== undefined ? `
+  <div style="background: linear-gradient(to right, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1)); border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0;">
+    <h3 style="margin-top: 0; color: #059669;">💡 Predčasné splatenie dlhov</h3>
+    ${data.projection.debtPayoffYears === 0 ? `
+      <p style="font-size: 16px; color: #059669; font-weight: 600;">
+        ✅ Už teraz máte dostatok aktív na splatenie dlhov.
+      </p>
+    ` : `
+      <p style="font-size: 16px; color: #059669; font-weight: 600;">
+        Vaše dlhy budete môcť predčasne vyplatiť o <strong>${data.projection.debtPayoffYears.toFixed(1)} rokov</strong> 
+        (v roku <strong>${data.projection.debtPayoffCalendarYear}</strong>).
+      </p>
+    `}
+  </div>
+  ` : ''}
 
   <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
     <h3 style="margin-top: 0; color: #059669;">🎯 Zloženie portfólia</h3>

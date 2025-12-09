@@ -19,6 +19,7 @@ interface ShareModalWithProjectionProps {
   horizonYears: number;
   goalAssetsEur: number;
   riskPref: string;
+  valuationMode?: "real" | "nominal"; // PR-27: Match StickyBottomBar mode
 }
 
 export function ShareModalWithProjection({
@@ -28,6 +29,7 @@ export function ShareModalWithProjection({
   horizonYears,
   goalAssetsEur,
   riskPref,
+  valuationMode = "nominal", // PR-27: Default to nominal (match StickyBottomBar)
 }: ShareModalWithProjectionProps) {
   const v3Data = readV3();
   const mix: MixItem[] = (v3Data.mix as any) || [];
@@ -54,8 +56,11 @@ export function ShareModalWithProjection({
   const pct = Math.round(goalProgress);
 
   // PR-27: Apply inflation adjustment (match StickyBottomBar display)
-  const displayFV = toRealValue(fvFinal, horizonYears);
-  const displayYield = toRealYield(approxYield);
+  // SINGLE SOURCE OF TRUTH: Use same logic as StickyBottomBar
+  const displayFV =
+    valuationMode === "real" ? toRealValue(fvFinal, horizonYears) : fvFinal;
+  const displayYield =
+    valuationMode === "real" ? toRealYield(approxYield) : approxYield;
 
   // Helper pre formátovanie majetku (rovnaký ako StickyBottomBar)
   const formatWealth = (value: number): string => {
@@ -96,9 +101,9 @@ pridávam vám moju investičnú projekciu:
 - Cieľ majetku: ${goalAssetsEur.toFixed(0)} €
 
 💰 Projekcia:
-- Hodnota po ${horizonYears} rokoch: ${formatWealth(displayFV)} (reálna hodnota, po inflácii)
+- Hodnota po ${horizonYears} rokoch: ${formatWealth(displayFV)}${valuationMode === "real" ? " (reálna hodnota, po inflácii)" : ""}
 - Progres k cieľu: ${pct}%
-- Odhad výnosu p.a.: ${(displayYield * 100).toFixed(1)}% (reálny, po inflácii)
+- Odhad výnosu p.a.: ${(displayYield * 100).toFixed(1)}%${valuationMode === "real" ? " (reálny, po inflácii)" : ""}
 
 🔗 Interaktívna projekcia:
 ${deeplink}
@@ -131,9 +136,11 @@ S pozdravom`;
               <div className="font-bold text-emerald-400 tabular-nums">
                 {formatWealth(displayFV)}
               </div>
-              <div className="text-xs text-slate-500 mt-0.5">
-                reálna hodnota (po inflácii)
-              </div>
+              {valuationMode === "real" && (
+                <div className="text-xs text-slate-500 mt-0.5">
+                  reálna hodnota (po inflácii)
+                </div>
+              )}
             </div>
             <div>
               <span className="text-slate-400">Progres k cieľu:</span>
@@ -158,9 +165,11 @@ S pozdravom`;
               <div className="font-medium text-blue-400 tabular-nums">
                 {(displayYield * 100).toFixed(1)}%
               </div>
-              <div className="text-xs text-slate-500 mt-0.5">
-                reálny (po inflácii)
-              </div>
+              {valuationMode === "real" && (
+                <div className="text-xs text-slate-500 mt-0.5">
+                  reálny (po inflácii)
+                </div>
+              )}
             </div>
           </div>
 

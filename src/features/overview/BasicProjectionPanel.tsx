@@ -87,7 +87,7 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   riskPref,
   mode = "BASIC", // PR-4: Default to BASIC
   debts = [], // PR-26: Default to empty array
-  valuationMode = "real", // PR-27: Default to real (po inflácii)
+  valuationMode = "nominal", // PR-27: Default to nominal (primárny pohľad)
   onValuationModeChange, // PR-27: Callback for mode changes
 }) => {
   // PR-9 Task A: Validate riskPref PRED defaultMix
@@ -150,14 +150,10 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
   const displayYield =
     valuationMode === "real" ? toRealYield(approxYield) : approxYield;
 
-  // PR-27: Progress k cieľu - porovnávame v rovnakom "svete"
-  // Real mode: FV_real vs goal_real (goal je zadaný v dnešných cenách)
-  // Nominal mode: FV_nom vs goal_nom (prepočítame goal do budúcich cien)
-  const displayGoal =
-    valuationMode === "real"
-      ? goalAssetsEur
-      : toNominalGoal(goalAssetsEur, horizonYears);
-  const displayProgress = displayGoal > 0 ? (displayFV / displayGoal) * 100 : 0;
+  // Progress k cieľu - VŽDY používame nominal FV (absolútna suma na účte)
+  // Real mode zobrazuje len kúpnu silu, ale cieľ sa hodnotí podľa nominal
+  const nominalProgress = goalAssetsEur > 0 ? (fv / goalAssetsEur) * 100 : 0;
+  const displayProgress = nominalProgress; // Vždy rovnaký progress (nominal aj real)
 
   // Detect investment stage for adaptive caps
   const stage = detectStage(
@@ -343,9 +339,9 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                     displayProgress >= 100 ? "text-emerald-300" : ""
                   }`}
                 >
-                  {remaining > 0
-                    ? `${formatLargeNumber(remaining)} €`
-                    : "Splnené ✓"}
+                  {displayProgress >= 100
+                    ? "Splnené ✓"
+                    : `${formatLargeNumber(goalAssetsEur - displayFV)} €`}
                 </div>
                 <div
                   className={`text-xs ${
@@ -359,6 +355,11 @@ export const BasicProjectionPanel: React.FC<BasicProjectionPanelProps> = ({
                       ? "Cieľ splnený"
                       : `Prekročený o ${(displayProgress - 100).toFixed(0)}%`
                     : `Progres: ${displayProgress.toFixed(0)}%`}
+                  {valuationMode === "real" && displayProgress >= 100 && (
+                    <span className="block mt-0.5 text-[11px] text-emerald-400/60">
+                      (v dnešných cenách ako {formatLargeNumber(displayFV)} €)
+                    </span>
+                  )}
                 </div>
               </>
             ) : (
