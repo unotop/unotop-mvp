@@ -334,7 +334,19 @@ export function optimizeYield(
       break;
     }
     
-    // PR-34: Stop ak sme nad maxRiskForOptimizer (headroom +1.0 už využitý)
+    // PR-39 CRITICAL FIX: Stop ak už sme nad riskMax (bez headroom)
+    // Toto zabraňuje yield optimizer zvyšovať risk nad riskMax, čo spôsobuje validation fail.
+    // Scenario: enforceRiskCap dosiahne 4.12 (Conservative cap 4.0), yield optimizer by to
+    // zvýšil na 4.24 (v rámci headroom 4.5), ale validation kontroluje proti 4.0 → FAIL
+    if (currentRisk > riskMax) {
+      console.log(
+        `[YieldOptimizer] STOP: Risk už nad riskCap (${currentRisk.toFixed(2)} > ${riskMax.toFixed(1)}), ` +
+        `nedokážeme bezpečne zvýšiť yield bez prekročenia validation limitu`
+      );
+      break;
+    }
+    
+    // PR-34: Stop ak sme nad maxRiskForOptimizer (headroom +0.5 už využitý)
     if (currentRisk > maxRiskForOptimizer) {
       console.log(
         `[YieldOptimizer] STOP: Risk nad optimizer limitom (${currentRisk.toFixed(2)} > ${maxRiskForOptimizer.toFixed(1)})`
