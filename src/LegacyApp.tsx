@@ -410,41 +410,6 @@ export default function LegacyApp({
                           </button>
                         </div>
 
-                        {/* Typ dlhu */}
-                        <div className="mb-3">
-                          <label className="text-xs text-slate-400 block mb-1">
-                            Typ dlhu
-                          </label>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateDebt(d.id, { type: "mortgage" })
-                              }
-                              className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all ${
-                                d.type === "mortgage"
-                                  ? "bg-red-600/30 ring-2 ring-red-500/50 font-semibold"
-                                  : "bg-slate-900/80 ring-1 ring-white/5 hover:ring-white/10"
-                              }`}
-                            >
-                              🏠 Hypotéka
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateDebt(d.id, { type: "consumer" })
-                              }
-                              className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all ${
-                                d.type === "consumer"
-                                  ? "bg-red-600/30 ring-2 ring-red-500/50 font-semibold"
-                                  : "bg-slate-900/80 ring-1 ring-white/5 hover:ring-white/10"
-                              }`}
-                            >
-                              💳 Spotrebný
-                            </button>
-                          </div>
-                        </div>
-
                         {/* Grid: Key metrics */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                           <div className="space-y-1">
@@ -576,12 +541,6 @@ export default function LegacyApp({
                           scope="col"
                           className="px-2 py-2 font-medium text-slate-400"
                         >
-                          Typ
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-2 py-2 font-medium text-slate-400"
-                        >
                           Zostatok
                         </th>
                         <th
@@ -634,25 +593,6 @@ export default function LegacyApp({
                               className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
                               placeholder="Názov"
                             />
-                          </td>
-                          <td className="px-2 py-2">
-                            <select
-                              aria-label={`Typ dlhu ${idx + 1}`}
-                              value={d.type || ""}
-                              onChange={(e) =>
-                                updateDebt(d.id, {
-                                  type: e.currentTarget.value as
-                                    | "mortgage"
-                                    | "consumer"
-                                    | undefined,
-                                })
-                              }
-                              className="w-full bg-slate-800 rounded px-2 py-1 text-sm"
-                            >
-                              <option value="">-</option>
-                              <option value="mortgage">🏠 Hypotéka</option>
-                              <option value="consumer">💳 Spotrebný</option>
-                            </select>
                           </td>
                           <td className="px-2 py-2">
                             <input
