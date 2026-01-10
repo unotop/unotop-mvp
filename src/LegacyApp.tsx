@@ -97,20 +97,24 @@ export default function LegacyApp({
 
   // Sync invest params from persist (100ms polling)
   React.useEffect(() => {
-    let mounted = true;
+    const mountedRef = { current: true };
     const interval = setInterval(() => {
-      if (!mounted) return; // Prevent setState after unmount
-      const v3 = readV3();
-      setInvestParams({
-        lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
-        monthlyVklad: (v3 as any).monthly || 0,
-        horizonYears: (v3.profile?.horizonYears as any) || 10,
-        goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
-      });
+      if (!mountedRef.current) return; // Prevent setState after unmount
+      try {
+        const v3 = readV3();
+        setInvestParams({
+          lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
+          monthlyVklad: (v3 as any).monthly || 0,
+          horizonYears: (v3.profile?.horizonYears as any) || 10,
+          goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
+        });
+      } catch {
+        // Ignore errors during cleanup
+      }
     }, 100);
     return () => {
       clearInterval(interval);
-      mounted = false;
+      mountedRef.current = false;
     };
   }, []);
 

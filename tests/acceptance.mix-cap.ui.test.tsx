@@ -18,7 +18,9 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     render(<App />);
 
     // Prepnúť na PRO režim (BASIC nemá spinbuttony)
-    const proButton = screen.getByRole("button", { name: "Prepnúť na PRO režim (toolbar)" });
+    const proButton = screen.getByRole("button", {
+      name: "Prepnúť na PRO režim (toolbar)",
+    });
     await user.click(proButton);
 
     // Vytvor drift: upravíme dva assets aby sme garantovali sum != 100
@@ -66,7 +68,9 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     const user = userEvent.setup();
     render(<App />);
     // Prepni do PRO režimu (PRO-only tlačidlo)
-    const proBtn = screen.getByRole("button", { name: "Prepnúť na PRO režim (toolbar)" });
+    const proBtn = screen.getByRole("button", {
+      name: "Prepnúť na PRO režim (toolbar)",
+    });
     await user.click(proBtn);
     const recommendBtn = await screen.findByRole("button", {
       name: /Aplikovať odporúčaný mix portfólia/i,

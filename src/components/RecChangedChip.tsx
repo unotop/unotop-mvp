@@ -7,18 +7,22 @@ export function RecChangedChip() {
   const [showChip, setShowChip] = React.useState(false);
 
   React.useEffect(() => {
-    let mounted = true;
+    const mountedRef = { current: true };
     const check = () => {
-      if (!mounted) return; // Prevent setState after unmount
-      const v3 = readV3();
-      const selected = v3.profile?.selected as RiskPref | undefined;
-      const current = v3.profile?.riskPref as RiskPref | undefined;
+      if (!mountedRef.current) return; // Prevent setState after unmount
+      try {
+        const v3 = readV3();
+        const selected = v3.profile?.selected as RiskPref | undefined;
+        const current = v3.profile?.riskPref as RiskPref | undefined;
 
-      // Show chip if selected exists but differs from current (user changed inputs → preset recalculated)
-      if (selected && current && selected !== current) {
-        setShowChip(true);
-      } else {
-        setShowChip(false);
+        // Show chip if selected exists but differs from current (user changed inputs → preset recalculated)
+        if (selected && current && selected !== current) {
+          setShowChip(true);
+        } else {
+          setShowChip(false);
+        }
+      } catch {
+        // Ignore errors during cleanup
       }
     };
 
@@ -28,7 +32,7 @@ export function RecChangedChip() {
     const interval = setInterval(check, 200);
     return () => {
       clearInterval(interval);
-      mounted = false;
+      mountedRef.current = false;
     };
   }, []);
 

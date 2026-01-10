@@ -72,19 +72,23 @@ export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
   const [showLowDepositInfo, setShowLowDepositInfo] = React.useState(false);
 
   React.useEffect(() => {
-    let mounted = true;
+    const mountedRef = { current: true };
     const updateLowDepositInfo = () => {
-      if (!mounted) return; // Prevent setState after unmount
-      const v3 = readV3();
-      const lumpSumEur = v3.profile?.lumpSumEur || 0;
-      setShowLowDepositInfo(lumpSumEur < 2500);
+      if (!mountedRef.current) return; // Prevent setState after unmount
+      try {
+        const v3 = readV3();
+        const lumpSumEur = v3.profile?.lumpSumEur || 0;
+        setShowLowDepositInfo(lumpSumEur < 2500);
+      } catch {
+        // Ignore errors during cleanup
+      }
     };
 
     // Initial check
     updateLowDepositInfo();
 
     // Listen to storage events for cross-component updates (only in browser)
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.addEventListener("storage", updateLowDepositInfo);
     }
 
@@ -93,10 +97,10 @@ export default function PortfolioSelector({ mix }: PortfolioSelectorProps) {
 
     return () => {
       clearInterval(interval);
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.removeEventListener("storage", updateLowDepositInfo);
       }
-      mounted = false;
+      mountedRef.current = false;
     };
   }, []); // Run once on mount, cleanup on unmount
 
