@@ -170,6 +170,10 @@ function validateV3Data(data: V3): V3 {
 }
 
 export function readV3(): V3 {
+  // Guard: localStorage may not exist in Node.js test environment
+  if (typeof localStorage === 'undefined') {
+    return {};
+  }
   try {
     const raw = safeParse<V3>(localStorage.getItem(KEY_V3_COLON))
              ?? safeParse<V3>(localStorage.getItem(KEY_V3_UNDERSCORE))
@@ -184,6 +188,10 @@ export function readV3(): V3 {
 }
 
 export function writeV3(patch: Partial<V3>): V3 {
+  // Guard: localStorage may not exist in Node.js test environment
+  if (typeof localStorage === 'undefined') {
+    return patch as V3;
+  }
   try {
     const cur = readV3();
     const next: V3 = { ...cur, ...patch };
