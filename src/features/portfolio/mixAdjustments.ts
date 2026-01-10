@@ -785,13 +785,19 @@ function downTuneRisk(
 
   // PR-27b: Cash cap as hard constraint
   const cashCap = getCashCap(riskPref);
+  
+  // PR-39 FIX: Profile-specific gold cap (inak loop keď gold+cash sú na capi)
+  const goldPolicy = getGoldPolicy(riskPref);
+  const goldCap = goldPolicy.hardCap; // C=40%, B=20%, G=15%
 
   // Poradie zdrojov (rizikovejšie)
   const sources: Array<MixItem["key"]> = ["etf", "real", "gold"];
+  // PR-39 FIX: Pridané bonds ako fallback sink (ak gold+cash sú full)
   // Poradie cieľov (miernejšie) + ratio
   const targets: Array<[MixItem["key"], number]> = [
-    ["gold", 0.6],
-    ["cash", 0.4],
+    ["gold", 0.4],    // PR-39: Znížené z 0.6 → 0.4
+    ["cash", 0.3],    // PR-39: Znížené z 0.4 → 0.3
+    ["bonds", 0.3],   // PR-39: Nový fallback sink
   ];
 
   // Helper: získaj pct aktíva
@@ -809,7 +815,10 @@ function downTuneRisk(
   // Helper: získaj voľný priestor v cap
   const getRoomForAsset = (key: MixItem["key"]): number => {
     const currentPct = getPct(key);
-    const capLimit = stageCaps[key] ?? 100;
+    // PR-39 FIX: Gold používa profile-specific hardCap, nie stageCaps[gold]=40%
+    const capLimit = key === "gold" 
+      ? goldCap 
+      : (stageCaps[key] ?? 100);
     return Math.max(0, capLimit - currentPct);
   };
 
