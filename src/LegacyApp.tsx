@@ -91,11 +91,9 @@ export default function LegacyApp({
   // Event-based sync: listen to mix changes from other components (replaces 500ms polling)
   React.useEffect(() => {
     return createMixListener((newMix) => {
-      if (JSON.stringify(newMix) !== JSON.stringify(mix)) {
-        setMix(newMix);
-      }
+      setMix(newMix);
     });
-  }, [mix]);
+  }, []);
 
   // Sync invest params from persist (100ms polling)
   React.useEffect(() => {
