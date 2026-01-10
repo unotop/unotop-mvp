@@ -452,7 +452,7 @@ export default function LegacyApp({
                               Splátka/mes.
                             </label>
                             <input
-                              aria-label={`Splátka dlhu ${idx + 1}`}
+                              aria-label={`Mesačná splátka dlhu ${idx + 1}`}
                               type="number"
                               value={monthlyPayment}
                               onChange={(e) =>
@@ -469,7 +469,7 @@ export default function LegacyApp({
                               Zostáva (roky)
                             </label>
                             <input
-                              aria-label={`Zostáva rokov dlhu ${idx + 1}`}
+                              aria-label={`Zostáva (mesiace) dlhu ${idx + 1}`}
                               type="number"
                               min="0"
                               max="50"
@@ -625,7 +625,7 @@ export default function LegacyApp({
                           </td>
                           <td className="px-2 py-2">
                             <input
-                              aria-label={`Splátka dlhu ${idx + 1}`}
+                              aria-label={`Mesačná splátka dlhu ${idx + 1}`}
                               type="number"
                               value={d.payment ?? d.monthly ?? 0}
                               onChange={(e) =>
@@ -639,7 +639,7 @@ export default function LegacyApp({
                           </td>
                           <td className="px-2 py-2">
                             <input
-                              aria-label={`Zostáva rokov dlhu ${idx + 1}`}
+                              aria-label={`Zostáva (mesiace) dlhu ${idx + 1}`}
                               type="number"
                               min="0"
                               max="50"
