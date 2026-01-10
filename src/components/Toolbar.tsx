@@ -141,8 +141,8 @@ export default function Toolbar({
               }
             }}
             className="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0 group"
-            aria-label="Zobraziť návod"
-            title="Zobraziť návod na použitie"
+            aria-label="Zobraziť intro"
+            title="Zobraziť úvodné info"
           >
             <svg
               className="w-4 h-4 transition-transform group-hover:scale-110"
@@ -158,7 +158,7 @@ export default function Toolbar({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="hidden sm:inline">Návod</span>
+            <span className="hidden sm:inline">Intro</span>
           </button>
 
           {/* Onboarding Tour Button */}
@@ -167,8 +167,8 @@ export default function Toolbar({
               type="button"
               onClick={onTourRestart}
               className="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0 group"
-              aria-label="Spustiť sprievodcu – krátky návod, ako funguje plánovač"
-              title="Spustiť sprievodcu – krátky návod, ako funguje plánovač"
+              aria-label="Spustiť návod – krátky sprievodca, ako funguje plánovač"
+              title="Spustiť návod – krátky sprievodca, ako funguje plánovač"
             >
               <svg
                 className="w-4 h-4 transition-transform group-hover:scale-110"
@@ -196,7 +196,7 @@ export default function Toolbar({
                   d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
                 />
               </svg>
-              <span className="hidden sm:inline">Sprievodca</span>
+              <span className="hidden sm:inline">Návod</span>
             </button>
           )}
 

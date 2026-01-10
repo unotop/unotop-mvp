@@ -1,12 +1,12 @@
 /**
  * PR-39: Regression test - Conservative 0/300/22 preset validation failure
- * 
+ *
  * Issue: Pri nastavení lump=0, monthly=300, horizon=22 sa nedal vybrať konzervatívny profil.
- * Root cause: 
+ * Root cause:
  * 1. enforceRiskCap nemohol dostať risk pod 4.0 (Conservative cap) → ostal na 4.12
  * 2. yield optimizer potom zvýšil risk na 4.24 (v rámci headroom 4.5)
  * 3. Validation kontrolovala proti riskMax=4.0 → FAIL
- * 
+ *
  * Fix: Yield optimizer teraz kontroluje `currentRisk > riskMax` (bez headroom) pred aplikáciou moves.
  * Ak je risk už nad cap, optimizer sa zastaví a nič nezvyšuje.
  */
