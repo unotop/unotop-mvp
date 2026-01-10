@@ -83,11 +83,11 @@ export const ASSET_STYLES: Record<AssetKey, AssetStyle> = {
   },
   bond3y9: {
     key: "bond3y9",
-    label: "Dlhopis 9% p.a. (3r, mesačný CF)",
+    label: "Dlhopis 13% p.a. (3r, mesačný CF)",
     color: "teal",
     bgGradient: "from-teal-500/20 to-cyan-600/10",
     ringColor: "ring-teal-500/40 hover:ring-teal-500/60",
-    icon: "�",
+    icon: "💰",
     hoverShadow: "hover:shadow-teal-500/30",
   },
 };

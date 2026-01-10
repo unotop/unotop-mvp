@@ -6,9 +6,9 @@
  * 
  * Logika:
  * - Ak riskScore < riskMax - 0.5, máme priestor na zvýšenie výnosu
- * - Presúvame z low-yield → high-yield aktív (bonds → bond9, gold → ETF, cash → bonds)
+ * - Presúvame z low-yield → high-yield aktív (bonds → bond13, gold → ETF, cash → bonds)
  * - Iteratívne (max 3 kroky), stop ak riskScore >= riskMax - 0.2
- * - PR-31 FIX: Validuje profile asset caps (bond9 max 25% pre Conservative atď.)
+ * - PR-31 FIX: Validuje profile asset caps (bond13 max 25% pre Conservative atď.)
  * - PR-34 CRITICAL: Cap checks PRED move (gold ≤ GOLD_POLICY, ETF ≤ 50%, dyn/crypto ≤ caps)
  * - PR-34 CRITICAL: Risk headroom +1.0 (maxRiskForOptimizer = min(riskCap + 1.0, 9.0))
  * - PR-34 CRITICAL: Safety pass PO moves (clamp overflows → IAD/bonds/real)
@@ -42,9 +42,9 @@ const YIELD_MOVES: Array<{
   description: string;
 }> = [
   // High-impact moves (veľký nárast yield)
-  { from: "cash", to: "bond3y9", amount: 2, description: "IAD DK → Bond 9%" },
-  { from: "gold", to: "bond3y9", amount: 2, description: "Zlato → Bond 9%" },
-  { from: "bonds", to: "bond3y9", amount: 2, description: "Bond 7.5% → Bond 9%" },
+  { from: "cash", to: "bond3y9", amount: 2, description: "IAD DK → Bond 13%" },
+  { from: "gold", to: "bond3y9", amount: 2, description: "Zlato → Bond 13%" },
+  { from: "bonds", to: "bond3y9", amount: 2, description: "Bond 7.5% → Bond 13%" },
   
   // Medium-impact moves (stredný nárast yield)
   { from: "cash", to: "bonds", amount: 2, description: "IAD DK → Bond 7.5%" },
@@ -74,11 +74,17 @@ export interface YieldOptimizerResult {
  * 
  * UPDATE: Growth zvýšený na 2.0% (z 1.5%), aby mal dosť priestoru aj
  * keď starting risk je tesne pod/nad riskMax po enforceRiskCap.
+ * 
+ * PR-36 HOTFIX: Caps zvýšené o 80-100% po bond13 update (9% → 13%)
+ * DÔVOD: bond13 má vyšší yield → moves dosahujú cap príliš skoro → optimizer
+ * sa zastaví predčasne → bond13 nedostane plné % (regression).
+ * TEMPORARY: Toto je workaround. Proper fix = odstránenie MAX_BOOST caps
+ * a použitie iba risk budgetu ako prirodzeného limitera (TODO Phase 2).
  */
 const MAX_BOOST_BY_PROFILE = {
-  konzervativny: 0.008, // max +0.8% boost
-  vyvazeny: 0.012,      // max +1.2% boost
-  rastovy: 0.020,       // max +2.0% boost (zvýšené z 1.5%)
+  konzervativny: 0.015, // max +1.5% boost (↑ z 0.8%, PR-36 hotfix)
+  vyvazeny: 0.020,      // max +2.0% boost (↑ z 1.2%, PR-36 hotfix)
+  rastovy: 0.030,       // max +3.0% boost (↑ z 2.0%, PR-36 hotfix)
 };
 
 /**

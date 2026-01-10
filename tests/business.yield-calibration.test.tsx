@@ -137,7 +137,7 @@ describe("Business: Yield Calibration (PR-36)", () => {
 
     // Reálne očakávania (ultrakonzervatívny profil)
     expect(yield_pa).toBeGreaterThanOrEqual(0.07); // Min 7%
-    expect(yield_pa).toBeLessThanOrEqual(0.09); // Max 9%
+    expect(yield_pa).toBeLessThanOrEqual(0.13); // Max 13% (bond3y9 je najvyšší safe asset)
     expect(risk).toBeLessThanOrEqual(6.0);
   });
 

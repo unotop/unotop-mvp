@@ -9,7 +9,7 @@
  * - ETF: >= 0 € (vždy dostupné)
  * - Dynamické riadenie: >= 1 000 €
  * - Dlhopis 7,5%: >= 2 500 €
- * - Dlhopis 9%: >= 10 000 €
+ * - Dlhopis 13%: >= 10 000 €
  * - Krypto: >= 0 € (vždy dostupné)
  * - Reality: >= 50 000 €
  * - Cash: >= 0 € (vždy dostupné)
@@ -32,7 +32,7 @@ export const ASSET_MINIMA: Record<string, number> = {
   etf: 0,        // Vždy dostupné
   dyn: 1_000,    // Dynamické riadenie
   bonds: 2_500,  // Dlhopis 7,5%
-  bond3y9: 10_000, // Dlhopis 9%
+  bond3y9: 10_000, // Dlhopis 13%
   crypto: 0,     // Vždy dostupné
   real: 50_000,  // Reality
   cash: 0,       // Vždy dostupné
