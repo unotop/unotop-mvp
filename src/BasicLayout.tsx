@@ -1037,15 +1037,17 @@ export default function BasicLayout({
 
   const left = (
     <div className="min-w-0 space-y-4" data-testid="left-col">
-      <BasicSettingsPanel
-        open={open0}
-        onToggle={() => setOpen0((v) => !v)}
-        mix={mix}
-        riskPref={
-          seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
-        }
-        validationState={validationState}
-      />
+      <div id="sec0" className="space-y-4">
+        <BasicSettingsPanel
+          open={open0}
+          onToggle={() => setOpen0((v) => !v)}
+          mix={mix}
+          riskPref={
+            seed.profile?.riskPref || (seed as any).riskPref || "vyvazeny"
+          }
+          validationState={validationState}
+        />
+      </div>
 
       {/* PR-28 Phase B: Investment Power Box */}
       <InvestmentPowerBox
@@ -1080,6 +1082,26 @@ export default function BasicLayout({
         }`}
       >
         <span id="portfolio-title" className="flex items-center gap-2">
+          <svg
+            className="w-5 h-5 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+            />
+          </svg>
           Zloženie portfólia
           {!validationState.investmentComplete && (
             <span className="text-xs text-amber-400 font-normal">
@@ -1244,6 +1266,7 @@ export default function BasicLayout({
         onTourRestart={restartTour}
         onContactClick={onAboutClick} // PR-14: Kontakt button
         onAdminOpen={onAdminOpen} // PR-16: DEV admin button
+        onInfoClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
         onShare={() => {
           // REVERTING: ShareModal je správny formulár (meno, priezvisko, email, telefón)
           if (validationState.canShare && !hasDriftBlocking) {
@@ -1256,6 +1279,18 @@ export default function BasicLayout({
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         mode="BASIC"
+        modeUi={modeUi}
+        onModeToggle={handleModeToggle}
+        onReset={handleReset}
+        onTourRestart={restartTour}
+        onContactClick={onAboutClick}
+        onInfoClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
+        onShare={() => {
+          if (validationState.canShare && !hasDriftBlocking) {
+            setShareOpen(true);
+          }
+        }}
+        canShare={validationState.canShare && !hasDriftBlocking}
       />
       <PageLayout left={left} right={right} />
 
@@ -1375,7 +1410,7 @@ export default function BasicLayout({
                               dyn: "📊 Dyn. riadenie",
                               etf: "🌍 ETF svet",
                               bonds: "📜 Dlhopis 7,5% (5r)",
-                              bond3y9: "💰 Dlhopis 9% (3r)",
+                              bond3y9: "💰 Dlhopis 13% (3r)",
                               cash: "💵 Pracujúca rezerva – IAD DK",
                               crypto: "₿ Krypto",
                               real: "🏘️ Reality",
@@ -1410,8 +1445,8 @@ export default function BasicLayout({
                             <div className="flex items-start gap-1">
                               <span className="shrink-0">💰</span>
                               <span>
-                                Dlhopis 9%: mesačné výplaty po dobu 36 mesiacov,
-                                lepšia likvidita
+                                Dlhopis 13%: mesačné výplaty po dobu 36
+                                mesiacov, lepšia likvidita
                               </span>
                             </div>
                           </div>

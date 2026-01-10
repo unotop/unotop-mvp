@@ -1309,6 +1309,7 @@ export default function LegacyApp({
         onModeToggle={handleModeToggle}
         onReset={handleReset}
         onContactClick={onAboutClick} // PR-14: Kontakt button
+        onInfoClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
       />
 
       {/* Sidebar Navigation (overlay) */}
@@ -1316,6 +1317,11 @@ export default function LegacyApp({
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         mode="PRO"
+        modeUi={modeUi}
+        onModeToggle={handleModeToggle}
+        onReset={handleReset}
+        onContactClick={onAboutClick}
+        onInfoClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
       />
 
       {/* PRO Beta Warning Banner */}

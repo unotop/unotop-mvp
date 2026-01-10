@@ -39,7 +39,7 @@ const ASSETS: AssetDef[] = [
   { key: "dyn", label: "Dynamické riadenie" },
   { key: "etf", label: "ETF (svet – aktívne)" },
   { key: "bonds", label: "Garantovaný dlhopis 7,5% p.a. (5r)" },
-  { key: "bond3y9", label: "Dlhopis 9% p.a. (3r, mesačný CF)" },
+  { key: "bond3y9", label: "Dlhopis 13% p.a. (3r, mesačný CF)" },
   { key: "cash", label: "Pracujúca rezerva – IAD DK" },
   { key: "crypto", label: "Krypto (BTC/ETH)" },
   { key: "real", label: "Reality (komerčné)" },
@@ -427,7 +427,30 @@ export const MixPanel: React.FC<{
       className="rounded-2xl ring-1 ring-white/10 bg-slate-900/60 p-4"
       aria-labelledby="mix-panel-title"
     >
-      <header id="mix-panel-title" className="mb-3 font-semibold">
+      <header
+        id="mix-panel-title"
+        className="mb-3 font-semibold flex items-center gap-2"
+      >
+        <svg
+          className="w-5 h-5 text-blue-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+          />
+        </svg>
         Zloženie portfólia
       </header>
 
@@ -552,7 +575,7 @@ export const MixPanel: React.FC<{
           controller={realCtl}
           onCommit={(pct) => commitAsset("real", pct)}
         />
-        {/* Dlhopis 3r/9% (PRO only) */}
+        {/* Dlhopis 3r/13% (PRO only) */}
         {mode === "PRO" && (
           <AssetSlider
             assetKey="bond3y9"

@@ -11,6 +11,7 @@ interface ToolbarProps {
   onTourRestart?: () => void;
   onContactClick?: () => void; // PR-14: Kontakt button
   onAdminOpen?: () => void; // PR-16: DEV fallback admin button
+  onInfoClick?: () => void; // Welcome modal trigger
 }
 
 export default function Toolbar({
@@ -23,6 +24,7 @@ export default function Toolbar({
   onTourRestart,
   onContactClick, // PR-14
   onAdminOpen, // PR-16
+  onInfoClick,
 }: ToolbarProps) {
   const [showResetConfirm, setShowResetConfirm] = React.useState(false);
 
@@ -79,7 +81,7 @@ export default function Toolbar({
               className="h-7 sm:h-8 w-auto flex-shrink-0"
             />
             <div className="flex flex-col min-w-0">
-              <span className="text-base sm:text-lg font-bold tracking-tight text-slate-100 truncate">
+              <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-100 truncate">
                 UNOTOP – majetkový plánovač
               </span>
               <span className="text-[9px] sm:text-[10px] text-slate-400 -mt-0.5 sm:-mt-1 hidden xs:block">
@@ -131,13 +133,19 @@ export default function Toolbar({
           {/* Info Button - Opens Welcome Modal */}
           <button
             type="button"
-            onClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
-            className="p-1.5 sm:p-2 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all flex-shrink-0"
+            onClick={() => {
+              if (onInfoClick) {
+                onInfoClick();
+              } else {
+                window.dispatchEvent(new Event("openWelcomeModal"));
+              }
+            }}
+            className="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0 group"
             aria-label="Zobraziť návod"
             title="Zobraziť návod na použitie"
           >
             <svg
-              className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+              className="w-4 h-4 transition-transform group-hover:scale-110"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -150,6 +158,7 @@ export default function Toolbar({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
+            <span className="hidden sm:inline">Návod</span>
           </button>
 
           {/* Onboarding Tour Button */}
@@ -157,13 +166,36 @@ export default function Toolbar({
             <button
               type="button"
               onClick={onTourRestart}
-              className="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0"
+              className="px-2 sm:px-3 py-1.5 rounded-lg bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 hover:text-blue-300 ring-1 ring-blue-500/30 hover:ring-blue-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0 group"
               aria-label="Spustiť sprievodcu – krátky návod, ako funguje plánovač"
               title="Spustiť sprievodcu – krátky návod, ako funguje plánovač"
             >
-              <span className="text-xs sm:text-sm" aria-hidden="true">
-                🎓
-              </span>
+              <svg
+                className="w-4 h-4 transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 14l9-5-9-5-9 5 9 5z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                />
+              </svg>
               <span className="hidden sm:inline">Sprievodca</span>
             </button>
           )}
@@ -173,39 +205,25 @@ export default function Toolbar({
             <button
               type="button"
               onClick={onContactClick}
-              className="px-2 sm:px-3 py-1.5 rounded-lg bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 hover:text-purple-300 ring-1 ring-purple-500/30 hover:ring-purple-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0"
+              className="px-2 sm:px-3 py-1.5 rounded-lg bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 hover:text-purple-300 ring-1 ring-purple-500/30 hover:ring-purple-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 flex-shrink-0 group"
               aria-label="Kontakt s autorom"
-              title="Zobraziť informácie o autorovi"
+              title="Zobrazi\u0165 inform\u00e1cie o autorovi"
             >
-              <span className="text-xs sm:text-sm" aria-hidden="true">
-                👤
-              </span>
+              <svg
+                className="w-4 h-4 transition-transform group-hover:scale-110"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
               <span className="hidden sm:inline">Kontakt</span>
-            </button>
-          )}
-
-          {/* Share Button (Odoslať projekciu) */}
-          {onShare && (
-            <button
-              type="button"
-              disabled={!canShare}
-              onClick={onShare}
-              className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-all flex-shrink-0 ${
-                canShare
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
-                  : "bg-slate-700 text-slate-400 opacity-60 cursor-not-allowed"
-              }`}
-              aria-label="Odoslať projekciu agentovi"
-              title={
-                canShare
-                  ? "Odoslať projekciu agentovi"
-                  : "Dokončite všetky kroky pred odoslaním"
-              }
-            >
-              <span className="text-xs sm:text-sm" aria-hidden="true">
-                📨
-              </span>
-              <span className="hidden sm:inline">Odoslať</span>
             </button>
           )}
 
@@ -215,12 +233,12 @@ export default function Toolbar({
               <button
                 type="button"
                 onClick={() => setShowResetConfirm(true)}
-                className="px-2 sm:px-2.5 py-1.5 rounded-lg bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 ring-1 ring-red-500/30 hover:ring-red-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5"
+                className="px-2 sm:px-3 py-1.5 rounded-lg bg-red-900/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 ring-1 ring-red-500/30 hover:ring-red-500/50 transition-all text-xs font-medium flex items-center gap-1 sm:gap-1.5 group"
                 aria-label="Resetovať nastavenie"
                 title="Vymazať všetky uložené nastavenia"
               >
                 <svg
-                  className="w-3 h-3 sm:w-3.5 sm:h-3.5"
+                  className="w-4 h-4 transition-transform group-hover:rotate-180"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -270,6 +288,42 @@ export default function Toolbar({
                 </div>
               )}
             </div>
+          )}
+
+          {/* Share Button (Odoslať projekciu) */}
+          {onShare && (
+            <button
+              type="button"
+              disabled={!canShare}
+              onClick={onShare}
+              className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 sm:gap-1.5 transition-all flex-shrink-0 group ${
+                canShare
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                  : "bg-slate-700 text-slate-400 opacity-60 cursor-not-allowed"
+              }`}
+              aria-label="Odoslať projekciu agentovi"
+              title={
+                canShare
+                  ? "Odoslať projekciu agentovi"
+                  : "Dokončite všetky kroky pred odoslaním"
+              }
+            >
+              <svg
+                className="w-4 h-4 transition-transform group-hover:scale-110 group-hover:translate-x-0.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                />
+              </svg>
+              <span className="hidden sm:inline">Odoslať</span>
+            </button>
           )}
 
           {/* BASIC/PRO Toggle */}
