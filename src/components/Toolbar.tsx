@@ -350,8 +350,9 @@ export default function Toolbar({
                   : "text-slate-400 hover:text-slate-200"
               }`}
               aria-pressed={modeUi === "PRO"}
-              aria-label="Prepnúť na PRO režim"
+              aria-label="Prepnúť na PRO režim (toolbar)"
               title="PRO režim je v aktívnom vývoji"
+              data-testid="mode-toggle-toolbar"
             >
               PRO
             </button>

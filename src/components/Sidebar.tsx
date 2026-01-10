@@ -471,6 +471,7 @@ export default function Sidebar({
                   }`}
                   aria-pressed={modeUi === "BASIC"}
                   aria-label="Prepnúť na BASIC režim"
+                  data-testid="mode-toggle-sidebar-basic"
                 >
                   BASIC
                 </button>
@@ -488,7 +489,8 @@ export default function Sidebar({
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                   aria-pressed={modeUi === "PRO"}
-                  aria-label="Prepnúť na PRO režim"
+                  aria-label="Prepnúť na PRO režim (sidebar menu)"
+                  data-testid="mode-toggle-sidebar-pro"
                 >
                   PRO
                 </button>
