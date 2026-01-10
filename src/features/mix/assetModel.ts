@@ -11,7 +11,7 @@
  * - ETF: 9% → 11% (baseline svet – aktívne)
  * - dyn: 24% → 36% (dynamické riadenie – hlavný driver rastu)
  * - crypto: 15% → 20% (kryptomeny – volatilné, ale vysoký yield)
- * - bond9: 9% → 9.5% (mierne zvýšenie garantovaných)
+ * - bond9: 9% → 13% (mierne zvýšenie garantovaných)
  * - Cieľ: Balanced 2600/300/30 → 15-16%, Growth 98100/600/23 → 18-19%
  */
 
@@ -55,12 +55,12 @@ export const ASSET_PARAMS: Record<
     label: "Dlhopis 7,5%",
   },
   bond3y9: {
-    expectedReturnPa: 0.09,   // 9% p.a. (PR-36: garantovaný dlhopis 3r)
+    expectedReturnPa: 0.13,   // 13% p.a. (PR-36: garantovaný dlhopis 3r)
     riskScore: 3,
-    label: "Dlhopis 9%",
+    label: "Dlhopis 13%",
   },
   etf: {
-    expectedReturnPa: 0.12,   // 12% p.a. (↑ z 11% – PR-36: ETF World aktívne spravované)
+    expectedReturnPa: 0.15,   // 15% p.a. (↑ z 12% – PR-36 FIX: ETF World aktívne riadenie 15-20%)
     riskScore: 6,
     label: "ETF svet – aktívne",
   },
@@ -87,12 +87,12 @@ export const ASSET_PARAMS: Record<
  * Kept temporarily for backward compatibility during transition.
  */
 export const ASSET_YIELDS: Record<AssetKey, { konzervativny: number; vyvazeny: number; rastovy: number }> = {
-  etf: { konzervativny: 0.12, vyvazeny: 0.12, rastovy: 0.12 },      // ↑ z 11% – PR-36
+  etf: { konzervativny: 0.15, vyvazeny: 0.15, rastovy: 0.15 },      // ↑ z 12% – PR-36 FIX
   gold: { konzervativny: 0.07, vyvazeny: 0.07, rastovy: 0.07 },     // ↑ z 5% – PR-36
   crypto: { konzervativny: 0.35, vyvazeny: 0.35, rastovy: 0.35 },   // ↑ z 20% – PR-36
   dyn: { konzervativny: 0.60, vyvazeny: 0.60, rastovy: 0.60 },      // ↑ z 45% – PR-36
   bonds: { konzervativny: 0.075, vyvazeny: 0.075, rastovy: 0.075 },
-  bond3y9: { konzervativny: 0.09, vyvazeny: 0.09, rastovy: 0.09 },  // PR-36: 9%
+  bond3y9: { konzervativny: 0.13, vyvazeny: 0.13, rastovy: 0.13 },  // PR-36: 13%
   cash: { konzervativny: 0.03, vyvazeny: 0.03, rastovy: 0.03 },     // ↑ z 2% – PR-36
   real: { konzervativny: 0.10, vyvazeny: 0.10, rastovy: 0.10 },     // PR-36: 10%
 };
@@ -151,7 +151,7 @@ export function getPlanStrengthMultiplier(strength: PlanStrength): number {
  * 
  * @param key - Asset key (gold, etf, crypto, ...)
  * @param _riskPref - DEPRECATED (kept for backward compatibility, not used)
- * @returns Očakávaný nominálny výnos p.a. (decimal, 0.09 = 9%)
+ * @returns Očakávaný nominálny výnos p.a. (decimal, 0.13 = 13%)
  */
 export function getAssetYield(key: AssetKey, _riskPref?: RiskPref): number {
   return ASSET_PARAMS[key]?.expectedReturnPa ?? 0.04; // fallback 4%
@@ -248,14 +248,25 @@ export function approxYieldAnnualFromMix(
   const multiplier = getPlanStrengthMultiplier(planStrength);
 
   let weightedYield = 0;
+  const breakdown: string[] = []; // PR-36 DEBUG
   for (const item of mix) {
     const assetParams = ASSET_PARAMS[item.key];
     if (assetParams) {
-      weightedYield += (item.pct / 100) * assetParams.expectedReturnPa;
+      const contribution = (item.pct / 100) * assetParams.expectedReturnPa;
+      weightedYield += contribution;
+      breakdown.push(`${item.key}:${item.pct.toFixed(1)}%×${(assetParams.expectedReturnPa*100).toFixed(1)}%=${(contribution*100).toFixed(2)}%`);
     }
   }
+  
+  const finalYield = weightedYield * multiplier;
+  
+  // PR-36 DEBUG: Log výpočet (odstrániť po fixe)
+  console.log(
+    `[approxYieldAnnual] strength=${planStrength}% (${multiplier}×), base=${(weightedYield*100).toFixed(2)}%, final=${(finalYield*100).toFixed(2)}%`,
+    breakdown.join(", ")
+  );
 
-  return weightedYield * multiplier;
+  return finalYield;
 }
 
 /**
@@ -295,15 +306,25 @@ export function riskScore0to10(mix: MixItem[], _riskPref?: RiskPref, crisisBias 
   const effectiveBias = crisisBias + penalty;
 
   let weightedRisk = 0;
+  const breakdown: string[] = []; // PR-36 DEBUG
   for (const item of mix) {
     const weight = item.pct / 100;
     const baseRisk = getAssetRisk(item.key, undefined, effectiveBias); // PR-29: No riskPref
     // Aplikuj škálovanie rizika pri vysokej alokácii
     const scaledRisk = getScaledRisk(item.key, item.pct, baseRisk);
     weightedRisk += weight * scaledRisk;
+    breakdown.push(`${item.key}:${item.pct.toFixed(1)}%×${scaledRisk.toFixed(1)}=${(weight*scaledRisk).toFixed(2)}`);
   }
+  
+  const finalRisk = Math.min(10, Math.max(0, weightedRisk));
+  
+  // PR-36 DEBUG: Log výpočet (odstrániť po fixe)
+  console.log(
+    `[riskScore0to10] total=${finalRisk.toFixed(2)}, bias=${effectiveBias}, dyn+crypto=${(dynPct+cryptoPct).toFixed(1)}%`,
+    breakdown.join(", ")
+  );
 
-  return Math.min(10, Math.max(0, weightedRisk));
+  return finalRisk;
 }
 
 /**

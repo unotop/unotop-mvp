@@ -1,5 +1,21 @@
 import '@testing-library/jest-dom';
 
+// Mock localStorage for JSDOM (Node.js env)
+if (typeof globalThis.localStorage === 'undefined') {
+  const store: Record<string, string> = {};
+  globalThis.localStorage = {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => { store[key] = value; },
+    removeItem: (key: string) => { delete store[key]; },
+    clear: () => { Object.keys(store).forEach(k => delete store[k]); },
+    key: (index: number) => Object.keys(store)[index] || null,
+    length: 0,
+  } as any;
+  Object.defineProperty(globalThis.localStorage, 'length', {
+    get: () => Object.keys(store).length,
+  });
+}
+
 // Plain (non-Proxy) clone of window.location so that .reload becomes writable for tests.
 try {
   const orig = window.location;

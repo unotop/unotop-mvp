@@ -3,14 +3,18 @@
  * 
  * PR-28: Finálna tvrdá brzda pre riziko portfólia.
  * PR-34: Profile-aware RISK_SINKS (B/G: bonds/IAD primárne, zlato secondary s cap checks)
+ * PR-36 STEP 1: Remove DIRECT CUT MODE (catastrophic 50% cuts removed)
+ * PR-36 STEP 2: cap+1.0 stop condition (risk <= riskMax + 1.0 je OK)
+ * PR-36 STEP 3: tryRedistribute() helper (clean, testovateľné)
+ * PR-36 STEP 4: Exponential step-down (2.0 → 0.125 p.b., 5 pokusov)
  * 
  * Aplikuje sa ako posledný krok (STEP 8) po všetkých policy adjustments.
  * 
  * Algoritmus:
- * 1. Skontroluj, či riskScore <= riskMax
+ * 1. Skontroluj, či riskScore <= riskMax + 1.0 (PR-36 STEP 2: +1.0 tolerancia)
  * 2. Ak nie, iteratívne znižuj najrizikovejšie assety (max 10 krokov)
  * 3. Redistribuj do bezpečných assetov podľa profilu (RISK_SINKS)
- * 4. Iteration 9-10: Direct cut mode (dyn/crypto/real/ETF → bonds/IAD, BEZ nafukovania zlata)
+ * 4. PR-36 STEP 4: Ak redistribúcia zlyhá → exponential step-down (rollback + menší step)
  * 
  * Rizikovosť assetov (od najvyššej):
  * - Crypto (9)
@@ -63,6 +67,58 @@ const RISK_SINKS: Record<RiskPref, Array<{ key: MixItem["key"]; weight: number; 
     { key: "cash", weight: 0.05 },          // IAD DK (minimálne)
   ],
 };
+
+/**
+ * PR-36 STEP 3: Helper funkcia pre redistribúciu
+ * 
+ * Distribuuje reduction do risk sinks podľa váh a kapacít.
+ * Čistá funkcia (no side effects) pre jednoduchšie unit testy.
+ * 
+ * @param mix - Mix (bude mutovaný)
+ * @param reduction - Počet p.b. na redistribúciu
+ * @param riskSinks - Zoznam sinks s váhami a maxPct
+ * @param stageCaps - Fallback caps (ak sink.maxPct nie je definované)
+ * @returns Počet p.b., ktoré sa nepodarilo redistribuovať
+ */
+function tryRedistribute(
+  mix: MixItem[],
+  reduction: number,
+  riskSinks: Array<{ key: MixItem["key"]; weight: number; maxPct?: number }>,
+  stageCaps?: Record<string, number>
+): number {
+  let remaining = reduction;
+
+  for (const sink of riskSinks) {
+    const sinkItem = mix.find(m => m.key === sink.key);
+    if (!sinkItem) continue;
+
+    // Skip ak sink už plný (maxPct cap)
+    if (sink.maxPct && sinkItem.pct >= sink.maxPct) {
+      continue;
+    }
+
+    // Calculate available room
+    let room = Infinity;
+    if (sink.maxPct) {
+      room = Math.max(0, sink.maxPct - sinkItem.pct);
+    } else if (stageCaps?.[sink.key]) {
+      room = Math.max(0, stageCaps[sink.key] - sinkItem.pct);
+    }
+
+    // Allocate weighted portion, but not more than room
+    const allocation = Math.min(
+      remaining * sink.weight,
+      room * 0.97 // 0.97 buffer pre normalizáciu
+    );
+
+    if (allocation > 0.01) {
+      sinkItem.pct += allocation;
+      remaining -= allocation;
+    }
+  }
+
+  return remaining;
+}
 
 /**
  * Rizikovosť assetov (zoradené od najvyššieho rizika)
@@ -172,110 +228,72 @@ export function enforceRiskCap(
     const assetIndex = mix.findIndex((m) => m.key === reducedKey);
     const currentPct = mix[assetIndex].pct;
 
-    // Znížiť o 2-5 p.b. (proporcionálne k veľkosti assetu)
-    const reductionStep = Math.min(5, Math.max(2, currentPct * 0.2)); // 20% z current alebo min 2 p.b.
-    const reducedPct = Math.max(0, currentPct - reductionStep);
-    const actualReduction = currentPct - reducedPct;
+    // PR-36 STEP 4: Exponential step-down s rollback
+    // Ak redistribúcia zlyhá (remaining > threshold), skús menší step
+    const MIN_STEP = 0.125; // Minimálny step (p.b.)
+    const MAX_STEP_ATTEMPTS = 5; // Max pokusov (2.0 → 1.0 → 0.5 → 0.25 → 0.125)
+    const REDISTRIBUTION_THRESHOLD = 1.0; // Ak zostane > 1.0 p.b., považuj za fail
 
-    mix[assetIndex].pct = reducedPct;
+    let baseStep = Math.min(5, Math.max(2, currentPct * 0.2)); // Štandardný step (2-5 p.b.)
+    let attemptedStep = baseStep;
+    let remainingReduction = Infinity;
+    let stepAttempts = 0;
+    let finalReductionStep = 0;
 
-    console.log(
-      `[EnforceRiskCap] Iteration ${iterations}: ${reducedKey} ${currentPct.toFixed(2)}% → ${reducedPct.toFixed(2)}% (-${actualReduction.toFixed(2)} p.b.)`
-    );
+    // Exponential step-down loop
+    while (stepAttempts < MAX_STEP_ATTEMPTS && attemptedStep >= MIN_STEP) {
+      stepAttempts++;
 
-    // PR-34: Profile-aware RISK_SINKS redistribution
-    // Iteration 1-8: Normal redistribution using RISK_SINKS
-    // Iteration 9-10: Direct cut mode (force cut high-risk assets → bonds/bond9 only, NO gold inflation)
-    
-    let remainingReduction = actualReduction;
+      // Pokus o cut
+      const reducedPct = Math.max(0, currentPct - attemptedStep);
+      const actualReduction = currentPct - reducedPct;
+      
+      // Dočasný cut (rollback ak zlyhá)
+      const originalPct = mix[assetIndex].pct;
+      mix[assetIndex].pct = reducedPct;
 
-    if (iterations < 9) {
-      // NORMAL MODE: Redistribute using profile-aware RISK_SINKS
-      for (const sink of riskSinks) {
-        const sinkItem = mix.find(m => m.key === sink.key);
-        if (!sinkItem) continue;
+      // Skús redistribúciu
+      remainingReduction = tryRedistribute(mix, actualReduction, riskSinks, stageCaps);
 
-        // PR-34: Ak sink.maxPct definovaný a current % >= maxPct → sink je "full", skip
-        if (sink.maxPct && sinkItem.pct >= sink.maxPct) {
-          console.log(`[EnforceRiskCap]   → ${sink.key} FULL (${sinkItem.pct.toFixed(1)}% >= ${sink.maxPct}% cap), skip`);
-          continue;
+      // Check: Podarilo sa redistribuovať aspoň väčšinu?
+      if (remainingReduction <= REDISTRIBUTION_THRESHOLD) {
+        // ✓ SUCCESS: Redistribúcia OK (alebo akceptovateľný zvyšok)
+        finalReductionStep = actualReduction;
+        console.log(
+          `[EnforceRiskCap] Iteration ${iterations}: ${reducedKey} ${currentPct.toFixed(2)}% → ${reducedPct.toFixed(2)}% (-${actualReduction.toFixed(2)} p.b., attempt ${stepAttempts})`
+        );
+        
+        if (remainingReduction < 0.01) {
+          console.log(`[EnforceRiskCap]   ✓ Redistribúcia OK (${actualReduction.toFixed(2)} p.b. presunutých do sinks)`);
+        } else {
+          console.warn(`[EnforceRiskCap]   ⚠️ Čiastočná redistribúcia (${remainingReduction.toFixed(2)} p.b. nezaradených, akceptovateľné)`);
         }
-
-        // Calculate room (use sink.maxPct if defined, else stage caps, else Infinity)
-        let room = Infinity;
-        if (sink.maxPct) {
-          room = Math.max(0, sink.maxPct - sinkItem.pct);
-        } else if (stageCaps?.[sink.key]) {
-          room = Math.max(0, stageCaps[sink.key] - sinkItem.pct);
-        }
-
-        const allocation = Math.min(
-          remainingReduction * sink.weight,
-          room * 0.97 // 0.97 buffer - rezerva pre normalizáciu
+        break; // Exit step-down loop, pokračuj ďalšou iteráciou
+      } else {
+        // ✗ FAIL: Rollback + skús menší step
+        mix[assetIndex].pct = originalPct; // Rollback cut
+        console.warn(
+          `[EnforceRiskCap]   → ROLLBACK ${reducedKey} -${actualReduction.toFixed(2)} p.b. (${remainingReduction.toFixed(2)} p.b. nemohol byť redistribuovaný)`
         );
 
-        if (allocation > 0.01) {
-          sinkItem.pct += allocation;
-          remainingReduction -= allocation;
-
-          console.log(
-            `[EnforceRiskCap]   → ${sink.key} +${allocation.toFixed(2)} p.b. (weight ${sink.weight.toFixed(2)}, room ${room.toFixed(1)}%)`
-          );
+        // Exponential step-down
+        attemptedStep = attemptedStep / 2;
+        
+        if (attemptedStep >= MIN_STEP) {
+          console.log(`[EnforceRiskCap]   → Pokúšam sa s menším stepom: ${attemptedStep.toFixed(3)} p.b. (attempt ${stepAttempts + 1}/${MAX_STEP_ATTEMPTS})`);
+        } else {
+          console.error(`[EnforceRiskCap]   → Minimálny step ${MIN_STEP} dosiahnutý, nemôžem ďalej znižovať`);
+          break;
         }
       }
-
-      // Ak všetky sinks full → auto jump to direct cut mode
-      const allSinksFull = riskSinks.every(sink => {
-        const item = mix.find(m => m.key === sink.key);
-        return sink.maxPct && item && item.pct >= sink.maxPct;
-      });
-
-      if (allSinksFull && remainingReduction > 0.05) {
-        console.warn(`[EnforceRiskCap] All sinks full (${remainingReduction.toFixed(2)} p.b. remaining), jumping to direct cut mode`);
-        // Set iterations to 9 to trigger direct cut on next iteration
-        // (current iteration už zredukovalo asset, redistribúcia failed)
-      }
-    } else {
-      // DIRECT CUT MODE (iteration 9-10)
-      console.warn(`[EnforceRiskCap] DIRECT CUT MODE (iteration ${iterations}): Force cut high-risk assets → bonds/bond9 ONLY`);
-
-      // Cut ALL remaining high-risk assets (dyn/crypto/real/ETF)
-      const cutTargets = ["dyn", "crypto", "real", "etf"];
-      let totalCut = 0;
-
-      for (const key of cutTargets) {
-        const item = mix.find(m => m.key === key);
-        if (!item || item.pct < 0.1) continue;
-
-        // Cut 50% (alebo all, ak risk stále vysoký)
-        const cutAmount = item.pct * 0.5;
-        item.pct -= cutAmount;
-        totalCut += cutAmount;
-
-        console.log(`[EnforceRiskCap]   → ${key} -${cutAmount.toFixed(1)}% (direct cut 50%)`);
-      }
-
-      // Redistribute CUT amount to bonds/bond9 ONLY (50/50 split, NO gold/cash/ETF!)
-      const bondsIdx = mix.findIndex(m => m.key === "bonds");
-      const bond9Idx = mix.findIndex(m => m.key === "bond3y9");
-
-      if (bondsIdx >= 0) {
-        mix[bondsIdx].pct += totalCut * 0.50;
-        console.log(`[EnforceRiskCap]   → bonds +${(totalCut * 0.50).toFixed(1)}% (direct cut redistribution)`);
-      }
-      if (bond9Idx >= 0) {
-        mix[bond9Idx].pct += totalCut * 0.50;
-        console.log(`[EnforceRiskCap]   → bond3y9 +${(totalCut * 0.50).toFixed(1)}% (direct cut redistribution)`);
-      }
-
-      remainingReduction = 0; // Direct cut handled redistribution
     }
 
-    // Ak STÁLE zostal remainder po normal mode → warning (nie error, pokračuj)
-    if (remainingReduction > 0.1 && iterations < 9) {
-      console.warn(
-        `[EnforceRiskCap] Cannot redistribute ${remainingReduction.toFixed(2)} p.b. (will retry or switch to direct cut)`
+    // Ak všetky pokusy zlyhali → HARD STOP (mix je v pôvodnom stave po rollbackoch)
+    if (remainingReduction > REDISTRIBUTION_THRESHOLD && stepAttempts >= MAX_STEP_ATTEMPTS) {
+      console.error(
+        `[EnforceRiskCap] ✗ Redistribúcia zlyhal po ${MAX_STEP_ATTEMPTS} pokusoch (sinks full alebo cap limit). Ukončujem enforcement.`
       );
+      break; // Exit main while loop
     }
 
     // Normalizuj a prepočítaj risk
@@ -287,8 +305,10 @@ export function enforceRiskCap(
     currentRisk = riskScore0to10(mix, riskPref, 0);
     console.log(`[EnforceRiskCap] After iteration ${iterations}: risk ${currentRisk.toFixed(2)}`);
 
-    // Early exit ak sme pod riskMax
-    if (currentRisk <= riskMax) {
+    // PR-36 STEP 2: Early exit ak sme pod riskMax + 1.0 (tolerancia)
+    const CAP_TOLERANCE = 1.0;
+    if (currentRisk <= riskMax + CAP_TOLERANCE) {
+      console.log(`[EnforceRiskCap] ✓ Risk OK (${currentRisk.toFixed(2)} <= ${(riskMax + CAP_TOLERANCE).toFixed(1)})`);
       break;
     }
 
@@ -301,15 +321,16 @@ export function enforceRiskCap(
     }
   }
 
-  // Warning ak stále nad riskMax (ale blízko)
+  // PR-36 STEP 2: Warning len ak prekročil cap+1.0 (už nie pri miernych overshootoch)
   let warning: string | null = null;
-  const tolerance = 1.5; // PR-33 FIX B: Zvýšená tolerancia (1.5 vs 0.5) – preferujeme mierny risk overflow vs DEADLOCK
+  const CAP_TOLERANCE = 1.0; // PR-36: Konzistentná tolerancia
+  const WARN_THRESHOLD = 0.5; // Extra buffer pre warning (cap+1.5)
 
-  if (currentRisk > riskMax && currentRisk <= riskMax + tolerance) {
-    warning = `⚠️ Risk blízko horného limitu profilu (${currentRisk.toFixed(1)} / ${riskMax.toFixed(1)})`;
+  if (currentRisk > riskMax + CAP_TOLERANCE && currentRisk <= riskMax + CAP_TOLERANCE + WARN_THRESHOLD) {
+    warning = `⚠️ Risk mierne nad cap+1.0 (${currentRisk.toFixed(1)} / ${(riskMax + CAP_TOLERANCE).toFixed(1)})`;
     console.warn(`[EnforceRiskCap] ${warning}`);
-  } else if (currentRisk > riskMax + tolerance) {
-    warning = `⚠️ CRITICAL: Risk prekročil limit aj po ${iterations} iteráciách (${currentRisk.toFixed(1)} / ${riskMax.toFixed(1)})`;
+  } else if (currentRisk > riskMax + CAP_TOLERANCE + WARN_THRESHOLD) {
+    warning = `⚠️ CRITICAL: Risk výrazne prekročil cap+1.0 po ${iterations} iteráciách (${currentRisk.toFixed(1)} / ${(riskMax + CAP_TOLERANCE).toFixed(1)})`;
     console.error(`[EnforceRiskCap] ${warning}`);
   }
 

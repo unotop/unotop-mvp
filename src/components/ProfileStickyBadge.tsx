@@ -21,13 +21,11 @@ export function ProfileStickyBadge() {
     const interval = setInterval(() => {
       const v3Fresh = readV3();
       const freshSelected = v3Fresh.profile?.selected as RiskPref | undefined;
-      if (freshSelected !== selected) {
-        setSelected(freshSelected || null);
-      }
+      setSelected(freshSelected || null);
     }, 200);
 
     return () => clearInterval(interval);
-  }, [selected]);
+  }, []);
 
   if (!selected) return null;
 

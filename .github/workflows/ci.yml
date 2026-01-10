@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, master, develop]
   push:
-    branches: [ci-test, feat/legacy-basic]
+    branches: [ci-test, feat/legacy-basic, fix/pr-36-real-remove-direct-cut]
 
 permissions:
   issues: write

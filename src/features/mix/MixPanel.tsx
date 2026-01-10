@@ -39,7 +39,7 @@ const ASSETS: AssetDef[] = [
   { key: "dyn", label: "Dynamické riadenie" },
   { key: "etf", label: "ETF (svet – aktívne)" },
   { key: "bonds", label: "Garantovaný dlhopis 7,5% p.a. (5r)" },
-  { key: "bond3y9", label: "Dlhopis 9% p.a. (3r, mesačný CF)" },
+  { key: "bond3y9", label: "Dlhopis 13% p.a. (3r, mesačný CF)" },
   { key: "cash", label: "Pracujúca rezerva – IAD DK" },
   { key: "crypto", label: "Krypto (BTC/ETH)" },
   { key: "real", label: "Reality (komerčné)" },
@@ -260,6 +260,22 @@ export const MixPanel: React.FC<{
   };
 
   const [toast, setToast] = React.useState<string | null>(null);
+  const toastTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup toast timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
+
+  // Helper: Set toast with auto-clear
+  const showToast = (message: string, duration = 1400) => {
+    setToast(message);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToast(null), duration);
+  };
+
   const applyGold12 = () => {
     const next = setGoldTarget(mix, 12);
     setMix(next);
@@ -283,8 +299,7 @@ export const MixPanel: React.FC<{
   const optimizeRisk = () => {
     // PR-6 Task B: Blokuj ak je mix locked
     if (isMixLocked()) {
-      setToast("⚠️ Mix je zamknutý");
-      setTimeout(() => setToast(null), 1400);
+      showToast("⚠️ Mix je zamknutý");
       return;
     }
     const constrained = applyRiskConstrainedMix(mix, cap);
@@ -294,8 +309,7 @@ export const MixPanel: React.FC<{
   const applyRecommended = () => {
     // PR-6 Task B: Blokuj ak je mix locked
     if (isMixLocked()) {
-      setToast("⚠️ Mix je zamknutý");
-      setTimeout(() => setToast(null), 1400);
+      showToast("⚠️ Mix je zamknutý");
       return;
     }
     // Simple recommendation: ensure gold at least 12 %, then normalize
@@ -305,28 +319,25 @@ export const MixPanel: React.FC<{
     if (JSON.stringify(next) !== JSON.stringify(mix)) {
       setMix(next);
       writeMixManual(next);
-      setToast("Odporúčaný mix aplikovaný");
+      showToast("Odporúčaný mix aplikovaný");
     } else {
-      setToast("Žiadne úpravy");
+      showToast("Žiadne úpravy");
     }
-    setTimeout(() => setToast(null), 1400);
   };
   const applyRules = () => {
     // PR-6 Task B: Blokuj ak je mix locked
     if (isMixLocked()) {
-      setToast("⚠️ Mix je zamknutý");
-      setTimeout(() => setToast(null), 1400);
+      showToast("⚠️ Mix je zamknutý");
       return;
     }
     const constrained = applyRiskConstrainedMix(mix, cap);
     if (JSON.stringify(constrained) === JSON.stringify(mix)) {
-      setToast("Žiadne úpravy");
+      showToast("Žiadne úpravy");
     } else {
       setMix(constrained);
       writeMixManual(constrained);
-      setToast("Mix upravený");
+      showToast("Mix upravený");
     }
-    setTimeout(() => setToast(null), 1400);
   };
 
   // Calculate risk score and summary metrics
@@ -427,7 +438,30 @@ export const MixPanel: React.FC<{
       className="rounded-2xl ring-1 ring-white/10 bg-slate-900/60 p-4"
       aria-labelledby="mix-panel-title"
     >
-      <header id="mix-panel-title" className="mb-3 font-semibold">
+      <header
+        id="mix-panel-title"
+        className="mb-3 font-semibold flex items-center gap-2"
+      >
+        <svg
+          className="w-5 h-5 text-blue-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+          />
+        </svg>
         Zloženie portfólia
       </header>
 
@@ -552,7 +586,7 @@ export const MixPanel: React.FC<{
           controller={realCtl}
           onCommit={(pct) => commitAsset("real", pct)}
         />
-        {/* Dlhopis 3r/9% (PRO only) */}
+        {/* Dlhopis 3r/13% (PRO only) */}
         {mode === "PRO" && (
           <AssetSlider
             assetKey="bond3y9"
@@ -634,8 +668,7 @@ export const MixPanel: React.FC<{
                 onClick={() => {
                   const json = JSON.stringify(mix, null, 2);
                   navigator.clipboard.writeText(json);
-                  setToast("✓ Mix skopírovaný do schránky");
-                  setTimeout(() => setToast(null), 2000);
+                  showToast("✓ Mix skopírovaný do schránky", 2000);
                 }}
                 className="px-3 py-1.5 rounded bg-slate-700 text-xs font-medium hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
                 title="Exportuj mix do schránky (JSON)"
@@ -658,19 +691,15 @@ export const MixPanel: React.FC<{
                       if (valid) {
                         setMix(parsed as MixItem[]);
                         writeMixManual(parsed);
-                        setToast("✓ Mix importovaný");
-                        setTimeout(() => setToast(null), 2000);
+                        showToast("✓ Mix importovaný", 2000);
                       } else {
-                        setToast("❌ Neplatný formát mixu");
-                        setTimeout(() => setToast(null), 2000);
+                        showToast("❌ Neplatný formát mixu", 2000);
                       }
                     } else {
-                      setToast("❌ Neplatný JSON");
-                      setTimeout(() => setToast(null), 2000);
+                      showToast("❌ Neplatný JSON", 2000);
                     }
                   } catch (err) {
-                    setToast("❌ Import zlyhal (neplatný JSON)");
-                    setTimeout(() => setToast(null), 2000);
+                    showToast("❌ Import zlyhal (neplatný JSON)", 2000);
                   }
                 }}
                 className="px-3 py-1.5 rounded bg-slate-700 text-xs font-medium hover:bg-slate-600 hover:scale-105 active:scale-95 transition-all duration-200"
@@ -692,8 +721,7 @@ export const MixPanel: React.FC<{
                   ];
                   setMix(seed);
                   writeMixManual(seed);
-                  setToast("✓ Mix resetovaný");
-                  setTimeout(() => setToast(null), 2000);
+                  showToast("✓ Mix resetovaný", 2000);
                 }}
                 aria-label="Resetovať hodnoty"
                 className="px-3 py-1.5 rounded bg-red-600/20 ring-1 ring-red-500/40 text-xs font-medium hover:bg-red-600/30 hover:scale-105 active:scale-95 transition-all duration-200"
@@ -748,8 +776,7 @@ export const MixPanel: React.FC<{
                 const normalized = normalize(adjusted);
                 setMix(normalized);
                 writeMixManual(normalized);
-                setToast("Dyn+Krypto dorovnané na 22%");
-                setTimeout(() => setToast(null), 2000);
+                showToast("Dyn+Krypto dorovnané na 22%", 2000);
               }}
             >
               Dorovnať na 22 %

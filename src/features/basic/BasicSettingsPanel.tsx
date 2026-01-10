@@ -382,7 +382,23 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
         onClick={onToggle}
         className="w-full flex items-center justify-between px-6 py-3 rounded-full bg-slate-800/80 hover:bg-slate-700/80 transition-colors text-left font-semibold"
       >
-        <span id="basic-settings-title">⚙️ Nastavenia</span>
+        <span id="basic-settings-title" className="flex items-center gap-2">
+          <svg
+            className="w-5 h-5 text-emerald-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          Vstupné údaje
+        </span>
         <svg
           className={`w-5 h-5 transition-transform duration-300 ${open ? "" : "rotate-180"}`}
           fill="none"
@@ -421,7 +437,21 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 }`}
                 aria-pressed={clientType === "individual"}
               >
-                👤 Jednotlivec
+                <svg
+                  className="w-5 h-5 inline-block mr-1.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                Jednotlivec
               </button>
               <button
                 type="button"
@@ -433,7 +463,21 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 }`}
                 aria-pressed={clientType === "family"}
               >
-                👨‍👩‍👧 Rodina
+                <svg
+                  className="w-5 h-5 inline-block mr-1.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                Rodina
               </button>
               <button
                 type="button"
@@ -445,7 +489,21 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                 }`}
                 aria-pressed={clientType === "company"}
               >
-                🏢 Firma
+                <svg
+                  className="w-5 h-5 inline-block mr-1.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                  />
+                </svg>
+                Firma
               </button>
             </div>
           </div>
@@ -688,7 +746,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     htmlFor="lump-sum-basic"
                     className="text-xs text-slate-400 block"
                   >
-                    Jednorazová investícia
+                    Začínam s (€)
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -696,7 +754,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       type="text"
                       role="textbox"
                       inputMode="decimal"
-                      aria-label="Jednorazová investícia"
+                      aria-label="Začínam s"
                       ref={lumpSumCtl.ref}
                       onChange={lumpSumCtl.onChange}
                       onBlur={lumpSumCtl.onBlur}
@@ -723,12 +781,12 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                           } as any,
                         });
                       }}
-                      aria-label="Jednorazová investícia slider"
+                      aria-label="Začínam s slider"
                       aria-valuemin={0}
                       aria-valuemax={lumpSumMax}
                       aria-valuenow={lumpSumEur}
                       aria-valuetext={`${lumpSumEur.toLocaleString("sk-SK")} eur`}
-                      title={`Jednorazová investícia: ${lumpSumEur.toLocaleString("sk-SK")} €`}
+                      title={`Začínam s: ${lumpSumEur.toLocaleString("sk-SK")} €`}
                       className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm tabular-nums font-semibold w-24 text-right">
@@ -824,7 +882,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     htmlFor="horizon-basic"
                     className="text-xs text-slate-400 block"
                   >
-                    Horizont investovania (roky)
+                    Doba investície (roky)
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -832,7 +890,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       type="text"
                       role="textbox"
                       inputMode="decimal"
-                      aria-label="Horizont investovania (roky)"
+                      aria-label="Doba investície (roky)"
                       ref={horizonCtl.ref}
                       onChange={horizonCtl.onChange}
                       onBlur={horizonCtl.onBlur}
@@ -884,7 +942,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     >
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
-                    Cieľ majetku
+                    Koľko chcem mať (€)
                     {validationState?.cashflowComplete &&
                       goalAssetsEur === 0 && (
                         <span className="ml-2 text-xs font-normal text-amber-300">
@@ -898,7 +956,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                       type="text"
                       role="textbox"
                       inputMode="decimal"
-                      aria-label="Cieľ majetku"
+                      aria-label="Koľko chcem mať"
                       placeholder="Napr. 100000"
                       data-testid={TEST_IDS.GOAL_INPUT}
                       ref={goalCtl.ref}

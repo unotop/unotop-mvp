@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../src/LegacyApp";
 
@@ -34,6 +34,10 @@ function findPanelByControlsId(id: string): HTMLElement | null {
 describe("Accessibility regression (core)", () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup(); // Unmount all components → clear timers
   });
 
   it("Sections (regions) have aria-labelledby pointing to existing headings", () => {
@@ -159,7 +163,7 @@ describe("Accessibility regression (core)", () => {
     render(<App />);
     // Prepni do PRO režimu (PRO-only tlačidlo)
     const proBtn = await screen.findByRole("button", {
-      name: /Prepnúť na PRO režim/i,
+      name: "Prepnúť na PRO režim (toolbar)",
     });
     await user.click(proBtn);
     const applyRulesBtn = await screen.findByRole("button", {
@@ -179,7 +183,7 @@ describe("Accessibility regression (core)", () => {
     render(<App />);
     // Prepni do PRO režimu pre advanced buttons
     const proBtn = await screen.findByRole("button", {
-      name: /Prepnúť na PRO režim/i,
+      name: "Prepnúť na PRO režim (toolbar)",
     });
     await user.click(proBtn);
     // Force baseline & invariants area visible

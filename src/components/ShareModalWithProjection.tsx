@@ -186,7 +186,7 @@ S pozdravom`;
                       dyn: "📊 Dyn. riadenie",
                       etf: "🌍 ETF svet",
                       bonds: "📜 Dlhopis 7,5% (5r)",
-                      bond3y9: "💰 Dlhopis 9% (3r)",
+                      bond3y9: "💰 Dlhopis 13% (3r)",
                       cash: "💵 Pracujúca rezerva – IAD DK",
                       crypto: "₿ Krypto",
                       real: "🏘️ Reality",
@@ -218,7 +218,7 @@ S pozdravom`;
                     <div className="flex items-start gap-1">
                       <span className="shrink-0">💰</span>
                       <span>
-                        Dlhopis 9%: mesačné výplaty po dobu 36 mesiacov, lepšia
+                        Dlhopis 13%: mesačné výplaty po dobu 36 mesiacov, lepšia
                         likvidita
                       </span>
                     </div>

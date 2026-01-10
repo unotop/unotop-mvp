@@ -91,24 +91,31 @@ export default function LegacyApp({
   // Event-based sync: listen to mix changes from other components (replaces 500ms polling)
   React.useEffect(() => {
     return createMixListener((newMix) => {
-      if (JSON.stringify(newMix) !== JSON.stringify(mix)) {
-        setMix(newMix);
-      }
+      setMix(newMix);
     });
-  }, [mix]);
+  }, []);
 
   // Sync invest params from persist (100ms polling)
   React.useEffect(() => {
+    const mountedRef = { current: true };
     const interval = setInterval(() => {
-      const v3 = readV3();
-      setInvestParams({
-        lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
-        monthlyVklad: (v3 as any).monthly || 0,
-        horizonYears: (v3.profile?.horizonYears as any) || 10,
-        goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
-      });
+      if (!mountedRef.current) return; // Prevent setState after unmount
+      try {
+        const v3 = readV3();
+        setInvestParams({
+          lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
+          monthlyVklad: (v3 as any).monthly || 0,
+          horizonYears: (v3.profile?.horizonYears as any) || 10,
+          goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
+        });
+      } catch {
+        // Ignore errors during cleanup
+      }
     }, 100);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      mountedRef.current = false;
+    };
   }, []);
 
   const debounceRef = React.useRef<number | undefined>(undefined);
@@ -1309,6 +1316,7 @@ export default function LegacyApp({
         onModeToggle={handleModeToggle}
         onReset={handleReset}
         onContactClick={onAboutClick} // PR-14: Kontakt button
+        onInfoClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
       />
 
       {/* Sidebar Navigation (overlay) */}
@@ -1316,6 +1324,11 @@ export default function LegacyApp({
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         mode="PRO"
+        modeUi={modeUi}
+        onModeToggle={handleModeToggle}
+        onReset={handleReset}
+        onContactClick={onAboutClick}
+        onInfoClick={() => window.dispatchEvent(new Event("openWelcomeModal"))}
       />
 
       {/* PRO Beta Warning Banner */}

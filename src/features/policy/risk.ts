@@ -16,13 +16,10 @@ import type { RiskPref } from "../mix/assetModel";
  * Tvrdé maximálne riziko podľa profilu (bez stage bonusov)
  * 
  * PR-28 FIX: Stage bonusy NESMÚ posúvať riskMax vyššie.
- * enforceRiskCap používa tieto pevné hodnoty ako STOP hranicu.
+ * PR-36 FIX: Use RISK_CAPS (4.0/6.0/7.5) from assetModel, not old hardcoded values
+ * enforceRiskCap používa tieto pevné hodnoty ako STOP hranicu (+ 1.0 tolerance).
  */
-export const RISK_MAX: Record<RiskPref, number> = {
-  konzervativny: 5.0,  // Konzervatívny max 5.0 (target 4.0)
-  vyvazeny: 7.0,       // Vyvážený max 7.0 (target 6.0)
-  rastovy: 8.5,        // Rastový max 8.5 (target 7.5)
-};
+export const RISK_MAX: Record<RiskPref, number> = RISK_CAPS; // PR-36: Import from assetModel
 
 /**
  * P1.5: Volume-based risk caps (VIP headroom)
