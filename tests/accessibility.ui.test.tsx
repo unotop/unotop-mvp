@@ -163,7 +163,7 @@ describe("Accessibility regression (core)", () => {
     render(<App />);
     // Prepni do PRO režimu (PRO-only tlačidlo)
     const proBtn = await screen.findByRole("button", {
-      name: /Prepnúť na PRO režim/i,
+      name: "Prepnúť na PRO režim (toolbar)",
     });
     await user.click(proBtn);
     const applyRulesBtn = await screen.findByRole("button", {
@@ -183,7 +183,7 @@ describe("Accessibility regression (core)", () => {
     render(<App />);
     // Prepni do PRO režimu pre advanced buttons
     const proBtn = await screen.findByRole("button", {
-      name: /Prepnúť na PRO režim/i,
+      name: "Prepnúť na PRO režim (toolbar)",
     });
     await user.click(proBtn);
     // Force baseline & invariants area visible

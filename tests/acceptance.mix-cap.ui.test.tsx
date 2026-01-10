@@ -18,7 +18,7 @@ describe("Acceptance: Mix cap & invariants UI", () => {
     render(<App />);
 
     // Prepnúť na PRO režim (BASIC nemá spinbuttony)
-    const proButton = screen.getByRole("button", { name: /prepnúť na pro/i });
+    const proButton = screen.getByRole("button", { name: "Prepnúť na PRO režim (toolbar)" });
     await user.click(proButton);
 
     // Vytvor drift: upravíme dva assets aby sme garantovali sum != 100

@@ -16,7 +16,7 @@ describe("Invariants limits & idempotencia", () => {
     render(<App />);
     // Prepni do PRO režimu (PRO-only tlačidlo)
     const proBtn = await screen.findByRole("button", {
-      name: /Prepnúť na PRO režim/i,
+      name: "Prepnúť na PRO režim (toolbar)",
     });
     await user.click(proBtn);
     const btn = await screen.findByRole("button", {
@@ -36,7 +36,7 @@ describe("Invariants limits & idempotencia", () => {
     render(<App />);
     // Prepni do PRO režimu
     const proBtn = await screen.findByRole("button", {
-      name: /Prepnúť na PRO režim/i,
+      name: "Prepnúť na PRO režim (toolbar)",
     });
     await user.click(proBtn);
     const btn = await screen.findByRole("button", {
