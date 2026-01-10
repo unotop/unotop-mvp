@@ -97,7 +97,9 @@ export default function LegacyApp({
 
   // Sync invest params from persist (100ms polling)
   React.useEffect(() => {
+    let mounted = true;
     const interval = setInterval(() => {
+      if (!mounted) return; // Prevent setState after unmount
       const v3 = readV3();
       setInvestParams({
         lumpSumEur: (v3.profile?.lumpSumEur as any) || 0,
@@ -106,7 +108,10 @@ export default function LegacyApp({
         goalAssetsEur: (v3.profile?.goalAssetsEur as any) || 0,
       });
     }, 100);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      mounted = false;
+    };
   }, []);
 
   const debounceRef = React.useRef<number | undefined>(undefined);

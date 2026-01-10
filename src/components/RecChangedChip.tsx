@@ -7,7 +7,9 @@ export function RecChangedChip() {
   const [showChip, setShowChip] = React.useState(false);
 
   React.useEffect(() => {
+    let mounted = true;
     const check = () => {
+      if (!mounted) return; // Prevent setState after unmount
       const v3 = readV3();
       const selected = v3.profile?.selected as RiskPref | undefined;
       const current = v3.profile?.riskPref as RiskPref | undefined;
@@ -24,7 +26,10 @@ export function RecChangedChip() {
 
     // Poll for changes
     const interval = setInterval(check, 200);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      mounted = false;
+    };
   }, []);
 
   if (!showChip) return null;
