@@ -1,4 +1,14 @@
 import '@testing-library/jest-dom';
+import { afterEach } from 'vitest';
+import { cleanup } from '@testing-library/react';
+import { vi } from 'vitest';
+
+// Cleanup po každom teste - vyčistí React komponenty aj všetky timery
+afterEach(() => {
+  cleanup(); // React cleanup
+  vi.clearAllTimers(); // Vyčistí všetky setTimeout/setInterval
+  vi.clearAllMocks(); // Vyčistí mocky
+});
 
 // Mock localStorage for JSDOM (Node.js env)
 if (typeof globalThis.localStorage === 'undefined') {

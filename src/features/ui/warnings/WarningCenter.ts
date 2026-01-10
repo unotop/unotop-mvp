@@ -156,9 +156,18 @@ class WarningCenterClass {
 // Singleton instance
 export const WarningCenter = new WarningCenterClass();
 
-// Periodické cleanup (každých 30s)
+// Periodické cleanup (každých 30s) - len v browseri
+let cleanupInterval: NodeJS.Timeout | null = null;
 if (typeof window !== 'undefined') {
-  setInterval(() => {
+  cleanupInterval = setInterval(() => {
     WarningCenter.cleanupDedupe();
   }, 30_000);
+}
+
+// Export pre cleanup v testoch
+export function stopWarningCenterCleanup() {
+  if (cleanupInterval) {
+    clearInterval(cleanupInterval);
+    cleanupInterval = null;
+  }
 }
