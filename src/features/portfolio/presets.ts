@@ -401,11 +401,11 @@ export function validatePresetRisk(
   // PR-14: Elastic sink exceptions - cash 60%, ETF 50% (main buckets for overflow)
   for (const item of mix) {
     if (item.key === "bonds" && riskPref === "konzervativny") {
-      // Výnimka: bonds môže byť až 35% v konzervatívnom
-      if (item.pct > 35) {
+      // Výnimka: bonds môže byť až 40% v konzervatívnom (po redistribúcii overflow)
+      if (item.pct > 40) {
         return {
           valid: false,
-          message: `Príliš vysoká alokácia dlhopisov (${item.pct}%). Max 35%.`,
+          message: `Príliš vysoká alokácia dlhopisov (${item.pct}%). Max 40%.`,
         };
       }
     } else if (item.key === "cash") {

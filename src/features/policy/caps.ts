@@ -16,7 +16,7 @@ export type Caps = Partial<Record<AssetKey, number>>;
  * Baseline (CORE) - PR-14.B zmäkčené (stred medzi STARTER/LATE):
  * - etf: 45% (zmäkčené z 40%), dyn: 13% (zmäkčené z 15%), crypto: 6%, 
  * - gold: 40%, bonds: 40%, bond3y9: 40%, cash: 35% (zmäkčené z 40%), real: 20%
- * - konzervativny: bonds max 35% (výnimka)
+ * - konzervativny: bonds max 40% (výnimka - po redistribúcii overflow)
  * 
  * STARTER úpravy:
  * - etf: 50% (+5 p.b. z CORE 45%) - povoliť rastové ťahúne
