@@ -26,10 +26,10 @@ import { applyBondMinimum, getBondMinimumInfo } from "./bondMinimum";
 import { applyCashCap, getCashCapInfo, getCashCap } from "./cashCapPolicy"; // PR-27: Cash cap policy
 import { enforceStageCaps } from "./presets";
 import { detectStage, volumeToStage } from "../policy/stage"; // P1.5: volumeToStage for consistent volume bands
-import { applyMinimums } from "../policy/applyMinimums";
+// PR-XX FIX: REMOVED applyMinimums import (duplicate logic, používalo RAW lump/monthly check)
 import { getAssetCaps, getDynCryptoComboCap } from "../policy/caps";
 import { getAdaptiveRiskCap, getRiskMax, getVipRiskMax, getRiskMaxForBand } from "../policy/risk"; // P1.5: getRiskMaxForBand
-import { isAssetAvailable, type AssetAvailabilityProfile } from "../policy/assetMinimums";
+// PR-XX FIX: REMOVED isAssetAvailable import (nepoužívané po odstránení applyMinimums)
 import { 
   calculateEffectivePlanVolume, 
   applyAssetMinima, 
@@ -350,6 +350,10 @@ export function getAdjustedMix(
   
   const riskPref = profile.riskPref || "vyvazeny"; // Definuj riskPref skôr
   
+  // === STEP 5.4: Asset Minima Policy (PR-28) ===
+  // Vynuluje assety ktoré nesplňajú minimum effectivePlanVolume
+  // a redistribuuje ich do gold/ETF podľa profilu
+  // PR-XX FIX: Toto je JEDINÝ asset minimum check (používa effectivePlanVolume)
   const assetMinimaResult: AssetMinimaResult = applyAssetMinima(
     mix,
     riskPref,
@@ -369,14 +373,10 @@ export function getAdjustedMix(
     };
   }
 
-  // === STEP 5: Apply asset minimums (PR-12/PR-13) ===
-  // Presunie nedostupné aktíva do ETF/hotovosti (alebo gold/cash pre konzervativny)
-  const { mix: mixAfterMinimums } = applyMinimums(mix, {
-    lumpSumEur: profile.lumpSumEur,
-    monthlyEur: profile.monthlyEur,
-    monthlyIncome: profile.monthlyIncome,
-  }, riskPref);
-  mix = mixAfterMinimums;
+  // PR-XX FIX: REMOVED applyMinimums (STEP 5) - duplicate logic
+  // Dôvod: applyMinimums kontroloval RAW lumpSum/monthly (zlyhával pre 0/50/23 - 13.8k EUR)
+  // applyAssetMinima správne používa effectivePlanVolume (STEP 5.4 už aplikovaný vyššie)
+  // Tento krok bol legacy duplikát ktorý blokovlal dyn/crypto pre monthly plány.
 
   // === STEP 5.5: Bi-directional Risk Tuner (PR-13 ULTIMATE) ===
   // A) DOWN-TUNE: Zníži riziko pod cap, ak je príliš vysoké
