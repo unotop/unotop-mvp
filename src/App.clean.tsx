@@ -489,8 +489,19 @@ function AppClean() {
   });
   function updateDebt(id: string, field: keyof Debt, value: number) {
     setDebts((ds) => {
-      const newDebts = ds.map((d) => (d.id === id ? { ...d, [field]: value } : d));
-      writeV3({ debts: newDebts.map(d => ({ id: d.id, name: `Dlh`, principal: d.principal, ratePa: d.rate, monthly: d.monthly, monthsLeft: d.remaining })) });
+      const newDebts = ds.map((d) =>
+        d.id === id ? { ...d, [field]: value } : d
+      );
+      writeV3({
+        debts: newDebts.map((d) => ({
+          id: d.id,
+          name: `Dlh`,
+          principal: d.principal,
+          ratePa: d.rate,
+          monthly: d.monthly,
+          monthsLeft: d.remaining,
+        })),
+      });
       return newDebts;
     });
   }
@@ -506,14 +517,32 @@ function AppClean() {
           remaining: 0,
         },
       ];
-      writeV3({ debts: newDebts.map(d => ({ id: d.id, name: `Dlh #${newDebts.length}`, principal: d.principal, ratePa: d.rate, monthly: d.monthly, monthsLeft: d.remaining })) });
+      writeV3({
+        debts: newDebts.map((d) => ({
+          id: d.id,
+          name: `Dlh #${newDebts.length}`,
+          principal: d.principal,
+          ratePa: d.rate,
+          monthly: d.monthly,
+          monthsLeft: d.remaining,
+        })),
+      });
       return newDebts;
     });
   }
   function removeDebt(id: string) {
     setDebts((ds) => {
       const newDebts = ds.filter((d) => d.id !== id);
-      writeV3({ debts: newDebts.map(d => ({ id: d.id, name: `Dlh`, principal: d.principal, ratePa: d.rate, monthly: d.monthly, monthsLeft: d.remaining })) });
+      writeV3({
+        debts: newDebts.map((d) => ({
+          id: d.id,
+          name: `Dlh`,
+          principal: d.principal,
+          ratePa: d.rate,
+          monthly: d.monthly,
+          monthsLeft: d.remaining,
+        })),
+      });
       return newDebts;
     });
   }
