@@ -6,6 +6,11 @@
  */
 
 import React from "react";
+import {
+  HomeIcon,
+  CreditCardIcon,
+  BanknotesIcon,
+} from "@heroicons/react/24/outline";
 import type { Debt } from "../../persist/v3";
 import { useProjection } from "../projection/useProjection";
 import { readV3 } from "../../persist/v3";
@@ -56,10 +61,10 @@ export const DebtSummaryCard: React.FC<DebtSummaryCardProps> = ({
   };
 
   // Ikona podľa typu
-  const getDebtIcon = (type?: "mortgage" | "consumer"): string => {
-    if (type === "mortgage") return "🏠";
-    if (type === "consumer") return "💳";
-    return "💰";
+  const getDebtIcon = (type?: "mortgage" | "consumer"): React.ReactElement => {
+    if (type === "mortgage") return <HomeIcon className="h-5 w-5" />;
+    if (type === "consumer") return <CreditCardIcon className="h-5 w-5" />;
+    return <BanknotesIcon className="h-5 w-5" />;
   };
 
   return (
@@ -67,7 +72,7 @@ export const DebtSummaryCard: React.FC<DebtSummaryCardProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-          <span>💰</span>
+          <BanknotesIcon className="h-5 w-5" />
           <span>Súhrn dlhov ({debts.length})</span>
         </h4>
       </div>
@@ -83,7 +88,7 @@ export const DebtSummaryCard: React.FC<DebtSummaryCardProps> = ({
               {/* Ľavá strana - Info */}
               <div className="flex-1 space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{getDebtIcon(debt.type)}</span>
+                  <span>{getDebtIcon(debt.type)}</span>
                   <span className="font-medium text-white">{debt.name}</span>
                   {debt.type && (
                     <span className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-300">

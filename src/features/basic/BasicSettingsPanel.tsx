@@ -12,6 +12,7 @@ import { TEST_IDS } from "../../testIds"; // PR-4
 import { AddDebtModal } from "../debts/AddDebtModal";
 import { DebtSummaryCard } from "../debt/DebtSummaryCard"; // PR-10 Task G
 import { EditDebtModal } from "../../components/EditDebtModal"; // PR-13
+import { CreditCardIcon } from "@heroicons/react/24/outline"; // PR-39
 
 interface BasicSettingsPanelProps {
   open: boolean;
@@ -696,7 +697,7 @@ export const BasicSettingsPanel: React.FC<BasicSettingsPanelProps> = ({
                     onClick={() => setIsDebtModalOpen(true)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 transition-colors text-sm font-medium text-slate-200"
                   >
-                    <span>💳</span>
+                    <CreditCardIcon className="h-5 w-5 text-slate-400" />
                     <span>Mám úver alebo hypotéku</span>
                   </button>
                 </div>
