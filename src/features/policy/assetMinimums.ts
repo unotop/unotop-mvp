@@ -12,15 +12,18 @@ import type { MixItem } from "../mix/mix.service";
  * 
  * lumpMin: Minimálna jednorazová investícia (EUR)
  * monthlyMin: Minimálny mesačný vklad (EUR), 0 = mesačný vklad nepostačuje
+ * 
+ * PR-XX FIX: Znížené minimumy pre dyn/bonds aby monthly plány (0/50/23) mohli používať high-yield assets
+ * effectivePlanVolume = lump + (monthly × 12 × horizonYears) je rozhodujúce
  */
 export const ASSET_MINIMUMS = {
   etf:     { lumpMin: 0,      monthlyMin: 20  },   // EIC bez vstupu, mesačne od ~20 €
   gold:    { lumpMin: 0,      monthlyMin: 50  },   // zlaté sporenie od ~50 €/mes
   bonds:   { lumpMin: 2500,   monthlyMin: 0   },   // nákup dlhopisu 2 500 €
   bond3y9: { lumpMin: 2500,   monthlyMin: 0   },   // rovnaké
-  dyn:     { lumpMin: 500,    monthlyMin: 100 },   // PR-34: Zníž z 1000→500, monthly od 100 (realistické pre 600/mes vklad)
+  dyn:     { lumpMin: 500,    monthlyMin: 0   },   // PR-XX: Znížené z monthlyMin 100→0 (bude kontrolované cez effectivePlanVolume)
   cash:    { lumpMin: 0,      monthlyMin: 0   },   // vždy OK
-  crypto:  { lumpMin: 100,    monthlyMin: 50  },   // praktické minimum
+  crypto:  { lumpMin: 100,    monthlyMin: 0   },   // PR-XX: Znížené z 50→0 (effectivePlanVolume check)
   real:    { lumpMin: 300000, monthlyMin: 0   },   // ostáva filter príjem≥3500 alebo lump≥300k
 } as const;
 
