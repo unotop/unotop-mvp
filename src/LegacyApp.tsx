@@ -466,7 +466,7 @@ export default function LegacyApp({
                           </div>
                           <div className="space-y-1">
                             <label className="text-xs text-slate-400 block">
-                              Zostáva (roky)
+                              Zostáva (mesiace)
                             </label>
                             <input
                               aria-label={`Zostáva rokov dlhu ${idx + 1}`}

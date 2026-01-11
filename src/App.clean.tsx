@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { OnboardingChoice } from "./components/OnboardingChoice";
 import { useRef, useCallback, useEffect } from "react";
 import { useUncontrolledValueInput } from "./features/_hooks/useUncontrolledValueInput";
+import { writeV3, readV3, Debt as PersistDebt } from "./persist/v3";
 
 // Stable TEST_IDS used by tests
 export const TEST_IDS = {
@@ -58,22 +59,30 @@ function setGoldTarget(list: MixItem[], target: number): MixItem[] {
   return normalize([{ ...gold, pct: target }, ...redistributed]);
 }
 function persist(state: PersistShape) {
-  try {
-    const json = JSON.stringify(state);
-    localStorage.setItem(KEY_V3_COLON, json);
-    localStorage.setItem(KEY_V3_UNDERSCORE, json);
-  } catch {}
+  // Delegate to writeV3 for consistency with LegacyApp
+  writeV3({
+    mix: state.mix,
+    profile: {
+      reserveEur: state.reserveEur,
+      reserveMonths: state.reserveMonths,
+      monthlyIncome: state.monthlyIncome,
+    },
+    monthly: state.monthly,
+    reserveEur: state.reserveEur,
+    reserveMonths: state.reserveMonths,
+    monthlyIncome: state.monthlyIncome,
+  });
 }
 function readInitial(): PersistShape | null {
-  try {
-    const raw =
-      localStorage.getItem(KEY_V3_COLON) ||
-      localStorage.getItem(KEY_V3_UNDERSCORE);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
+  const v3 = readV3();
+  if (!v3 || Object.keys(v3).length === 0) return null;
+  return {
+    mix: v3.mix || [],
+    reserveEur: v3.reserveEur ?? v3.profile?.reserveEur ?? 500,
+    reserveMonths: v3.reserveMonths ?? v3.profile?.reserveMonths ?? 3,
+    monthly: v3.monthly ?? 200,
+    monthlyIncome: v3.monthlyIncome ?? v3.profile?.monthlyIncome ?? 0,
+  };
 }
 
 const DEFAULT_MIX: MixItem[] = [
@@ -328,7 +337,16 @@ function AppClean() {
     monthly: number;
     remaining: number;
   };
-  const [debts, setDebts] = React.useState<Debt[]>([]);
+  const [debts, setDebts] = React.useState<Debt[]>(() => {
+    const v3 = readV3();
+    return (v3.debts || []).map((d: any) => ({
+      id: d.id,
+      principal: d.principal || 0,
+      rate: d.ratePa || 0,
+      monthly: d.monthly || d.payment || 0,
+      remaining: d.monthsLeft || 0,
+    }));
+  });
   // Simple legacy helpers (v1) used for mirror persistence in this sandbox file
   function readLegacy(): any {
     try {
@@ -460,30 +478,44 @@ function AppClean() {
     extraMonthly: number;
     extraOnce: number;
     atMonth: number;
-  }>({
-    extraMonthly: 0,
-    extraOnce: 0,
-    atMonth: 0,
+  }>(() => {
+    const v3 = readV3();
+    const legacy = readLegacy();
+    return {
+      extraMonthly: legacy?.debtVsInvest?.extraMonthly ?? 0,
+      extraOnce: legacy?.debtVsInvest?.extraOnce ?? 0,
+      atMonth: legacy?.debtVsInvest?.atMonth ?? 0,
+    };
   });
   function updateDebt(id: string, field: keyof Debt, value: number) {
-    setDebts((ds) =>
-      ds.map((d) => (d.id === id ? { ...d, [field]: value } : d))
-    );
+    setDebts((ds) => {
+      const newDebts = ds.map((d) => (d.id === id ? { ...d, [field]: value } : d));
+      writeV3({ debts: newDebts.map(d => ({ id: d.id, name: `Dlh`, principal: d.principal, ratePa: d.rate, monthly: d.monthly, monthsLeft: d.remaining })) });
+      return newDebts;
+    });
   }
   function addDebt() {
-    setDebts((ds) => [
-      ...ds,
-      {
-        id: Math.random().toString(36).slice(2),
-        principal: 0,
-        rate: 0,
-        monthly: 0,
-        remaining: 0,
-      },
-    ]);
+    setDebts((ds) => {
+      const newDebts = [
+        ...ds,
+        {
+          id: Math.random().toString(36).slice(2),
+          principal: 0,
+          rate: 0,
+          monthly: 0,
+          remaining: 0,
+        },
+      ];
+      writeV3({ debts: newDebts.map(d => ({ id: d.id, name: `Dlh #${newDebts.length}`, principal: d.principal, ratePa: d.rate, monthly: d.monthly, monthsLeft: d.remaining })) });
+      return newDebts;
+    });
   }
   function removeDebt(id: string) {
-    setDebts((ds) => ds.filter((d) => d.id !== id));
+    setDebts((ds) => {
+      const newDebts = ds.filter((d) => d.id !== id);
+      writeV3({ debts: newDebts.map(d => ({ id: d.id, name: `Dlh`, principal: d.principal, ratePa: d.rate, monthly: d.monthly, monthsLeft: d.remaining })) });
+      return newDebts;
+    });
   }
   function setMixField(label: string, val: number) {
     setMixInputs((m) => ({ ...m, [label]: val }));
